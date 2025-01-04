@@ -1,0 +1,8 @@
+{
+    "gopls": {
+        "buildFlags": [
+            "-tags=e2e"
+        ]
+    },
+    "go.testTags": "e2e",  // 用于运行测试时的标签
+}
