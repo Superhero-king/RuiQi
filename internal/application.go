@@ -53,6 +53,34 @@ type applicationRequest struct {
 	Body    []byte
 }
 
+type FirewallLog struct {
+	TransactionID   string    `json:"transactionId"`   // Unique identifier for the transaction
+	RuleID          string    `json:"ruleId"`          // ID of the triggered rule
+	SecLangRaw      string    `json:"secLangRaw"`      // Raw security language definition
+	Severity        int       `json:"severity"`        // Severity level of the event
+	Phase           int       `json:"phase"`           // Phase of the request processing
+	Payload         string    `json:"payload"`         // Attack payload
+	URI             string    `json:"uri"`             // Request URI
+	ClientIPAddress string    `json:"clientIpAddress"` // Source IP address
+	ServerIPAddress string    `json:"serverIpAddress"` // Destination IP address
+	Domain          string    `json:"domain"`          // Target domain
+	CreatedAt       time.Time `json:"createdAt"`       // Timestamp of the event
+	Logs            []Log     `json:"logs"`            // Associated log entries
+	Message         string    `json:"message"`         // Event message or description
+	Request         string    `json:"request"`         // Raw HTTP request
+	Response        string    `json:"response"`        // Raw HTTP response
+}
+
+// Log represents individual log entries with the specified fields
+type Log struct {
+	Message    string `json:"message"`    // Log message
+	Payload    string `json:"payload"`    // Attack payload
+	RuleID     string `json:"ruleId"`     // Rule identifier
+	Severity   int    `json:"severity"`   // Severity level
+	SecLangRaw string `json:"secLangRaw"` // Raw security language
+	LogRaw     string `json:"logRaw"`     // Raw log data
+}
+
 func (a *Application) HandleRequest(ctx context.Context, writer *encoding.ActionWriter, message *encoding.Message) (err error) {
 	k := encoding.AcquireKVEntry()
 	// run defer via anonymous function to not directly evaluate the arguments.
@@ -137,6 +165,68 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		if err == nil && a.ResponseCheck {
 			a.cache.SetWithExpiration(tx.ID(), &transaction{tx: tx}, a.TransactionTTL)
 			return
+		}
+		// b := tx.MatchedRules()
+		// c := tx.Interruption()
+		// if err := tx.Close(); err != nil {
+		// 	a.Logger.Error().Str("tx", tx.ID()).Err(err).Msg("failed to close transaction")
+		// }
+		// // 被 b 引用的东西 什么时候被清理
+		// fmt.Println("matched rules", b)
+		// for i, rule := range b {
+		// 	// 检查 Data 不为空
+		// 	// if data := rule.Data(); len(data) > 0 {
+		// 	if data := rule.Data(); rule.Rule().ID() == c.RuleID || len(data) > 0 {
+		// 		// if data := rule.Data(); len(data) > 0 && rule.Rule().ID() == interruption.RuleID {
+		// 		fmt.Printf("匹配规则 %d: %s, Data: %v\n",
+		// 			i+1,
+		// 			rule.ErrorLog(),
+		// 			data,
+		// 		)
+		// 		fmt.Println("raw", rule.Rule().Raw())
+		// 		fmt.Println("id", rule.TransactionID())
+		// 		fmt.Println("matched data", rule.MatchedDatas()[0].Message())
+		// 		fmt.Println("uri", rule.URI())
+		// 		fmt.Println("ip", rule.ClientIPAddress())
+		// 		fmt.Println("server ip", rule.ServerIPAddress())
+		// 		fmt.Println("message", rule.Message())
+		// 		fmt.Println("audit log", rule.AuditLog())
+		// 	}
+		// }
+
+		if tx.IsInterrupted() {
+			interruption := tx.Interruption()
+			fmt.Println("interruption", interruption)
+			fmt.Println("interruption rule id", interruption.RuleID)
+			fmt.Println("interruption rule id", interruption.Data)
+			fmt.Println("interruption id", tx.ID())
+
+			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
+				// 遍历所有匹配的规则
+				for i, rule := range matchedRules {
+					// 检查 Data 不为空
+					// if data := rule.Data(); len(data) > 0 {
+					if data := rule.Data(); rule.Rule().ID() == interruption.RuleID || len(data) > 0 {
+						// if data := rule.Data(); len(data) > 0 && rule.Rule().ID() == interruption.RuleID {
+						fmt.Printf("匹配规则 %d: %s\n Data: %v\n",
+							i+1,
+							rule.ErrorLog(),
+							data,
+						)
+						fmt.Println("raw", rule.Rule().Raw())
+						fmt.Println("id", rule.TransactionID())
+						fmt.Println("matched message:", rule.MatchedDatas()[0].Message())
+						fmt.Println("matched data:", rule.MatchedDatas()[0].Data())
+						fmt.Println("uri", rule.URI())
+						fmt.Println("ip", rule.ClientIPAddress())
+						fmt.Println("server ip", rule.ServerIPAddress())
+						fmt.Println("message", rule.Message())
+						fmt.Println("audit log", rule.AuditLog())
+					}
+				}
+			} else {
+				fmt.Println("没有匹配的规则")
+			}
 		}
 
 		tx.ProcessLogging()

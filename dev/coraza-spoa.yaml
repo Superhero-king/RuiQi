@@ -2,7 +2,7 @@
 bind: 0.0.0.0:2342
 
 # The log level configuration, one of: debug/info/warn/error/panic/fatal
-log_level: info
+log_level: debug
 # The log file path
 log_file: /dev/stdout
 # The log format, one of: console/json
@@ -17,6 +17,7 @@ applications:
       Include @coraza.conf-recommended
       Include @crs-setup.conf.example
       Include @owasp_crs/*.conf
+      SecRuleEngine On
 
     # HAProxy configured to send requests only, that means no cache required
     response_check: false
