@@ -1,0 +1,8 @@
+:root {
+  --bg-color: #ffffff;
+}
+
+html,
+body {
+  height: 100%;
+}
