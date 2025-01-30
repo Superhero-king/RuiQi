@@ -34,28 +34,28 @@ export function Sidebar() {
   const currentFirstLevelPath = '/' + location.pathname.split('/')[1]
 
   return (
-    <Card className="w-[283px] flex flex-col rounded-none py-4 gap-1 border-0 shadow-none overflow-auto">
-      <CardHeader className="pt-1 pb-0 gap-5 w-full items-center justify-center space-y-0 ">
+    <Card className="w-[17.69rem] flex flex-col rounded-none  gap-1 border-0 shadow-none overflow-auto">
+      <CardHeader className="pt-[0.0625rem] pb-0 gap-5 w-full items-center justify-center space-y-0 ">
         <CardTitle
-          className="bg-surface-300 font-medium w-20 h-20 rounded-full text-[36px] leading-[1.2] tracking-[0.01em] flex justify-center items-center"
+          className="bg-surface-300 font-medium w-[5rem] h-[5rem] rounded-full text-[2.25rem] leading-[1.2] tracking-[0.01em] flex justify-center items-center text-content-200"
         >
           Xray
         </CardTitle>
-        <CardDescription className="text-[28px] font-bold leading-[1.4] tracking-[0.2px] normal-case">Simple WAF</CardDescription>
+        <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case text-content-200">Simple WAF</CardDescription>
       </CardHeader>
 
-      <CardContent className="pt-[96px] pl-[48px] pb-0 pr-0">
-        <nav className="flex flex-col gap-[18px]">
+      <CardContent className="pt-[6rem] pl-[3rem] pb-0 pr-0">
+        <nav className="flex flex-col gap-[1.125rem]">
           {sidebarItems.map((item) => {
             const isActive = currentFirstLevelPath === item.href
             return (
               <Link
                 key={item.href}
                 to={item.href}
-                className="flex items-center gap-[18px] group"
+                className="flex items-center gap-[1.125rem] group"
               >
                 <div className={cn(
-                  "p-2 rounded-md w-[56px] h-[56px]",
+                  "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
                   "transform transition-all duration-500 ease-out",
                   isActive
                     ? "bg-primary-100 scale-110"
@@ -71,7 +71,7 @@ export function Sidebar() {
                   />
                 </div>
                 <span className={cn(
-                  "text-[24px] leading-[1.6] tracking-[1px] text-text-200",
+                  "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-content-200",
                   "transform transition-all duration-500 ease-out",
                   isActive
                     ? "font-bold translate-x-2"
@@ -85,10 +85,10 @@ export function Sidebar() {
         </nav>
       </CardContent>
 
-      <CardFooter className="pt-[100px] pl-[48px] pb-0 pr-0">
-        <div className="flex items-center gap-[18px] cursor-pointer group">
+      <CardFooter className="pt-[6.25rem] pl-[3rem] pb-0 pr-0">
+        <div className="flex items-center gap-[1.125rem] cursor-pointer group">
           <div className={cn(
-            "p-2 rounded-md w-[56px] h-[56px]",
+            "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
             "transform transition-all duration-500 ease-out",
             "bg-surface-200 group-hover:bg-primary-100/20 group-hover:scale-105",
             "group-active:bg-primary-100"
@@ -102,7 +102,7 @@ export function Sidebar() {
               )} />
           </div>
           <span className={cn(
-            "text-[24px] leading-[1.6] tracking-[1px] text-text-200",
+            "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-content-200",
             "transform transition-all duration-500 ease-out",
             "font-normal group-hover:translate-x-1",
             "group-active:font-bold group-active:translate-x-2"

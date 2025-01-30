@@ -4,10 +4,10 @@ import { Breadcrumb } from "./breadcrumb"
 
 export function RootLayout() {
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen py-4">
       <Sidebar />
-      <div className="w-[2px] my-4 bg-surface-300 " />
-      <main className="flex-1 flex flex-col">
+      <div className="w-[0.125rem] bg-surface-300" />
+      <main className="flex-1 flex flex-col px-6">
         <Breadcrumb />
         <div className="flex-1 overflow-auto">
           <Outlet />
