@@ -3,35 +3,44 @@ import { cn } from "@/lib/utils"
 import { Settings, Shield, BarChart2, FileText, LogOut } from "lucide-react"
 import { ROUTES } from "@/routes/constants"
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card"
+import { useTranslation } from 'react-i18next'
+import { TFunction } from 'i18next'
 
-const sidebarItems = [
-  {
-    title: "监控",
-    icon: BarChart2,
-    href: ROUTES.MONITOR
-  },
-  {
-    title: "日志",
-    icon: FileText,
-    href: ROUTES.LOGS
-  },
-  {
-    title: "规则",
-    icon: Shield,
-    href: ROUTES.RULES
-  },
-  {
-    title: "设置",
-    icon: Settings,
-    href: ROUTES.SETTINGS
-  }
-] as const
+// 创建一个配置生成函数
+function createSidebarConfig(t: TFunction) {
+  return [
+    {
+      title: t('sidebar.monitor'),
+      icon: BarChart2,
+      href: ROUTES.MONITOR
+    },
+    {
+      title: t('sidebar.logs'),
+      icon: FileText,
+      href: ROUTES.LOGS
+    },
+    {
+      title: t('sidebar.rules'),
+      icon: Shield,
+      href: ROUTES.RULES
+    },
+    {
+      title: t('sidebar.settings'),
+      icon: Settings,
+      href: ROUTES.SETTINGS
+    }
+  ] as const
+}
 
 export function Sidebar() {
   const location = useLocation()
+  const { t } = useTranslation()
 
   // 获取当前路径的第一级
   const currentFirstLevelPath = '/' + location.pathname.split('/')[1]
+
+  // 使用 t 函数生成 sidebarItems
+  const sidebarItems = createSidebarConfig(t)
 
   return (
     <Card className="w-[17.69rem] flex flex-col rounded-none  gap-1 border-0 shadow-none overflow-auto">
@@ -41,7 +50,9 @@ export function Sidebar() {
         >
           Xray
         </CardTitle>
-        <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case text-content-200">Simple WAF</CardDescription>
+        <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case text-content-200">
+          {t('sidebar.title')}
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="pt-[6rem] pl-[3rem] pb-0 pr-0">
@@ -107,7 +118,7 @@ export function Sidebar() {
             "font-normal group-hover:translate-x-1",
             "group-active:font-bold group-active:translate-x-2"
           )}>
-            登出
+            {t('sidebar.logout')}
           </span>
         </div>
       </CardFooter>

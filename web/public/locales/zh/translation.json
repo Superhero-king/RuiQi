@@ -1,0 +1,35 @@
+{
+  "sidebar": {
+    "title": "Simple WAF",
+    "monitor": "监控",
+    "logs": "日志",
+    "rules": "规则",
+    "settings": "设置",
+    "logout": "登出"
+  },
+  "breadcrumb": {
+    "logs": {
+      "attack": "攻击事件",
+      "protect": "防护日志"
+    },
+    "monitor": {
+      "overview": "监控"
+    },
+    "rules": {
+      "rules": "规则"
+    },
+    "settings": {
+      "settings": "设置"
+    }
+  },
+  "action": "动作",
+  "attack": {
+    "url": "攻击地址",
+    "type": "攻击类型",
+    "ip": "源 IP"
+  },
+  "time": "时间",
+  "protect": {
+    "status": "防护状态"
+  }
+}

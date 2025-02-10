@@ -1,9 +1,9 @@
-import { BrowserRouter, useRoutes } from "react-router"
-
-import { routes } from "./config"
+import { BrowserRouter, useRoutes as useReactRoutes } from "react-router"
+import { useRoutes } from "./config"
 
 function Router() {
-    return useRoutes(routes)
+    const routes = useRoutes()
+    return useReactRoutes(routes)
 }
 
 export function AppRouter() {

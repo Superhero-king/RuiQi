@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card"
 import { Outlet } from "react-router"
 
-export function LogsPage() {
+export function MonitorPage() {
     return (
-        <Card className="flex-1  h-full border-none shadow-none p-0">
+        <Card className="border-none shadow-none p-0">
             <Outlet />
         </Card>
     )

@@ -1,6 +1,45 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { MoreHorizontal } from "lucide-react"
+import * as React from "react"
+import {
+    ColumnDef,
+    getCoreRowModel,
+    getPaginationRowModel,
+    useReactTable,
+    VisibilityState,
+    SortingState,
+    getSortedRowModel,
+} from "@tanstack/react-table"
+
+
+
+
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import { Checkbox } from "@/components/ui/checkbox"
+// import { DataTableViewOptions } from "@/components/table/column-toggle"
+// import { DataTableColumnHeader } from "@/components/table/column-header"
+import { DataTable } from "@/components/table/data-table"
+import { useTranslation } from "react-i18next"
+import { AttackDetailDialog } from "@/pages/logs/components/attack-detail-dialog"
+
+type LogItem = {
+    id: number
+    url: string
+    status: string
+    type: string
+    ip: string
+    location: string
+    timestamp: string
+}
 
 const logItems = [
     {
@@ -10,16 +49,179 @@ const logItems = [
         type: "SQL注入",
         ip: "125.118.24.13",
         location: "浙江-杭州",
-        timestamp: "2024-12-25",
-        time: "21:58:56"
+        timestamp: "1735135136000",
+    },
+    {
+        id: 1,
+        url: "https://demo.waf-ce.chaitin.cn:10084/hello.html?payload",
+        status: "已防护",
+        type: "SQL注入",
+        ip: "125.118.24.13",
+        location: "浙江-杭州",
+        timestamp: "1735135136000",
+    },
+    {
+        id: 1,
+        url: "https://demo.waf-ce.chaitin.cn:10084/hello.html?payload",
+        status: "已防护",
+        type: "SQL注入",
+        ip: "125.118.24.13",
+        location: "浙江-杭州",
+        timestamp: "1735135136000",
     }
 ]
 
+
+
 export function LogsProtect() {
+    const { t } = useTranslation()
+
+    const columns: ColumnDef<LogItem>[] = [
+        {
+            id: "select",
+            header: ({ table }) => (
+                <Checkbox
+                    checked={
+                        table.getIsAllPageRowsSelected() ||
+                        (table.getIsSomePageRowsSelected() && "indeterminate")
+                    }
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all"
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        },
+        {
+            id: "status",
+            accessorKey: "status",
+            header: t('protect.status'),
+        },
+        {
+            id: "url",
+            accessorKey: "url",
+            header: t('attack.url'),
+        },
+        {
+            id: "type",
+            accessorKey: "type",
+            header: t('attack.type'),
+        },
+        {
+            id: "ip",
+            header: t('attack.ip'),
+            cell: ({ row }) => {
+                return (
+                    <div className="flex flex-col">
+                        <span className="text-sm text-muted-foreground">{row.original.ip}</span>
+                        <span className="text-xs text-muted-foreground">{row.original.location}</span>
+                    </div>
+                )
+            }
+        },
+        {
+            id: "time",
+            header: t('time'),
+            cell: ({ row }) => {
+                const date = new Date(parseInt(row.original.timestamp))
+                const dateStr = date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                })
+                const timeStr = date.toLocaleTimeString('zh-CN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                })
+                return (
+                    <div className="flex flex-col">
+                        <span className="text-sm text-muted-foreground">{dateStr}</span>
+                        <span className="text-xs text-muted-foreground">{timeStr}</span>
+                    </div>
+                )
+            }
+        },
+        {
+            id: "actions",
+            cell: ({ row }) => {
+                const [open, setOpen] = React.useState(false)
+                const data = row.original
+
+                return (
+                    <>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(data.ip)}>
+                                    Copy IP
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setOpen(true)}>
+                                    {t('view.detail')}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <AttackDetailDialog
+                            open={open}
+                            onOpenChange={setOpen}
+                            data={{
+                                url: data.url,
+                                ip: data.ip,
+                                payload: "1 and 1=1", // 从 URL 中提取
+                                type: data.type,
+                                timestamp: data.timestamp,
+                                id: data.id,
+                                location: data.location
+                            }}
+                        />
+                    </>
+                )
+            }
+        },
+    ]
+
+    const [sorting, setSorting] = React.useState<SortingState>([])
+
+    const [rowSelection, setRowSelection] = React.useState({})
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({})
+
+    const table = useReactTable({
+        data: logItems,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        onRowSelectionChange: setRowSelection,
+        onSortingChange: setSorting,
+        getSortedRowModel: getSortedRowModel(),
+        state: {
+            columnVisibility,
+            rowSelection,
+            sorting,
+        },
+    })
+
     return (
-        <Card className="border-none shadow-none">
-            <div className="p-0">
-                <div className="flex items-center justify-between mb-6">
+        <Card className="flex flex-col border-none shadow-none gap-6 flex-1 h-full">
+
+            <Card className="flex justify-between border rounded-md shadow-none p-4 border-black-550 bg-surface-200">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="sm">
                             全选导出
@@ -38,32 +240,14 @@ export function LogsProtect() {
                         刷新
                     </Button>
                 </div>
+            </Card>
 
-                <div className="space-y-4">
-                    {logItems.map((item) => (
-                        <div key={item.id} className="flex items-center gap-4 p-4 border rounded-lg">
-                            <input type="checkbox" className="h-4 w-4" />
-                            <span className="px-3 py-1 text-xs font-medium bg-zinc-900 text-white rounded">
-                                {item.status}
-                            </span>
-                            <span className="flex-1 text-muted-foreground text-sm">{item.url}</span>
-                            <span className="text-sm text-muted-foreground">{item.type}</span>
-                            <div className="flex flex-col items-end gap-1">
-                                <span className="text-sm text-muted-foreground">{item.ip}</span>
-                                <span className="text-sm text-muted-foreground">{item.location}</span>
-                            </div>
-                            <div className="flex flex-col items-end gap-1">
-                                <span className="text-sm text-muted-foreground">{item.timestamp}</span>
-                                <span className="text-sm text-muted-foreground">{item.time}</span>
-                            </div>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))}
-                </div>
+            <Card className="flex flex-col justify-between border rounded-md shadow-none p-4 border-black-550 bg-surface-200 gap-4 flex-1 h-full">
+                <Card className="border border-primary-300 rounded-sm shadow-none bg-inherit flex-1">
+                    <DataTable table={table} columns={columns} style="border" />
+                </Card>
 
-                <div className="flex items-center justify-between mt-6">
+                <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
                         0 of 5 row(s) selected.
                     </span>
@@ -86,7 +270,9 @@ export function LogsProtect() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
+
+
         </Card>
     )
 } 

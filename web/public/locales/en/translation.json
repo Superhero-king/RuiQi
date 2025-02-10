@@ -1,0 +1,35 @@
+{
+  "sidebar": {
+    "title": "Simple WAF",
+    "monitor": "Monitor",
+    "logs": "Logs",
+    "rules": "Rules",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "breadcrumb": {
+    "logs": {
+      "attack": "Attack events",
+      "protect": "Protection logs"
+    },
+    "monitor": {
+      "overview": "Monitor"
+    },
+    "rules": {
+      "rules": "Rules"
+    },
+    "settings": {
+      "settings": "Settings"
+    }
+  },
+  "action": "action",
+  "attack": {
+    "url": "Attack address",
+    "type": "Attack Type",
+    "ip": "Source IP"
+  },
+  "time": "time",
+  "protect": {
+    "status": "Protection status"
+  }
+}

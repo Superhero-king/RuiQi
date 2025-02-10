@@ -1,11 +1,12 @@
 import { useLocation, Link } from "react-router"
-import { breadcrumbMap } from "@/routes/config"
+import { useBreadcrumbMap } from "@/routes/config"
 import { RoutePath } from "@/routes/constants"
 import { cn } from "@/lib/utils"
 import { Slash } from "lucide-react"
 
 export function Breadcrumb() {
   const location = useLocation()
+  const breadcrumbMap = useBreadcrumbMap()
   const [mainPath, subPath] = location.pathname.split("/").filter(Boolean)
   const config = breadcrumbMap[`/${mainPath}` as RoutePath]
 
@@ -23,9 +24,20 @@ export function Breadcrumb() {
           <Link
             to={`/${mainPath}/${item.path}`}
             className={cn(
-              "transition-colors hover:text-primary",
-              index === 0 ? "text-2xl font-semibold" : "text-lg text-muted-foreground",
-              currentPath === item.path && "text-primary"
+              "transition-colors duration-200",
+              index === 0
+                ? cn(
+                  "text-2xl font-semibold",
+                  currentPath === item.path
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-muted-foreground/80"
+                )
+                : cn(
+                  "text-lg",
+                  currentPath === item.path
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground hover:text-muted-foreground/80"
+                )
             )}
           >
             {item.title}
