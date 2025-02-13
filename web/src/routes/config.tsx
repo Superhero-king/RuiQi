@@ -5,10 +5,15 @@ import { LogsPage } from "@/pages/logs/page"
 import { MonitorPage } from "@/pages/monitor/page"
 import { RoutePath, ROUTES } from "./constants"
 import { LogsAttack, LogsProtect } from "@/pages/logs/components"
+import { RulesPage } from "@/pages/rules/pages"
+import { SettingsPage } from "@/pages/settings/pages"
+import { GlobalSetting, SiteManager, CertManager } from "@/pages/settings/components"
 import { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TFunction } from 'i18next'
 import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
+import { SysRules, UserRules, IpGroup } from "@/pages/rules/components"
+
 interface BreadcrumbItem {
     title: string
     path: string
@@ -49,13 +54,24 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
             ]
         },
         [ROUTES.RULES]: {
-            defaultPath: "rules",
+            defaultPath: "system",
             items: [
                 {
-                    title: t('breadcrumb.rules.rules'),
-                    path: "rules",
-                    component: <div>Rules Page</div>
+                    title: t('breadcrumb.rules.system'),
+                    path: "system",
+                    component: <SysRules />
+                },
+                {
+                    title: t('breadcrumb.rules.user'),
+                    path: "user",
+                    component: <UserRules />
+                },
+                {
+                    title: t('breadcrumb.rules.ipGroup'),
+                    path: "ip",
+                    component: <IpGroup />
                 }
+
             ]
         },
         [ROUTES.SETTINGS]: {
@@ -64,7 +80,17 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
                 {
                     title: t('breadcrumb.settings.settings'),
                     path: "settings",
-                    component: <div>Settings Page</div>
+                    component: <GlobalSetting />
+                },
+                {
+                    title: t('breadcrumb.settings.siteManager'),
+                    path: "site",
+                    component: <SiteManager />
+                },
+                {
+                    title: t('breadcrumb.settings.certManager'),
+                    path: "cert",
+                    component: <CertManager />
                 }
             ]
         }
@@ -119,6 +145,7 @@ export function useRoutes(): RouteObject[] {
                 },
                 {
                     path: ROUTES.RULES,
+                    element: <RulesPage />,
                     children: [
                         {
                             path: "",
@@ -132,6 +159,7 @@ export function useRoutes(): RouteObject[] {
                 },
                 {
                     path: ROUTES.SETTINGS,
+                    element: <SettingsPage />,
                     children: [
                         {
                             path: "",

@@ -16,10 +16,14 @@
       "overview": "监控"
     },
     "rules": {
-      "rules": "规则"
+      "system": "系统规则",
+      "user": "自定义规则",
+      "ipGroup": "IP 组管理"
     },
     "settings": {
-      "settings": "设置"
+      "settings": "设置",
+      "siteManager": "站点管理",
+      "certManager": "证书管理"
     }
   },
   "action": "动作",

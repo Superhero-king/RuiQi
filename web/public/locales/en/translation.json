@@ -16,10 +16,14 @@
       "overview": "Monitor"
     },
     "rules": {
-      "rules": "Rules"
+      "system": "System rules",
+      "user": "Custom rules",
+      "ipGroup": "IP Group Management"
     },
     "settings": {
-      "settings": "Settings"
+      "settings": "Settings",
+      "siteManager": "Site Management",
+      "certManager": "Certificate Management"
     }
   },
   "action": "action",
