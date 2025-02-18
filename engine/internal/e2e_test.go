@@ -121,7 +121,11 @@ func runCoraza(tb testing.TB) (testutil.HAProxyConfig, string, string) {
 		TransactionTTL: 10 * time.Second,
 	}
 
-	application, err := appCfg.NewApplication()
+	application, err := appCfg.NewApplication(MongoConfig{
+		URI:        "mongodb://root:fzlmwkjt@dbconn.sealosbja.site:33789/?directConnection=true",
+		Database:   "waf",
+		Collection: "logs",
+	})
 	if err != nil {
 		tb.Fatal(err)
 	}

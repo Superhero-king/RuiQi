@@ -11,9 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
 	"github.com/corazawaf/coraza/v3"
 	"github.com/corazawaf/coraza/v3/types"
@@ -24,13 +21,6 @@ import (
 	"istio.io/istio/pkg/cache"
 )
 
-// MongoDB 配置
-type MongoConfig struct {
-	URI        string
-	Database   string
-	Collection string
-}
-
 type AppConfig struct {
 	Directives     string
 	ResponseCheck  bool
@@ -39,12 +29,8 @@ type AppConfig struct {
 }
 
 type Application struct {
-	waf             coraza.WAF
-	cache           cache.ExpiringCache
-	mongo           *mongo.Client
-	mongoDB         string
-	mongoCollection string
-	logStore        LogStore
+	waf   coraza.WAF
+	cache cache.ExpiringCache
 
 	AppConfig
 }
@@ -65,6 +51,38 @@ type applicationRequest struct {
 	Version string
 	Headers []byte
 	Body    []byte
+}
+
+type FirewallLog struct {
+	RuleID          string    `json:"ruleId"`          // ID of the triggered rule
+	SecLangRaw      string    `json:"secLangRaw"`      // Raw security language definition
+	Severity        int       `json:"severity"`        // Severity level of the event
+	Phase           int       `json:"phase"`           // Phase of the request processing
+	SecMark         string    `json:"secMark"`         // Security mark of the rule
+	Accuracy        int       `json:"accuracy"`        // Accuracy level of the rule match
+	Payload         string    `json:"payload"`         // Attack payload
+	URI             string    `json:"uri"`             // Request URI
+	ClientIPAddress string    `json:"clientIpAddress"` // Source IP address
+	ServerIPAddress string    `json:"serverIpAddress"` // Destination IP address
+	Domain          string    `json:"domain"`          // Target domain
+	Logs            []Log     `json:"logs"`            // Associated log entries
+	Message         string    `json:"message"`         // Event message or description
+	Request         string    `json:"request"`         // Raw HTTP request
+	Response        string    `json:"response"`        // Raw HTTP response
+	CreatedAt       time.Time `json:"createdAt"`       // Timestamp of the event
+}
+
+// Log represents individual log entries with the specified fields
+type Log struct {
+	Message    string `json:"message"`    // Log message
+	Payload    string `json:"payload"`    // Attack payload
+	RuleID     string `json:"ruleId"`     // Rule identifier
+	Severity   int    `json:"severity"`   // Severity level
+	Phase      int    `json:"phase"`      // Phase of the request processing
+	SecMark    string `json:"secMark"`    // Security mark of the rule
+	Accuracy   int    `json:"accuracy"`   // Accuracy level of the rule match
+	SecLangRaw string `json:"secLangRaw"` // Raw security language
+	LogRaw     string `json:"logRaw"`     // Raw log data
 }
 
 func (a *Application) HandleRequest(ctx context.Context, writer *encoding.ActionWriter, message *encoding.Message) (err error) {
@@ -155,11 +173,45 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 
 		if tx.IsInterrupted() {
 			interruption := tx.Interruption()
+			fmt.Println("interruption", interruption)
+			fmt.Println("interruption rule id", interruption.RuleID)
+			fmt.Println("interruption id", tx.ID())
+			fmt.Println("interruption rule data", interruption.Data)
+
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
-				err := a.saveFirewallLog(matchedRules, interruption, &req, req.Headers)
-				if err != nil {
-					a.Logger.Error().Err(err).Msg("failed to save firewall log")
+				// 遍历所有匹配的规则
+				for _, matchedRule := range matchedRules {
+					// 检查 Data 不为空
+					// if data := rule.Data(); len(data) > 0 {
+					if data := matchedRule.Data(); matchedRule.Rule().ID() == interruption.RuleID || len(data) > 0 {
+						// if data := rule.Data(); len(data) > 0 && rule.Rule().ID() == interruption.RuleID {
+						fmt.Println("id: ", matchedRule.TransactionID())
+						fmt.Println("rule id: ", matchedRule.Rule().ID())
+						fmt.Println("rule phase: ", matchedRule.Rule().Phase())
+						fmt.Println("rule sec mark: ", matchedRule.Rule().SecMark())
+						fmt.Println("rule Accuracy: ", matchedRule.Rule().Accuracy())
+						fmt.Println("rule severity: ", matchedRule.Rule().Severity())
+						fmt.Println("rule raw: ", matchedRule.Rule().Raw())
+						fmt.Println("err log: ", matchedRule.ErrorLog())
+						fmt.Println("audit log: ", matchedRule.AuditLog())
+						fmt.Println("matched rule datas: ", matchedRule.Data())
+						fmt.Println("matched rule message: ", matchedRule.Message())
+
+						fmt.Println("matched message: ", matchedRule.MatchedDatas()[0].Message())
+						fmt.Println("matched data: ", matchedRule.MatchedDatas()[0].Data())
+						fmt.Println("matched variable: ", matchedRule.MatchedDatas()[0].Variable())
+						fmt.Println("matched key:", matchedRule.MatchedDatas()[0].Key())
+						fmt.Println("matched value: ", matchedRule.MatchedDatas()[0].Value())
+
+						fmt.Println("uri: ", matchedRule.URI())
+						fmt.Println("ip: ", matchedRule.ClientIPAddress())
+						fmt.Println("server ip: ", matchedRule.ServerIPAddress())
+
+						fmt.Println("--------------------------------")
+					}
 				}
+			} else {
+				fmt.Println("没有匹配的规则")
 			}
 		}
 
@@ -350,150 +402,10 @@ exit:
 	return nil
 }
 
-// 构建HTTP请求字符串
-func buildRequestString(req *applicationRequest, headers []byte) string {
-	// 预计算总容量
-	capacity := len(req.Method) + 1 + // Method + space
-		len(req.Path) + // Path
-		len(req.Version) + 6 + // " HTTP/" + version
-		1 + // \n
-		len(headers) // headers
-
-	if req.Query != nil {
-		capacity += 1 + len(req.Query) // ? + query
+func (a AppConfig) NewApplication() (*Application, error) {
+	app := Application{
+		AppConfig: a,
 	}
-
-	if len(req.Body) > 0 {
-		capacity += 1 + len(req.Body) // \n + body
-	}
-
-	// 使用预计算的容量初始化 Builder
-	var sb strings.Builder
-	sb.Grow(capacity)
-
-	// 构建请求字符串
-	sb.WriteString(req.Method)
-	sb.WriteByte(' ')
-	sb.Write(req.Path)
-	if req.Query != nil {
-		sb.WriteByte('?')
-		sb.Write(req.Query)
-	}
-	sb.WriteString(" HTTP/")
-	sb.WriteString(req.Version)
-	sb.WriteByte('\n')
-	sb.Write(headers)
-
-	if len(req.Body) > 0 {
-		sb.WriteByte('\n')
-		sb.Write(req.Body)
-	}
-
-	return sb.String()
-}
-
-func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interruption *types.Interruption, req *applicationRequest, headers []byte) error {
-	// 构建日志条目
-	logs := make([]Log, 0)
-
-	// 初始化防火墙日志
-	firewallLog := FirewallLog{
-		CreatedAt: time.Now(),
-		Request:   buildRequestString(req, headers),
-		Response:  "", // 暂时不处理响应
-		Domain:    getHostFromRequest(req),
-	}
-
-	// 遍历所有匹配的规则
-	for _, matchedRule := range matchedRules {
-		if data := matchedRule.Data(); matchedRule.Rule().ID() == interruption.RuleID || len(data) > 0 {
-			// 添加日志条目
-			log := Log{
-				Message:    matchedRule.Message(),
-				Payload:    matchedRule.Data(),
-				RuleID:     matchedRule.Rule().ID(),
-				Severity:   int(matchedRule.Rule().Severity()),
-				Phase:      int(matchedRule.Rule().Phase()),
-				SecMark:    matchedRule.Rule().SecMark(),
-				Accuracy:   matchedRule.Rule().Accuracy(),
-				SecLangRaw: matchedRule.Rule().Raw(),
-				LogRaw:     matchedRule.ErrorLog(),
-			}
-			logs = append(logs, log)
-
-			// 更新防火墙日志的字段（只有当新值不为空时才覆盖）
-			if id := matchedRule.Rule().ID(); id != 0 {
-				firewallLog.RuleID = id
-			}
-			if raw := matchedRule.Rule().Raw(); raw != "" {
-				firewallLog.SecLangRaw = raw
-			}
-			if severity := matchedRule.Rule().Severity(); severity != 0 {
-				firewallLog.Severity = int(severity)
-			}
-			if phase := matchedRule.Rule().Phase(); phase != 0 {
-				firewallLog.Phase = int(phase)
-			}
-			if secMark := matchedRule.Rule().SecMark(); secMark != "" {
-				firewallLog.SecMark = secMark
-			}
-			if accuracy := matchedRule.Rule().Accuracy(); accuracy != 0 {
-				firewallLog.Accuracy = accuracy
-			}
-			if payload := matchedRule.Data(); payload != "" {
-				firewallLog.Payload = payload
-			}
-			if msg := matchedRule.Message(); msg != "" {
-				firewallLog.Message = msg
-			}
-			if uri := matchedRule.URI(); uri != "" {
-				firewallLog.URI = uri
-			}
-			if clientIP := matchedRule.ClientIPAddress(); clientIP != "" {
-				firewallLog.ClientIPAddress = clientIP
-			}
-			if serverIP := matchedRule.ServerIPAddress(); serverIP != "" {
-				firewallLog.ServerIPAddress = serverIP
-			}
-		}
-	}
-
-	// 添加收集的所有日志
-	firewallLog.Logs = logs
-
-	// 使用日志存储器异步存储
-	return a.logStore.Store(firewallLog)
-}
-
-// NewApplication creates a new Application with a custom context
-func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig MongoConfig) (*Application, error) {
-	// If no context is provided, use background context
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	app := &Application{
-		AppConfig:       a,
-		mongoDB:         mongoConfig.Database,
-		mongoCollection: mongoConfig.Collection,
-	}
-
-	// Create timeout context for MongoDB connection
-	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(connectCtx, options.Client().ApplyURI(mongoConfig.URI))
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %v", err)
-	}
-
-	// 验证连接
-	err = client.Ping(connectCtx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
-	}
-
-	app.mongo = client
 
 	// debugLogger := debuglog.Default().
 	// 	WithLevel(debuglog.LevelDebug).
@@ -530,19 +442,7 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig Mo
 		}
 	})
 
-	// 初始化日志存储器
-	logStore := NewMongoLogStore(client, mongoConfig.Database, mongoConfig.Collection, a.Logger)
-	app.logStore = logStore
-
-	// 使用传入的上下文启动日志存储
-	logStore.Start(ctx)
-
-	return app, nil
-}
-
-// NewDefaultApplication creates a new Application with background context
-func (a AppConfig) NewApplication(mongoConfig MongoConfig) (*Application, error) {
-	return a.NewApplicationWithContext(context.Background(), mongoConfig)
+	return &app, nil
 }
 
 func (a *Application) logCallback(mr types.MatchedRule) {
@@ -576,33 +476,4 @@ func (e ErrInterrupted) Is(target error) bool {
 		return false
 	}
 	return e.Interruption == t.Interruption
-}
-
-// 添加新的辅助函数
-func getHeaderValue(headers []byte, targetHeader string) (string, error) {
-	s := bufio.NewScanner(bytes.NewReader(headers))
-	for s.Scan() {
-		line := bytes.TrimSpace(s.Bytes())
-		if len(line) == 0 {
-			continue
-		}
-
-		kv := bytes.SplitN(line, []byte(":"), 2)
-		if len(kv) != 2 {
-			continue
-		}
-
-		key, value := bytes.TrimSpace(kv[0]), bytes.TrimSpace(kv[1])
-		if strings.EqualFold(string(key), targetHeader) {
-			return string(value), nil
-		}
-	}
-	return "", nil
-}
-
-func getHostFromRequest(req *applicationRequest) string {
-	if host, err := getHeaderValue(req.Headers, "host"); err == nil && host != "" {
-		return host
-	}
-	return req.DstIp.String()
 }

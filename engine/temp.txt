@@ -1,0 +1,50 @@
+GET /?input=<script>alert(1)</script> HTTP/1.1
+host: localhost:8080
+user-agent: curl/7.81.0
+accept: */*
+
+
+
+		if tx.IsInterrupted() {
+			interruption := tx.Interruption()
+			fmt.Println("interruption", interruption)
+			fmt.Println("interruption rule id", interruption.RuleID)
+			fmt.Println("interruption id", tx.ID())
+			fmt.Println("interruption rule data", interruption.Data)
+
+			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
+				// 遍历所有匹配的规则
+				for _, matchedRule := range matchedRules {
+					// 检查 Data 不为空
+					// if data := rule.Data(); len(data) > 0 {
+					if data := matchedRule.Data(); matchedRule.Rule().ID() == interruption.RuleID || len(data) > 0 {
+						// if data := rule.Data(); len(data) > 0 && rule.Rule().ID() == interruption.RuleID {
+						fmt.Println("id: ", matchedRule.TransactionID())
+						fmt.Println("rule id: ", matchedRule.Rule().ID())
+						fmt.Println("rule phase: ", matchedRule.Rule().Phase())
+						fmt.Println("rule sec mark: ", matchedRule.Rule().SecMark())
+						fmt.Println("rule Accuracy: ", matchedRule.Rule().Accuracy())
+						fmt.Println("rule severity: ", matchedRule.Rule().Severity())
+						fmt.Println("rule raw: ", matchedRule.Rule().Raw())
+						fmt.Println("err log: ", matchedRule.ErrorLog())
+						fmt.Println("audit log: ", matchedRule.AuditLog())
+						fmt.Println("matched rule datas: ", matchedRule.Data())
+						fmt.Println("matched rule message: ", matchedRule.Message())
+
+						fmt.Println("matched message: ", matchedRule.MatchedDatas()[0].Message())
+						fmt.Println("matched data: ", matchedRule.MatchedDatas()[0].Data())
+						fmt.Println("matched variable: ", matchedRule.MatchedDatas()[0].Variable())
+						fmt.Println("matched key:", matchedRule.MatchedDatas()[0].Key())
+						fmt.Println("matched value: ", matchedRule.MatchedDatas()[0].Value())
+
+						fmt.Println("uri: ", matchedRule.URI())
+						fmt.Println("ip: ", matchedRule.ClientIPAddress())
+						fmt.Println("server ip: ", matchedRule.ServerIPAddress())
+
+						fmt.Println("--------------------------------")
+					}
+				}
+			} else {
+				fmt.Println("没有匹配的规则")
+			}
+		}

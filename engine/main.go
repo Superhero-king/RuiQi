@@ -56,13 +56,13 @@ func main() {
 	}
 	globalLogger = logger
 
-	apps, err := cfg.newApplications()
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+
+	apps, err := cfg.newApplicationsWithContext(ctx)
 	if err != nil {
 		globalLogger.Fatal().Err(err).Msg("Failed creating applications")
 	}
-
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
 
 	network, address := cfg.networkAddressFromBind()
 	l, err := (&net.ListenConfig{}).Listen(ctx, network, address)

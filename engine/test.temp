@@ -1,0 +1,11 @@
+curl -X POST "http://a.com:8080/?input=<script>alert(1)</script>" \
+     -d "key1=value1" \
+     -d "key2=value2" \
+     -d "key3=value3"
+
+curl "http://a.com:8080/?input=<script>alert(1)</script>"
+
+curl -X GET "http://a.com:8080/?input=<script>alert(1)</script>" \
+     -d "key1=value1" \
+     -d "key2=value2" \
+     -d "key3=value3"

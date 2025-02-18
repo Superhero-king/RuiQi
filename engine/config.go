@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -56,7 +57,7 @@ func (c config) networkAddressFromBind() (network string, address string) {
 	return "tcp", c.Bind
 }
 
-func (c config) newApplications() (map[string]*internal.Application, error) {
+func (c config) newApplicationsWithContext(ctx context.Context) (map[string]*internal.Application, error) {
 	allApps := make(map[string]*internal.Application)
 
 	for index, a := range c.Applications {
@@ -72,7 +73,11 @@ func (c config) newApplications() (map[string]*internal.Application, error) {
 			TransactionTTL: time.Duration(a.TransactionTTLMS) * time.Millisecond,
 		}
 
-		application, err := appConfig.NewApplication()
+		application, err := appConfig.NewApplicationWithContext(ctx, internal.MongoConfig{
+			URI:        "mongodb://root:fzlmwkjt@dbconn.sealosbja.site:33789/?directConnection=true",
+			Database:   "waf",
+			Collection: "logs",
+		})
 		if err != nil {
 			return nil, fmt.Errorf("initializing application %q: %v", index, err)
 		}
@@ -81,6 +86,10 @@ func (c config) newApplications() (map[string]*internal.Application, error) {
 	}
 
 	return allApps, nil
+}
+
+func (c config) newApplications() (map[string]*internal.Application, error) {
+	return c.newApplicationsWithContext(context.Background())
 }
 
 type logConfig struct {

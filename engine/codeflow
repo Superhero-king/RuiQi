@@ -36,7 +36,7 @@ agent 代码分析
                    nc, err := l.Accept()
                           ↓
                    创建协议处理器
-                   p := newProtocolClient(ctx, nc, as, handler)
+                   p := newProtocolClient(ctx, nc, as, handler) // as := newAsyncScheduler() 异步调度器
                           ↓
                    启动goroutine处理连接
                    go func() { 
@@ -44,11 +44,11 @@ agent 代码分析
                    }()
                           ↓
                 [protocolClient.Serve]
-                   循环处理Frame
+                   循环处理Frame(连接中的数据读取)
                    for {
                        f := acquireFrame()
-                       f.ReadFrom(c.rw)
-                       c.as.schedule(f, c)
+                       f.ReadFrom(c.rw) // 读取连接中的数据，放到 f.buf 中
+                       c.as.schedule(f, c) // 将 f 和 c 放到 asyncScheduler 中，由异步队列调度处理
                    }
                           ↓
                 [frameHandler处理Frame]
