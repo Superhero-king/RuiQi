@@ -1,0 +1,654 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
+
+	client_native "github.com/haproxytech/client-native/v6"
+	"github.com/haproxytech/client-native/v6/configuration"
+	cfg_opt "github.com/haproxytech/client-native/v6/configuration/options"
+	"github.com/haproxytech/client-native/v6/models"
+	"github.com/haproxytech/client-native/v6/options"
+	runtime_api "github.com/haproxytech/client-native/v6/runtime"
+	runtime_options "github.com/haproxytech/client-native/v6/runtime/options"
+)
+
+// HAProxyOptions 包含 HAProxy 的配置选项
+type HAProxyOptions struct {
+	ConfigFile     string
+	HAProxyBin     string
+	BackupsNumber  int
+	TransactionDir string
+	SocketDir      string
+	PidFile        string
+}
+
+// HAProxyManager 管理 HAProxy 进程和客户端
+type HAProxyManager struct {
+	options HAProxyOptions
+	client  client_native.HAProxyClient
+	cmd     *exec.Cmd
+	ctx     context.Context
+}
+
+// NewHAProxyManager 创建一个新的 HAProxy 管理器
+func NewHAProxyManager(ctx context.Context) (*HAProxyManager, error) {
+	// 获取用户主目录，以解决权限问题
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("无法获取用户主目录: %v", err)
+	}
+
+	// 设置 HAProxy 选项，使用用户自己的目录
+	options := HAProxyOptions{
+		ConfigFile:     filepath.Join(homeDir, "haproxy/haproxy.cfg"),
+		HAProxyBin:     "haproxy", // 根据实际路径调整
+		BackupsNumber:  3,         // 增加备份数量
+		TransactionDir: filepath.Join(homeDir, "haproxy/transactions"),
+		SocketDir:      filepath.Join(homeDir, "haproxy/sock"),
+		PidFile:        filepath.Join(homeDir, "haproxy/haproxy.pid"),
+	}
+
+	return &HAProxyManager{
+		options: options,
+		ctx:     ctx,
+	}, nil
+}
+
+// Init 初始化 HAProxy 环境
+func (m *HAProxyManager) Init() error {
+	// 确保所需目录存在并创建基本配置
+	if err := m.createDirsIfNotExist(); err != nil {
+		return err
+	}
+
+	// 创建配置客户端
+	confClient, err := configuration.New(m.ctx,
+		cfg_opt.ConfigurationFile(m.options.ConfigFile),
+		cfg_opt.HAProxyBin(m.options.HAProxyBin),
+		cfg_opt.Backups(m.options.BackupsNumber),
+		cfg_opt.UsePersistentTransactions,
+		cfg_opt.TransactionsDir(m.options.TransactionDir),
+		cfg_opt.MasterWorker,
+		cfg_opt.UseMd5Hash,
+	)
+	if err != nil {
+		return fmt.Errorf("设置配置客户端错误: %w", err)
+	}
+
+	// 配置 HAProxy
+	if err := m.setupHAProxyConfig(confClient); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Start 启动 HAProxy 进程并初始化客户端
+func (m *HAProxyManager) Start() error {
+	var err error
+
+	// 启动 HAProxy 进程
+	m.cmd, err = m.startHAProxy()
+	if err != nil {
+		return err
+	}
+
+	// 等待 HAProxy 启动并创建套接字
+	masterSocketPath := filepath.Join(m.options.SocketDir, "haproxy-master.sock")
+	fmt.Println("等待 HAProxy 启动并创建套接字...")
+	if err := m.waitForSocket(masterSocketPath); err != nil {
+		m.Stop()
+		return err
+	}
+
+	// 创建运行时客户端
+	ms := runtime_options.MasterSocket(masterSocketPath)
+	runtimeClient, err := runtime_api.New(m.ctx, ms)
+	if err != nil {
+		m.Stop()
+		return fmt.Errorf("设置运行时客户端错误: %w", err)
+	}
+
+	// 获取配置客户端
+	confClient, err := configuration.New(m.ctx,
+		cfg_opt.ConfigurationFile(m.options.ConfigFile),
+		cfg_opt.HAProxyBin(m.options.HAProxyBin),
+		cfg_opt.Backups(m.options.BackupsNumber),
+		cfg_opt.UsePersistentTransactions,
+		cfg_opt.TransactionsDir(m.options.TransactionDir),
+		cfg_opt.MasterWorker,
+		cfg_opt.UseMd5Hash,
+	)
+	if err != nil {
+		m.Stop()
+		return fmt.Errorf("设置配置客户端错误: %w", err)
+	}
+
+	// 组合配置和运行时客户端
+	clientOpts := []options.Option{
+		options.Configuration(confClient),
+		options.Runtime(runtimeClient),
+	}
+
+	// 创建完整客户端
+	m.client, err = client_native.New(m.ctx, clientOpts...)
+	if err != nil {
+		m.Stop()
+		return fmt.Errorf("初始化客户端错误: %w", err)
+	}
+
+	return nil
+}
+
+// Stop 停止 HAProxy 进程
+func (m *HAProxyManager) Stop() {
+	if m.cmd != nil && m.cmd.Process != nil {
+		fmt.Println("正在停止 HAProxy...")
+
+		// 尝试优雅地终止进程
+		if err := m.cmd.Process.Signal(os.Interrupt); err != nil {
+			log.Printf("发送中断信号失败: %v", err)
+			// 强制终止
+			if err := m.cmd.Process.Kill(); err != nil {
+				log.Printf("强制终止进程失败: %v", err)
+			}
+		}
+
+		// 等待进程完全退出
+		m.cmd.Wait()
+		fmt.Println("HAProxy 已停止")
+	}
+}
+
+// DisplayStats 显示 HAProxy 统计信息
+func (m *HAProxyManager) DisplayStats() error {
+	runtimeCli, err := m.client.Runtime()
+	if err != nil {
+		return fmt.Errorf("获取运行时客户端错误: %w", err)
+	}
+
+	// 获取统计信息
+	stats := runtimeCli.GetStats()
+	if stats.Error != "" {
+		return fmt.Errorf("获取统计信息失败: %s", stats.Error)
+	}
+
+	// 显示统计信息摘要
+	fmt.Println("\n===== HAProxy 统计信息摘要 =====")
+
+	// 根据类型分组统计
+	frontends := []*models.NativeStat{}
+	backends := []*models.NativeStat{}
+	servers := []*models.NativeStat{}
+
+	for _, stat := range stats.Stats {
+		switch stat.Type {
+		case "frontend":
+			frontends = append(frontends, stat)
+		case "backend":
+			backends = append(backends, stat)
+		case "server":
+			servers = append(servers, stat)
+		}
+	}
+
+	// 显示前端统计
+	if len(frontends) > 0 {
+		fmt.Println("\n----- 前端统计 -----")
+		for _, f := range frontends {
+			fmt.Printf("前端: %s\n", f.Name)
+			if f.Stats != nil {
+				fmt.Printf("  状态: %s\n", getStatusString(f.Stats.Status))
+				fmt.Printf("  会话: 当前=%d, 最大=%d, 限制=%d\n",
+					getIntValue(f.Stats.Scur),
+					getIntValue(f.Stats.Smax),
+					getIntValue(f.Stats.Slim))
+				fmt.Printf("  字节: 入=%s, 出=%s\n",
+					formatBytes(getIntValue(f.Stats.Bin)),
+					formatBytes(getIntValue(f.Stats.Bout)))
+				fmt.Printf("  请求: 速率=%d/秒, 最大=%d/秒, 总计=%d\n",
+					getIntValue(f.Stats.ReqRate),
+					getIntValue(f.Stats.ReqRateMax),
+					getIntValue(f.Stats.ReqTot))
+				fmt.Printf("  HTTP响应: 2xx=%d, 3xx=%d, 4xx=%d, 5xx=%d\n",
+					getIntValue(f.Stats.Hrsp2xx),
+					getIntValue(f.Stats.Hrsp3xx),
+					getIntValue(f.Stats.Hrsp4xx),
+					getIntValue(f.Stats.Hrsp5xx))
+			}
+			fmt.Println()
+		}
+	}
+
+	// 显示后端统计
+	if len(backends) > 0 {
+		fmt.Println("\n----- 后端统计 -----")
+		for _, b := range backends {
+			fmt.Printf("后端: %s\n", b.Name)
+			if b.Stats != nil {
+				fmt.Printf("  状态: %s\n", getStatusString(b.Stats.Status))
+				fmt.Printf("  会话: 当前=%d, 最大=%d, 限制=%d\n",
+					getIntValue(b.Stats.Scur),
+					getIntValue(b.Stats.Smax),
+					getIntValue(b.Stats.Slim))
+				fmt.Printf("  请求: 总计=%d\n", getIntValue(b.Stats.ReqTot))
+				fmt.Printf("  响应时间: %dms\n", getIntValue(b.Stats.Rtime))
+			}
+			fmt.Println()
+		}
+	}
+
+	// 显示服务器统计
+	if len(servers) > 0 {
+		fmt.Println("\n----- 服务器统计 -----")
+		for _, s := range servers {
+			fmt.Printf("服务器: %s (后端: %s)\n", s.Name, s.BackendName)
+			if s.Stats != nil {
+				fmt.Printf("  状态: %s\n", getStatusString(s.Stats.Status))
+				fmt.Printf("  健康检查: %s\n", getStringValue(s.Stats.LastChk))
+				fmt.Printf("  会话: 当前=%d, 最大=%d, 总计=%d\n",
+					getIntValue(s.Stats.Scur),
+					getIntValue(s.Stats.Smax),
+					getIntValue(s.Stats.Stot))
+				fmt.Printf("  字节: 入=%s, 出=%s\n",
+					formatBytes(getIntValue(s.Stats.Bin)),
+					formatBytes(getIntValue(s.Stats.Bout)))
+				fmt.Printf("  响应时间: %dms\n", getIntValue(s.Stats.Rtime))
+				fmt.Printf("  重试/重定向: %d/%d\n",
+					getIntValue(s.Stats.Wretr),
+					getIntValue(s.Stats.Wredis))
+			}
+			fmt.Println()
+		}
+	}
+
+	return nil
+}
+
+// DisplayInfo 显示 HAProxy 信息
+func (m *HAProxyManager) DisplayInfo() error {
+	runtimeCli, err := m.client.Runtime()
+	if err != nil {
+		return fmt.Errorf("获取运行时客户端错误: %w", err)
+	}
+
+	processInfo, err := runtimeCli.GetInfo()
+	if err != nil {
+		return fmt.Errorf("获取HAProxy信息失败: %w", err)
+	}
+
+	fmt.Println("\n===== HAProxy 系统信息 =====")
+	if processInfo.Info != nil {
+		fmt.Printf("版本: %s\n", processInfo.Info.Version)
+		if processInfo.Info.Uptime != nil {
+			uptime := *processInfo.Info.Uptime
+			days := uptime / 86400
+			hours := (uptime % 86400) / 3600
+			minutes := (uptime % 3600) / 60
+			seconds := uptime % 60
+			fmt.Printf("运行时间: %d天 %d小时 %d分钟 %d秒\n", days, hours, minutes, seconds)
+		}
+		if processInfo.Info.Pid != nil {
+			fmt.Printf("PID: %d\n", *processInfo.Info.Pid)
+		}
+		if processInfo.Info.Processes != nil {
+			fmt.Printf("进程数: %d\n", *processInfo.Info.Processes)
+		}
+		if processInfo.Info.MaxConnections != nil {
+			fmt.Printf("最大连接数: %d\n", *processInfo.Info.MaxConnections)
+		}
+		if processInfo.Info.Jobs != nil {
+			fmt.Printf("Jobs: %d\n", *processInfo.Info.Jobs)
+		}
+		fmt.Printf("构建信息: %s\n", processInfo.Info.BuildInfo)
+	} else if processInfo.Error != "" {
+		fmt.Printf("错误: %s\n", processInfo.Error)
+	}
+
+	return nil
+}
+
+// AddNewBackend 添加新的后端作为API调用示例
+func (m *HAProxyManager) AddNewBackend() error {
+	configClient, err := m.client.Configuration()
+	if err != nil {
+		return fmt.Errorf("获取配置客户端错误: %w", err)
+	}
+
+	// 获取当前配置版本
+	version, err := configClient.GetVersion()
+	if err != nil {
+		return fmt.Errorf("获取配置版本错误: %w", err)
+	}
+
+	// 启动事务
+	transaction, err := configClient.StartTransaction(version)
+	if err != nil {
+		return fmt.Errorf("启动事务错误: %w", err)
+	}
+
+	// 创建一个新的后端
+	newBackend := &models.Backend{
+		BackendBase: models.BackendBase{
+			Name:    "api_added_backend",
+			Mode:    "http",
+			Enabled: true,
+		},
+	}
+
+	err = configClient.CreateBackend(newBackend, transaction.ID, transaction.Version)
+	if err != nil {
+		// 中止事务
+		configClient.DeleteTransaction(transaction.ID)
+		return fmt.Errorf("创建新后端错误: %w", err)
+	}
+
+	// 向新后端添加服务器
+	newServer := &models.Server{
+		Name:    "example",
+		Address: "example.com",
+		Port:    Int64P(80),
+		ServerParams: models.ServerParams{
+			Weight: Int64P(100),
+			Check:  "enabled",
+		},
+	}
+
+	err = configClient.CreateServer("api_added_backend", newServer, transaction.ID, transaction.Version)
+	if err != nil {
+		// 中止事务
+		configClient.DeleteTransaction(transaction.ID)
+		return fmt.Errorf("添加服务器错误: %w", err)
+	}
+
+	// 提交事务
+	_, err = configClient.CommitTransaction(transaction.ID)
+	if err != nil {
+		return fmt.Errorf("提交事务错误: %w", err)
+	}
+
+	// 重新加载HAProxy使配置生效
+	runtimeClient, err := m.client.Runtime()
+	if err != nil {
+		return fmt.Errorf("获取运行时客户端错误: %w", err)
+	}
+
+	output, err := runtimeClient.Reload()
+	if err != nil {
+		return fmt.Errorf("重新加载HAProxy错误: %w", err)
+	}
+
+	fmt.Printf("HAProxy已成功重新加载，添加了新后端 'api_added_backend'\n输出: %s\n", output)
+	return nil
+}
+
+// 设置 HAProxy 初始配置
+func (m *HAProxyManager) setupHAProxyConfig(confClient configuration.Configuration) error {
+	version := int64(1)
+	transaction, err := confClient.StartTransaction(version)
+	if err != nil {
+		return fmt.Errorf("启动事务错误: %w", err)
+	}
+
+	// 创建一个后端
+	backend := &models.Backend{
+		BackendBase: models.BackendBase{
+			Name:    "httpbin_backend",
+			Mode:    "http",
+			Enabled: true,
+		},
+		Servers: map[string]models.Server{
+			"server1": {
+				Name:    "server1",
+				Address: "httpbin.org",
+				Port:    Int64P(80),
+				ServerParams: models.ServerParams{
+					Weight: Int64P(100),
+					Check:  "enabled",
+				},
+			},
+		},
+	}
+
+	err = confClient.CreateBackend(backend, transaction.ID, transaction.Version)
+	if err != nil {
+		confClient.DeleteTransaction(transaction.ID)
+		return fmt.Errorf("创建后端错误: %w", err)
+	}
+	fmt.Println("已成功创建后端")
+
+	// 创建一个前端
+	frontend := &models.Frontend{
+		FrontendBase: models.FrontendBase{
+			Name:           "default",
+			Mode:           "http",
+			DefaultBackend: "httpbin_backend",
+			Enabled:        true,
+		},
+		Binds: map[string]models.Bind{
+			"public": {
+				Address: "*",
+				Port:    Int64P(8000),
+				BindParams: models.BindParams{
+					Name: "public",
+				},
+			},
+		},
+	}
+
+	err = confClient.CreateFrontend(frontend, transaction.ID, transaction.Version)
+	if err != nil {
+		confClient.DeleteTransaction(transaction.ID)
+		return fmt.Errorf("创建前端错误: %w", err)
+	}
+	fmt.Println("已成功创建前端")
+
+	// 提交事务
+	_, err = confClient.CommitTransaction(transaction.ID)
+	if err != nil {
+		return fmt.Errorf("提交事务错误: %w", err)
+	}
+	fmt.Println("已成功提交初始配置")
+
+	return nil
+}
+
+// 启动 HAProxy 进程
+func (m *HAProxyManager) startHAProxy() (*exec.Cmd, error) {
+	fmt.Println("正在启动 HAProxy...")
+
+	// 构建 HAProxy 命令行
+	cmd := exec.Command(
+		m.options.HAProxyBin,
+		"-f", m.options.ConfigFile,
+		"-p", m.options.PidFile,
+		"-W", // 启用 master-worker 模式
+		"-d", // 调试模式
+	)
+
+	// 将标准输出和错误输出设置为我们可以查看的内容
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	// 启动 HAProxy
+	if err := cmd.Start(); err != nil {
+		return nil, fmt.Errorf("启动 HAProxy 失败: %w", err)
+	}
+
+	fmt.Printf("HAProxy 已启动，PID: %d\n", cmd.Process.Pid)
+	return cmd, nil
+}
+
+// 等待套接字文件创建完成
+func (m *HAProxyManager) waitForSocket(socketPath string) error {
+	maxAttempts := 15
+	for i := 0; i < maxAttempts; i++ {
+		if _, err := os.Stat(socketPath); err == nil {
+			fmt.Printf("套接字文件已创建: %s\n", socketPath)
+			// 再等一小段时间确保 HAProxy 完全就绪
+			time.Sleep(500 * time.Millisecond)
+			return nil
+		}
+		fmt.Printf("等待套接字文件创建 (%d/%d)...\n", i+1, maxAttempts)
+		time.Sleep(500 * time.Millisecond)
+	}
+	return fmt.Errorf("套接字文件创建超时: %s", socketPath)
+}
+
+// 创建所需的目录并确保配置文件存在
+func (m *HAProxyManager) createDirsIfNotExist() error {
+	// 确保所有目录都存在
+	dirs := []string{
+		filepath.Dir(m.options.ConfigFile),
+		m.options.TransactionDir,
+		m.options.SocketDir,
+		filepath.Dir(m.options.PidFile),
+	}
+	for _, dir := range dirs {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("无法创建目录 %s: %w", dir, err)
+		}
+	}
+
+	// 如果配置文件不存在，创建一个基本配置
+	if _, err := os.Stat(m.options.ConfigFile); os.IsNotExist(err) {
+		basicConfig := fmt.Sprintf(`# _version = 1
+global
+    log stdout format raw local0
+    stats socket %s mode 600 level admin
+    maxconn 4000
+    # 在非root用户下运行时可能需要删除以下两行
+    user %s
+    group %s
+defaults
+    log global
+    mode http
+    option httplog
+    timeout client 1m
+    timeout server 1m
+    timeout connect 10s
+# 以下部分将由程序动态配置
+`, filepath.Join(m.options.SocketDir, "haproxy-master.sock"), os.Getenv("USER"), os.Getenv("USER"))
+		err = os.WriteFile(m.options.ConfigFile, []byte(basicConfig), 0644)
+		if err != nil {
+			return fmt.Errorf("无法创建基本配置文件: %w", err)
+		}
+		fmt.Printf("已创建基本配置文件: %s\n", m.options.ConfigFile)
+	}
+
+	return nil
+}
+
+// 辅助函数
+func getIntValue(ptr *int64) int64 {
+	if ptr == nil {
+		return 0
+	}
+	return *ptr
+}
+
+func getStringValue(ptr *string) string {
+	if ptr == nil {
+		return "N/A"
+	}
+	return *ptr
+}
+
+func getStatusString(status string) string {
+	switch status {
+	case "UP":
+		return "运行中 (UP)"
+	case "DOWN":
+		return "已停止 (DOWN)"
+	case "NOLB":
+		return "非负载均衡 (NOLB)"
+	case "MAINT":
+		return "维护模式 (MAINT)"
+	case "no check":
+		return "未检查 (no check)"
+	default:
+		return status
+	}
+}
+
+func formatBytes(bytes int64) string {
+	const (
+		_          = iota
+		KB float64 = 1 << (10 * iota)
+		MB
+		GB
+	)
+
+	switch {
+	case bytes >= int64(GB):
+		return fmt.Sprintf("%.2f GB", float64(bytes)/GB)
+	case bytes >= int64(MB):
+		return fmt.Sprintf("%.2f MB", float64(bytes)/MB)
+	case bytes >= int64(KB):
+		return fmt.Sprintf("%.2f KB", float64(bytes)/KB)
+	default:
+		return fmt.Sprintf("%d B", bytes)
+	}
+}
+
+// Int64P 返回一个指向提供的 int64 值的指针
+func Int64P(v int64) *int64 {
+	return &v
+}
+
+func main() {
+	// 创建上下文
+	ctx := context.Background()
+
+	// 创建 HAProxy 管理器
+	manager, err := NewHAProxyManager(ctx)
+	if err != nil {
+		log.Fatalf("创建 HAProxy 管理器失败: %v", err)
+	}
+
+	// 初始化 HAProxy 环境
+	if err := manager.Init(); err != nil {
+		log.Fatalf("初始化 HAProxy 环境失败: %v", err)
+	}
+
+	// 启动 HAProxy
+	if err := manager.Start(); err != nil {
+		log.Fatalf("启动 HAProxy 失败: %v", err)
+	}
+
+	// 确保在程序退出时停止 HAProxy
+	defer manager.Stop()
+
+	// 显示 HAProxy 信息
+	if err := manager.DisplayInfo(); err != nil {
+		log.Printf("显示 HAProxy 信息失败: %v", err)
+	}
+
+	// 显示 HAProxy 统计信息
+	if err := manager.DisplayStats(); err != nil {
+		log.Printf("显示 HAProxy 统计信息失败: %v", err)
+	}
+
+	// 使用 API 添加新的后端
+	fmt.Println("\n使用 API 添加新的后端...")
+	if err := manager.AddNewBackend(); err != nil {
+		log.Printf("添加新后端失败: %v", err)
+	}
+
+	// 显示更新后的统计信息
+	fmt.Println("\n重新获取最新统计信息...")
+	if err := manager.DisplayStats(); err != nil {
+		log.Printf("显示 HAProxy 统计信息失败: %v", err)
+	}
+
+	// 让程序保持运行，等待用户输入来终止
+	fmt.Println("\nHAProxy 正在运行中，监听 *:8000，请在浏览器访问 http://localhost:8000")
+	fmt.Println("按回车键终止程序并关闭 HAProxy...")
+	fmt.Scanln()
+}

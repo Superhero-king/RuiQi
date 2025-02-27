@@ -1,0 +1,100 @@
+# https://docs.haproxy.org/
+global
+    log stdout format raw local0
+
+crt-store sites
+    crt-base /usr/local/etc/haproxy/cert
+    key-base /usr/local/etc/haproxy/cert
+    load crt "a.com.crt" key "a.com.key" alias "a_com_cert"
+
+defaults
+    log global
+    option httplog
+    timeout client 1m
+    timeout server 1m
+    timeout connect 10s
+
+frontend default
+    mode http
+    bind *:80
+    filter spoe engine coraza config /usr/local/etc/haproxy/coraza.cfg
+    log-format "%ci:%cp\ [%t]\ %ft\ %b/%s\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\ %ST\ %B\ %CC\ %CS\ %tsc\ %ac/%fc/%bc/%sc/%rc\ %sq/%bq\ %hr\ %hs\ %{+Q}r\ %[var(txn.coraza.id)]\ spoa-error:\ %[var(txn.coraza.error)]\ waf-hit:\ %[var(txn.coraza.fail)]"
+
+    # Currently haproxy cannot use variables to set the code or deny_status, so this needs to be manually configured here
+    http-request redirect code 302 location %[var(txn.coraza.data)] if { var(txn.coraza.action) -m str redirect }
+    http-response redirect code 302 location %[var(txn.coraza.data)] if { var(txn.coraza.action) -m str redirect }
+
+    http-request deny deny_status 403 hdr waf-block "request"  if { var(txn.coraza.action) -m str deny }
+    http-response deny deny_status 403 hdr waf-block "response" if { var(txn.coraza.action) -m str deny }
+
+    http-request silent-drop if { var(txn.coraza.action) -m str drop }
+    http-response silent-drop if { var(txn.coraza.action) -m str drop }
+
+    # Deny in case of an error, when processing with the Coraza SPOA
+    http-request deny deny_status 500 if { var(txn.coraza.error) -m int gt 0 }
+    http-response deny deny_status 500 if { var(txn.coraza.error) -m int gt 0 }
+
+    use_backend httpbin_backend
+
+
+frontend a.com_ssl
+    mode http
+
+    bind *:9000 ssl crt "@sites/a_com_cert"
+    bind *:9001 ssl crt "@sites/a_com_cert"
+
+
+   
+    filter spoe engine coraza config /usr/local/etc/haproxy/coraza.cfg
+    log-format "%ci:%cp\ [%t]\ %ft\ %b/%s\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\ %ST\ %B\ %CC\ %CS\ %tsc\ %ac/%fc/%bc/%sc/%rc\ %sq/%bq\ %hr\ %hs\ %{+Q}r\ %[var(txn.coraza.id)]\ spoa-error:\ %[var(txn.coraza.error)]\ waf-hit:\ %[var(txn.coraza.fail)]"
+
+    # Currently haproxy cannot use variables to set the code or deny_status, so this needs to be manually configured here
+    http-request redirect code 302 location %[var(txn.coraza.data)] if { var(txn.coraza.action) -m str redirect }
+    http-response redirect code 302 location %[var(txn.coraza.data)] if { var(txn.coraza.action) -m str redirect }
+
+    http-request deny deny_status 403 hdr waf-block "request"  if { var(txn.coraza.action) -m str deny }
+    http-response deny deny_status 403 hdr waf-block "response" if { var(txn.coraza.action) -m str deny }
+
+    http-request silent-drop if { var(txn.coraza.action) -m str drop }
+    http-response silent-drop if { var(txn.coraza.action) -m str drop }
+
+    # Deny in case of an error, when processing with the Coraza SPOA
+    http-request deny deny_status 500 if { var(txn.coraza.error) -m int gt 0 }
+    http-response deny deny_status 500 if { var(txn.coraza.error) -m int gt 0 }
+
+
+    use_backend httpbin_backend
+
+frontend b.com
+    mode http
+    bind *:9002
+    filter spoe engine coraza config /usr/local/etc/haproxy/coraza.cfg
+    log-format "%ci:%cp\ [%t]\ %ft\ %b/%s\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\ %ST\ %B\ %CC\ %CS\ %tsc\ %ac/%fc/%bc/%sc/%rc\ %sq/%bq\ %hr\ %hs\ %{+Q}r\ %[var(txn.coraza.id)]\ spoa-error:\ %[var(txn.coraza.error)]\ waf-hit:\ %[var(txn.coraza.fail)]"
+
+    # Currently haproxy cannot use variables to set the code or deny_status, so this needs to be manually configured here
+    http-request redirect code 302 location %[var(txn.coraza.data)] if { var(txn.coraza.action) -m str redirect }
+    http-response redirect code 302 location %[var(txn.coraza.data)] if { var(txn.coraza.action) -m str redirect }
+
+    http-request deny deny_status 403 hdr waf-block "request"  if { var(txn.coraza.action) -m str deny }
+    http-response deny deny_status 403 hdr waf-block "response" if { var(txn.coraza.action) -m str deny }
+
+    http-request silent-drop if { var(txn.coraza.action) -m str drop }
+    http-response silent-drop if { var(txn.coraza.action) -m str drop }
+
+    # Deny in case of an error, when processing with the Coraza SPOA
+    http-request deny deny_status 500 if { var(txn.coraza.error) -m int gt 0 }
+    http-response deny deny_status 500 if { var(txn.coraza.error) -m int gt 0 }
+
+
+    use_backend httpbin_backend
+
+resolvers host_dns
+    parse-resolv-conf
+
+backend httpbin_backend
+    mode http
+    server backend $BACKEND_HOST
+
+backend coraza-spoa
+    mode tcp
+    server coraza_spoa host.docker.internal:2342
