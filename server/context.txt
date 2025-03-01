@@ -1,0 +1,7 @@
+目录结构如下
+web 前端
+server 后端，负责后端接口处理，haproxy 启动管理，配置生成等，haproxy corazawaf spoe（ engine） 启动管理等
+server/engine 负责corazawaf spoe 的启动管理等
+server/haproxy 负责haproxy 的启动管理等，配置生成等
+
+server 后端 web服务框架采用 go gin 框架

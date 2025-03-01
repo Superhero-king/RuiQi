@@ -60,6 +60,7 @@ type applicationRequest struct {
 	DstIp   netip.Addr
 	DstPort int64
 	Method  string
+	ID      string
 	Path    []byte
 	Query   []byte
 	Version string
@@ -134,19 +135,24 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 			req.Body = currK.ValueBytes()
 			// acquire a new kv entry to continue reading other message values.
 			k = encoding.AcquireKVEntry()
+		case "id":
+			req.ID = string(k.ValueBytes())
 		default:
 			a.Logger.Debug().Str("name", name).Msg("unknown kv entry")
 		}
 	}
 
-	const idLength = 16
-	var sb strings.Builder
-	sb.Grow(idLength)
-	for i := 0; i < idLength; i++ {
-		sb.WriteRune(rune('A' + rand.Intn(26)))
+	if len(req.ID) == 0 {
+		const idLength = 16
+		var sb strings.Builder
+		sb.Grow(idLength)
+		for i := 0; i < idLength; i++ {
+			sb.WriteRune(rune('A' + rand.Intn(26)))
+		}
+		req.ID = sb.String()
 	}
 
-	tx := a.waf.NewTransactionWithID(sb.String())
+	tx := a.waf.NewTransactionWithID(req.ID)
 	defer func() {
 		if err == nil && a.ResponseCheck {
 			a.cache.SetWithExpiration(tx.ID(), &transaction{tx: tx}, a.TransactionTTL)

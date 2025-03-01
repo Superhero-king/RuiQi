@@ -20,7 +20,7 @@ applications:
       SecRuleEngine On
 
     # HAProxy configured to send requests only, that means no cache required
-    response_check: false
+    response_check: true
 
     # The transaction cache lifetime in milliseconds (60000ms = 60s)
     transaction_ttl_ms: 60000
