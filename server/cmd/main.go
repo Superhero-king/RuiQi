@@ -16,6 +16,8 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	// TODO 开启新的 go 程 启动 haproxy 和 engine 服务
+
 	// Set Gin mode based on configuration
 	if config.Global.IsProduction {
 		gin.SetMode(gin.ReleaseMode)
@@ -34,4 +36,15 @@ func main() {
 	if err := engine.Run(config.Global.Bind); err != nil {
 		config.Logger.Error().Msgf("Failed to start server: %v", err)
 	}
+
+	// serviceRunner := service.NewServiceRunner()
+	// serviceRunner.StartServices()
+	// c := make(chan os.Signal, 1)
+	// signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	// go func() {
+	// 	<-c
+	// 	config.Logger.Info().Msg("Shutting down services...")
+	// 	serviceRunner.StopServices()
+	// 	os.Exit(0)
+	// }()
 }
