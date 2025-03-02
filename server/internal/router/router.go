@@ -1,7 +1,7 @@
 package router
 
 import (
-	"server/middleware"
+	"github.com/HUAHUAI23/simple-waf/server/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

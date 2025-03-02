@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"server/config"
-	"server/router"
+	"github.com/HUAHUAI23/simple-waf/server/internal/config"
+	"github.com/HUAHUAI23/simple-waf/server/internal/router"
 )
 
 func main() {

@@ -1,8 +1,9 @@
 package middleware
 
 import (
-	"simple-waf/config"
 	"time"
+
+	"github.com/HUAHUAI23/simple-waf/server/internal/config"
 
 	"github.com/gin-gonic/gin"
 )

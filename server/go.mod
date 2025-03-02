@@ -1,4 +1,4 @@
-module server
+module github.com/HUAHUAI23/simple-waf/server
 
 go 1.22.5
 
