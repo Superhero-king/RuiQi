@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"log"
+	"simple-waf/config"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,6 +9,9 @@ import (
 
 // Logger middleware logs the request/response details
 func Logger() gin.HandlerFunc {
+	log := config.Logger
+	isProduction := config.Global.IsProduction
+
 	return func(c *gin.Context) {
 		// Start timer
 		start := time.Now()
@@ -22,7 +25,25 @@ func Logger() gin.HandlerFunc {
 		elapsed := time.Since(start)
 		statusCode := c.Writer.Status()
 
-		log.Printf("%s %s %d %s", method, path, statusCode, elapsed)
+		// 在生产环境中，只记录错误、警告或较慢的请求
+		if !isProduction ||
+			statusCode >= 400 ||
+			elapsed > 500*time.Millisecond {
+
+			// 根据状态码选择日志级别
+			event := log.Info()
+			if statusCode >= 400 && statusCode < 500 {
+				event = log.Warn()
+			} else if statusCode >= 500 {
+				event = log.Error()
+			}
+
+			event.Str("method", method).
+				Str("path", path).
+				Int("status", statusCode).
+				Dur("latency", elapsed).
+				Msg("HTTP Request")
+		}
 	}
 }
 
@@ -39,6 +60,12 @@ func Cors() gin.HandlerFunc {
 			return
 		}
 
+		c.Next()
+	}
+}
+
+func ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		c.Next()
 	}
 }

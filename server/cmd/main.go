@@ -11,27 +11,27 @@ import (
 
 func main() {
 	// Load configuration
-	cfg, err := config.Load()
+	err := config.InitConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	// Set Gin mode based on configuration
-	if cfg.Debug {
-		gin.SetMode(gin.DebugMode)
-	} else {
+	if config.Global.IsProduction {
 		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
 	}
 
 	// Initialize the Gin engine
-	r := gin.Default()
+	engine := gin.New()
 
 	// Setup the router
-	router.Setup(r)
+	router.Setup(engine)
 
 	// Start the server
-	log.Printf("Starting server on %s", cfg.ServerAddress)
-	if err := r.Run(cfg.ServerAddress); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	config.Logger.Info().Msgf("Starting server on %s", config.Global.Bind)
+	if err := engine.Run(config.Global.Bind); err != nil {
+		config.Logger.Error().Msgf("Failed to start server: %v", err)
 	}
 }
