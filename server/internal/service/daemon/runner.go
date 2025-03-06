@@ -7,25 +7,40 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/internal/config"
 	"github.com/HUAHUAI23/simple-waf/server/internal/service/daemon/engine"
 	"github.com/HUAHUAI23/simple-waf/server/internal/service/daemon/haproxy"
+	"github.com/rs/zerolog"
 )
 
 // ServiceRunner 负责管理和协调所有后台服务
 type ServiceRunner struct {
-	haproxyService haproxy.Service
-	engineService  engine.Service
+	haproxyService haproxy.HAProxyService
+	engineService  engine.EngineService
 	wg             sync.WaitGroup
 	ctx            context.Context
 	cancel         context.CancelFunc
+	logger         *zerolog.Logger
 }
 
 // NewServiceRunner 创建一个新的服务运行器
 func NewServiceRunner() *ServiceRunner {
 	ctx, cancel := context.WithCancel(context.Background())
+	logger := config.GetLogger().With().Str("component", "runner").Logger()
+	haproxyService, err := haproxy.NewHAProxyService("", "", ctx)
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("初始化 HAProxy 服务失败")
+		// 可以返回 nil 或使用默认配置继续
+	}
+
+	// 创建 Engine 服务
+	engineService := engine.NewMockEngineService(engine.MockConfig{
+		Name: "TestEngine",
+	})
+
 	return &ServiceRunner{
-		haproxyService: haproxy.NewService(),
-		engineService:  engine.NewService(),
+		haproxyService: haproxyService,
+		engineService:  engineService,
 		ctx:            ctx,
 		cancel:         cancel,
+		logger:         &logger,
 	}
 }
 
@@ -35,9 +50,22 @@ func (r *ServiceRunner) StartServices() {
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()
+		siteList := GetTestSites()
 		config.Logger.Info().Msg("启动HAProxy服务...")
-		if err := r.haproxyService.Start(r.ctx); err != nil {
-			config.Logger.Error().Err(err).Msg("HAProxy服务失败")
+		r.haproxyService.RemoveConfig()
+		r.haproxyService.InitSpoeConfig()
+		r.haproxyService.InitHAProxyConfig()
+		r.haproxyService.AddCorazaBackend()
+		r.haproxyService.CreateHAProxyCrtStore()
+		for i, site := range siteList {
+			err := r.haproxyService.AddSiteConfig(site)
+			if err != nil {
+				r.logger.Error().Err(err).Msgf("添加站点配置失败 %d", i)
+			}
+		}
+
+		if err := r.haproxyService.Start(); err != nil {
+			r.logger.Error().Err(err).Msg("HAProxy服务失败")
 		}
 	}()
 
@@ -46,7 +74,7 @@ func (r *ServiceRunner) StartServices() {
 	go func() {
 		defer r.wg.Done()
 		config.Logger.Info().Msg("启动Engine服务...")
-		if err := r.engineService.Start(r.ctx); err != nil {
+		if err := r.engineService.Start(); err != nil {
 			config.Logger.Error().Err(err).Msg("Engine服务失败")
 		}
 	}()
@@ -55,7 +83,26 @@ func (r *ServiceRunner) StartServices() {
 // StopServices 停止所有服务
 func (r *ServiceRunner) StopServices() {
 	config.Logger.Info().Msg("停止所有服务...")
+
+	// 1. 首先取消上下文，通知所有使用该上下文的操作
 	r.cancel()
+
+	// 2. 显式调用各服务的 Stop 方法
+	if r.haproxyService != nil {
+		config.Logger.Info().Msg("正在停止 HAProxy 服务...")
+		if err := r.haproxyService.Stop(); err != nil {
+			config.Logger.Error().Err(err).Msg("停止 HAProxy 服务时出错")
+		}
+	}
+
+	if r.engineService != nil {
+		config.Logger.Info().Msg("正在停止 Engine 服务...")
+		if err := r.engineService.Stop(); err != nil {
+			config.Logger.Error().Err(err).Msg("停止 Engine 服务时出错")
+		}
+	}
+
+	// 3. 等待所有 goroutine 完成
 	r.wg.Wait()
 	config.Logger.Info().Msg("所有服务已停止")
 }

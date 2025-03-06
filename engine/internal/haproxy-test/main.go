@@ -655,6 +655,91 @@ func setupHAProxyConfig(confClient configuration.Configuration, haproxyOpts *hap
 		fmt.Println("已成功添加 p9000_server 服务器")
 	}
 
+	p9000_server1 := &models.Server{
+		Name:    "p9000_server1",
+		Address: "httpbin.org",
+		Port:    Int64P(443),
+		ServerParams: models.ServerParams{
+			Ssl:    "enabled",
+			Verify: "none",
+		},
+	}
+
+	err = confClient.CreateServer("backend", "p9000_backend", p9000_server1, transaction.ID, 0)
+	if err != nil {
+		log.Printf("添加 p9000_server 服务器错误: %v", err)
+		return
+	} else {
+		fmt.Println("已成功添加 p9000_server 服务器")
+	}
+
+	// 创建 fe_9000_https 前端，并设置日志格式
+	fe_9000_https := &models.Frontend{
+		FrontendBase: models.FrontendBase{
+			Name:           "fe_9000_https",
+			Mode:           "http",
+			DefaultBackend: "p9000_backend",
+			Enabled:        true,
+			// 日志格式使用反斜杠转义空格和特殊字符
+			LogFormat: "\"%ci:%cp\\ [%t]\\ %ft\\ %b/%s\\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\\ %ST\\ %B\\ %CC\\ %CS\\ %tsc\\ %ac/%fc/%bc/%sc/%rc\\ %sq/%bq\\ %hr\\ %hs\\ %{+Q}r\\ %[var(txn.coraza.id)]\\ spoa-error:\\ %[var(txn.coraza.error)]\\ waf-hit:\\ %[var(txn.coraza.fail)]\"",
+		},
+	}
+
+	err = confClient.CreateFrontend(fe_9000_https, transaction.ID, 0)
+	if err != nil {
+		log.Printf("创建HTTP前端错误: %v", err)
+		return // 添加return，避免继续执行
+	} else {
+		fmt.Println("已成功创建HTTP前端，并设置了日志格式")
+	}
+
+	// 添加到 fe_9000_http 的绑定
+	bind_https := &models.Bind{
+		BindParams: models.BindParams{
+			Name:        "internal_https",
+			AcceptProxy: true,
+			Ssl:         true,
+			DefaultCrtList: []string{
+				"@sites/a_com_cert",
+				"@sites/b_com_cert",
+			},
+		},
+		Address: "abns@haproxy-9000-https",
+		Port:    Int64P(2222),
+	}
+	err = confClient.CreateBind("frontend", "fe_9000_https", bind_https, transaction.ID, 0)
+	if err != nil {
+		log.Printf("setupHAProxyConfig 添加HTTPS绑定错误: %v", err)
+		return
+	} else {
+		fmt.Println("已成功添加HTTPS绑定")
+	}
+
+	// BUG
+	_, http_binds, err := confClient.GetBinds("frontend", "fe_9000_https", transaction.ID)
+	if err != nil {
+		log.Printf("setupHAProxyConfig 获取绑定失败: %v", err)
+		return
+	}
+	fmt.Printf("http_binds: %+v\n", http_binds)
+
+	bind_https1 := &models.Bind{
+		BindParams: models.BindParams{
+			Name:        "internal",
+			AcceptProxy: true,
+			Ssl:         true,
+			DefaultCrtList: []string{
+				"@sites/a_com_cert",
+			},
+		},
+		Address: "abns@haproxy-9000-https",
+	}
+	err = confClient.EditBind("internal_https", "frontend", "fe_9000_https", bind_https1, transaction.ID, 0)
+	if err != nil {
+		log.Printf("setupHAProxyConfig 编辑绑定失败: %v", err)
+		return
+	}
+
 	// 提交事务
 	transaction, err = confClient.CommitTransaction(transaction.ID)
 	if err != nil {

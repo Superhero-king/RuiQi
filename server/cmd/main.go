@@ -2,11 +2,15 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/HUAHUAI23/simple-waf/server/internal/config"
 	"github.com/HUAHUAI23/simple-waf/server/internal/router"
+	"github.com/HUAHUAI23/simple-waf/server/internal/service/daemon"
 )
 
 func main() {
@@ -16,7 +20,20 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// TODO 开启新的 go 程 启动 haproxy 和 engine 服务
+	// Create service runner and start background services
+	serviceRunner := daemon.NewServiceRunner()
+	serviceRunner.StartServices()
+
+	// Set up graceful shutdown
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		config.Logger.Info().Msg("Received shutdown signal, shutting down services...")
+		serviceRunner.StopServices()
+		config.Logger.Info().Msg("Background services have been shut down, exiting...")
+		os.Exit(0)
+	}()
 
 	// Set Gin mode based on configuration
 	if config.Global.IsProduction {
@@ -35,16 +52,7 @@ func main() {
 	config.Logger.Info().Msgf("Starting server on %s", config.Global.Bind)
 	if err := engine.Run(config.Global.Bind); err != nil {
 		config.Logger.Error().Msgf("Failed to start server: %v", err)
+		// Ensure stopping background services
+		serviceRunner.StopServices()
 	}
-
-	// serviceRunner := service.NewServiceRunner()
-	// serviceRunner.StartServices()
-	// c := make(chan os.Signal, 1)
-	// signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	// go func() {
-	// 	<-c
-	// 	config.Logger.Info().Msg("Shutting down services...")
-	// 	serviceRunner.StopServices()
-	// 	os.Exit(0)
-	// }()
 }

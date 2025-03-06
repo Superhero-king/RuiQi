@@ -48,7 +48,7 @@ backend be_9000_http
     server loopback-for-http abns@haproxy-9000-http send-proxy-v2
 
 backend be_9000_https
-    server loopback-for-https abns@haproxy-9000-https:1000 send-proxy-v2
+    server loopback-for-https abns@haproxy-9000-https send-proxy-v2
 
 backend be_9001_http
     server loopback-for-http abns@haproxy-9001-http send-proxy-v2
@@ -59,7 +59,7 @@ backend be_9001_https
 # 9000 端口的 HTTPS 多域名处理
 frontend fe_9000_https
     mode http
-    bind abns@haproxy-9000-https:1000 accept-proxy ssl default-crt "@sites/a_com_cert" default-crt "@sites/b_com_cert"
+    bind abns@haproxy-9000-https accept-proxy ssl crt "@sites/a_com_cert" crt "@sites/b_com_cert"
     
     # 定义域名 ACL
     acl host_a_com hdr(host) -i a.com

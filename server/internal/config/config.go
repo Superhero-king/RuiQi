@@ -29,7 +29,7 @@ type DBConfig struct {
 func InitConfig() error {
 	// 设置默认值
 	Global = Config{
-		Bind:         "0.0.0.0:2342",
+		Bind:         "0.0.0.0:2333",
 		IsProduction: false,
 		Log: LogConfig{
 			Level:  "info",
@@ -77,6 +77,6 @@ func InitConfig() error {
 		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
-	Logger.Info().Msg("✨ Application configured successfully")
+	Logger.Info().Msg("✨ Application configure loaded successfully")
 	return nil
 }

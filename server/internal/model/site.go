@@ -52,6 +52,7 @@ type Server struct {
 	Host   string `bson:"host" json:"host"`     // 主机地址，如 IP 或域名
 	Port   int    `bson:"port" json:"port"`     // 端口
 	Weight int    `bson:"weight" json:"weight"` // 权重
+	IsSSL  bool   `bson:"isSSL" json:"isSSL"`   // 是否启用SSL
 }
 
 // IsValidWAFMode 检查WAF模式是否有效
