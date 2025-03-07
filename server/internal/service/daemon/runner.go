@@ -50,7 +50,9 @@ func (r *ServiceRunner) StartServices() {
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()
+
 		siteList := GetTestSites()
+
 		config.Logger.Info().Msg("启动HAProxy服务...")
 		r.haproxyService.RemoveConfig()
 		r.haproxyService.InitSpoeConfig()

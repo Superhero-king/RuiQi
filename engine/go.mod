@@ -8,7 +8,6 @@ require (
 	github.com/corazawaf/coraza-coreruleset v0.0.0-20240226094324-415b1017abdc
 	github.com/corazawaf/coraza/v3 v3.3.0
 	github.com/dropmorepackets/haproxy-go v0.0.5
-	github.com/haproxytech/client-native/v5 v5.1.15
 	github.com/haproxytech/client-native/v6 v6.1.1
 	github.com/jcchavezs/mergefs v0.1.0
 	github.com/magefile/mage v1.15.1-0.20241126214340-bdc92f694516
@@ -46,7 +45,6 @@ require (
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20240411101913-e07a1f0e8eb4 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect

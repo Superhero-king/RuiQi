@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/HUAHUAI23/simple-waf/server/internal/model"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetTestSites 返回用于开发/测试的模拟站点数据
@@ -14,7 +13,6 @@ func GetTestSites() []model.Site {
 
 	return []model.Site{
 		{
-			ID:           primitive.NewObjectID(),
 			Name:         "测试站点-ip",
 			Domain:       "10.214.210.183",
 			ListenPort:   8080,
@@ -45,9 +43,8 @@ func GetTestSites() []model.Site {
 			},
 		},
 		{
-			ID:           primitive.NewObjectID(),
 			Name:         "测试站点2-http",
-			Domain:       "b.com",
+			Domain:       "c.com",
 			ListenPort:   8080,
 			EnableHTTPS:  false,
 			WAFEnabled:   true,
@@ -69,8 +66,7 @@ func GetTestSites() []model.Site {
 			},
 		},
 		{
-			ID:           primitive.NewObjectID(),
-			Name:         "测试站点2-https",
+			Name:         "测试站点3-https",
 			Domain:       "a.com",
 			ListenPort:   9443,
 			EnableHTTPS:  true,
@@ -149,9 +145,87 @@ JtutDjT7wgLTacd+39nhwVKw
 			},
 		},
 		{
-			ID:           primitive.NewObjectID(),
+			Name:         "测试站点4-https",
+			Domain:       "b.com",
+			ListenPort:   9443,
+			EnableHTTPS:  true,
+			WAFEnabled:   true,
+			WAFMode:      model.WAFModeProtection,
+			CreatedAt:    now.Add(-48 * time.Hour),
+			UpdatedAt:    now.Add(-24 * time.Hour),
+			ActiveStatus: true,
+			Certificate: model.Certificate{
+				CertName: "secure-cert",
+				PublicKey: `-----BEGIN CERTIFICATE-----
+MIIDmzCCAoOgAwIBAgIUHzy8znaOq8IYk17Dfh+zig8NzBUwDQYJKoZIhvcNAQEL
+BQAwXTELMAkGA1UEBhMCQ04xEDAOBgNVBAgMB0JlaWppbmcxEDAOBgNVBAcMB0Jl
+aWppbmcxDTALBgNVBAoMBFRlc3QxCzAJBgNVBAsMAklUMQ4wDAYDVQQDDAViLmNv
+bTAeFw0yNTAyMTkxNTAyMjRaFw0yNjAyMTkxNTAyMjRaMF0xCzAJBgNVBAYTAkNO
+MRAwDgYDVQQIDAdCZWlqaW5nMRAwDgYDVQQHDAdCZWlqaW5nMQ0wCwYDVQQKDARU
+ZXN0MQswCQYDVQQLDAJJVDEOMAwGA1UEAwwFYi5jb20wggEiMA0GCSqGSIb3DQEB
+AQUAA4IBDwAwggEKAoIBAQC9TRRgGJXj7vo3KBPHS7OgBmhviwETfjjZtw783o8A
+yF+m3pA443ln3eU6DSbIDN6C7ihpJWn5XXA4ZnshUBUYhkqlDd8A4LE+kDZDThYi
+Ni/ufq0cvi0Z3tmwofutAIbQOADMTuXRoVPfpJal7RKBaUD+tB061MQrI79JJSRM
+ABWlhex2zjhHvxrNHPKdE/AYdblhaQRNKmpJ3gDbfwf02DiHr5uBbZ2Ed06FpmtZ
+lqMjTF2+7Kbp90BosB4Yla0w23oNvdlykdG1bjS1Cj4Im+7poIJFwdVURWRuO3Mr
+bLwYGXeMT0H3P2iOVWH3HqmNV7fMcZl2WWFUwc/8L6EHAgMBAAGjUzBRMB0GA1Ud
+DgQWBBTAjPzIM2sEyWnf+s6hS54kGC13YzAfBgNVHSMEGDAWgBTAjPzIM2sEyWnf
++s6hS54kGC13YzAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQC9
+CGxpiDfh/dxCwe/rUQJdy+2Cirv1anaV+GftN7tuKH0gKhtm3G2A34wYlSwuob2z
+xfOeWms4NGMkf6PYLdM74AaMPrCFhT2X6Qs8avWumDuWjRzav1FcbjTHlLqlc+hM
+eIVSqSqhIfbXgmeCnp/mes1ABZkwh+Op8mCGDCsqMOrcVxbbb4m32r06zREAmfrx
+/HPt/ZIoapT9G9zOzlrBTMu+LMqeJgLlMnv1rV0rB6Lp7cp171Hkh3nkiHcRh54l
+otVGgn/gjE2y4321CpWVBr2M4pxPCTefGAESvTeBLW4Ac1Fq/1wwzHL1hTiO4DxU
+MESXh7be6bpc0udAqRA1
+-----END CERTIFICATE-----`,
+				PrivateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC9TRRgGJXj7vo3
+KBPHS7OgBmhviwETfjjZtw783o8AyF+m3pA443ln3eU6DSbIDN6C7ihpJWn5XXA4
+ZnshUBUYhkqlDd8A4LE+kDZDThYiNi/ufq0cvi0Z3tmwofutAIbQOADMTuXRoVPf
+pJal7RKBaUD+tB061MQrI79JJSRMABWlhex2zjhHvxrNHPKdE/AYdblhaQRNKmpJ
+3gDbfwf02DiHr5uBbZ2Ed06FpmtZlqMjTF2+7Kbp90BosB4Yla0w23oNvdlykdG1
+bjS1Cj4Im+7poIJFwdVURWRuO3MrbLwYGXeMT0H3P2iOVWH3HqmNV7fMcZl2WWFU
+wc/8L6EHAgMBAAECggEAUvpwJYVxYsYVAUt8i/5HgSx95/MXKCvKkMi49ag7KB0t
+LJDfyEgSJjDys6UjLErT2LG7ngeL8gZ+1AI8FAiuDp+DJeG0MIbNuv5tAsi+VAXL
+se/uQyyryWzRoKcIkrep4KjD1Mr6246rnNthO991Hqv8FQnvzCOKz9wuE8qHpBYd
+uoTHDS/vwL5wXY1rNsTWwvbQJs4GlDuT5t0M3SWqFaU6ksBlt7Fdt8+yldz/P9pO
+cvIqHcTEjQRYFXN02s2G1zHZiCosM94KTLmzJbHGIONAN75qNt/M4BwWJT3dPAhE
+npo/iCYT6TeKZLhEf/uji81EP/zMSphXWrly6gEGtQKBgQDvZvSv8J1xzKcf2eZ5
+GonSKC4J8T6CrEmBK62BC8IRMzM2R8X7AIPAyjX2bodydO05FLiztJGw9ooOwQkG
+hhqQwj785Pgorvc1FZkFosC0oHgIxYLpr53nBrpgVrCwuOSRpkFbBXOcJD4drZYB
+MACB2wJiJUCe0HLLsl/o6VaOIwKBgQDKbObVYD3ksEic4vy48qy3ApeVS7VPZcAj
+VgvJe+wls/VcN/I2muXwBNyRH0q8F7SQadmaq0Shbc1dMotRNVPUJDaiisk5mf2I
+79aunsCuxUF2G6TrVsIpm8oLIijnkGA6daH3DRe8e6ytspy6lpy7MWEXtU5yRANc
+D+eCQ8RlzQKBgGAXIgVwfbGMpFQLgQ+A0GrTB8+jziRjBMnc/zI5xvZiZ57U5ile
+RoPeZhR4vtL5DbKIl65BvuyZuEY9wuKkdws9fEzDlru1prHe7mGtts2JT0SuCmLD
+w4xUTgCXKypzvAKeCcOAB6xXe7srznbBjqKQhn9gVnSoVDtgaFCzP7OjAoGBAJ07
+M51/sPOmPfCmmzipPqC0gbt0X/O5DCImXud0uzuZ6bZkul3RuVLS4+RRUwKAwz79
+CQoLiDZ/jGmcrfw5GNEKA+oDNUPpqbYo3S8rnmziSPONi29FJ3GcUbaOJQmg6i3e
+Wx0DbXF4+uq8duKzxC/erhT1PmahD579t4xGSRHtAoGAF0DcqNQwe5n135odW7BC
+oGBgap6AmX+EDMdWkhdwq1uR8vauWR5P3wJ0bzn2k+EY/FAD8gjKgV6r+eGczh2y
+ARaYRHWM5453zNCv8jxR9hn+m6nxavGFzuyg/gm51P+qdqF+0lh/c3XiI+zwjEZc
+F4HspkmPawQNPqFCDqHcHaA=
+-----END PRIVATE KEY-----`,
+				ExpireDate:  now.AddDate(1, 0, 0),
+				IssuerName:  "Internet Widgets Pty Ltd",
+				FingerPrint: "5E:FF:56:A2:AF:15:88:25:AE:E2:2B:B5:11:64:63:F8:8E:7C:D2:2E",
+			},
+			Backend: model.Backend{
+				Name: "be_secure_servers",
+				Servers: []model.Server{
+					{
+						Name:   "web1",
+						Host:   "httpbin.org",
+						Port:   443,
+						Weight: 10,
+						IsSSL:  false,
+					},
+				},
+			},
+		},
+		{
 			Name:         "测试站点2-inactive",
-			Domain:       "c.com",
+			Domain:       "d.com",
 			ListenPort:   8080,
 			EnableHTTPS:  false,
 			WAFEnabled:   true,

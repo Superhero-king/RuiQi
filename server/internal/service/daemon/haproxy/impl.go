@@ -405,7 +405,8 @@ func (s *HAProxyServiceImpl) InitHAProxyConfig() error {
 	basicConfig := fmt.Sprintf(`# _version = 1
 global
     log stdout format raw local0
-    maxconn 4000
+	# nbthread 8 # 线程数
+    # maxconn 4000 # 最大连接数
     # user %s
     # group %s
 defaults http

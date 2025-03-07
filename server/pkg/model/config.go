@@ -1,18 +1,15 @@
-package models
+package model
 
 import (
 	"time"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Config struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Engine    EngineConfig       `bson:"engine" json:"engine"`
-	Haproxy   HaproxyConfig      `bson:"haproxy" json:"haproxy"`
-	CreatedAt time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time          `bson:"updatedAt" json:"updatedAt"`
-	Version   int                `bson:"version" json:"version"`
+	Engine          EngineConfig  `bson:"engine" json:"engine"`
+	Haproxy         HaproxyConfig `bson:"haproxy" json:"haproxy"`
+	CreatedAt       time.Time     `bson:"createdAt" json:"createdAt"`
+	UpdatedAt       time.Time     `bson:"updatedAt" json:"updatedAt"`
+	IsResponseCheck bool          `bson:"isResponseCheck" json:"isResponseCheck"`
 }
 
 type EngineConfig struct {
@@ -30,4 +27,11 @@ type EngineConfig struct {
 type HaproxyConfig struct {
 	ConfigBaseDir string `bson:"configBaseDir" json:"configBaseDir"`
 	HaproxyBin    string `bson:"haproxyBin" json:"haproxyBin"`
+	BackupsNumber int    `bson:"backupsNumber" json:"backupsNumber"`
+	SpoeAgentAddr string `bson:"spoeAgentAddr" json:"spoeAgentAddr"`
+	SpoeAgentPort int    `bson:"spoeAgentPort" json:"spoeAgentPort"`
+}
+
+func (c *Config) GetCollectionName() string {
+	return "configs"
 }
