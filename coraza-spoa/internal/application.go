@@ -11,8 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 
 	"github.com/HUAHUAI23/simple-waf/server/pkg/model"
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
@@ -27,12 +26,13 @@ import (
 
 // MongoDB 配置
 type MongoConfig struct {
-	URI        string
+	Client     *mongo.Client
 	Database   string
 	Collection string
 }
 
 type AppConfig struct {
+	Name           string
 	Directives     string
 	ResponseCheck  bool
 	Logger         zerolog.Logger
@@ -40,12 +40,9 @@ type AppConfig struct {
 }
 
 type Application struct {
-	waf             coraza.WAF
-	cache           cache.ExpiringCache
-	mongo           *mongo.Client
-	mongoDB         string
-	mongoCollection string
-	logStore        LogStore
+	waf      coraza.WAF
+	cache    cache.ExpiringCache
+	logStore LogStore
 
 	AppConfig
 }
@@ -160,7 +157,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 			return
 		}
 
-		if tx.IsInterrupted() {
+		if tx.IsInterrupted() && a.logStore != nil {
 			interruption := tx.Interruption()
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
 				err := a.saveFirewallLog(matchedRules, interruption, &req, req.Headers)
@@ -404,7 +401,7 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 	logs := make([]model.Log, 0)
 
 	// 初始化防火墙日志
-	firewallLog := model.FirewallLog{
+	firewallLog := model.WAFLog{
 		CreatedAt: time.Now(),
 		Request:   buildRequestString(req, headers),
 		Response:  "", // 暂时不处理响应
@@ -473,34 +470,23 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 }
 
 // NewApplication creates a new Application with a custom context
-func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig MongoConfig) (*Application, error) {
+func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *MongoConfig) (*Application, error) {
 	// If no context is provided, use background context
-	if ctx == nil {
-		ctx = context.Background()
+	var app *Application
+	var logStore LogStore
+	if mongoConfig == nil {
+		app = &Application{
+			AppConfig: a,
+		}
+	} else {
+		// 初始化日志存储器
+		logStore = NewMongoLogStore(mongoConfig.Client, mongoConfig.Database, mongoConfig.Collection, a.Logger)
+		logStore.Start(ctx)
+		app = &Application{
+			AppConfig: a,
+			logStore:  logStore,
+		}
 	}
-
-	app := &Application{
-		AppConfig:       a,
-		mongoDB:         mongoConfig.Database,
-		mongoCollection: mongoConfig.Collection,
-	}
-
-	// Create timeout context for MongoDB connection
-	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(connectCtx, options.Client().ApplyURI(mongoConfig.URI))
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %v", err)
-	}
-
-	// 验证连接
-	err = client.Ping(connectCtx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
-	}
-
-	app.mongo = client
 
 	// debugLogger := debuglog.Default().
 	// 	WithLevel(debuglog.LevelDebug).
@@ -537,18 +523,11 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig Mo
 		}
 	})
 
-	// 初始化日志存储器
-	logStore := NewMongoLogStore(client, mongoConfig.Database, mongoConfig.Collection, a.Logger)
-	app.logStore = logStore
-
-	// 使用传入的上下文启动日志存储
-	logStore.Start(ctx)
-
 	return app, nil
 }
 
 // NewDefaultApplication creates a new Application with background context
-func (a AppConfig) NewApplication(mongoConfig MongoConfig) (*Application, error) {
+func (a AppConfig) NewApplication(mongoConfig *MongoConfig) (*Application, error) {
 	return a.NewApplicationWithContext(context.Background(), mongoConfig)
 }
 

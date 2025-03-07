@@ -16,17 +16,21 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/HUAHUAI23/simple-waf/coraza-spoa/internal"
+	"github.com/HUAHUAI23/simple-waf/server/pkg/database/mongo"
+	"github.com/HUAHUAI23/simple-waf/server/pkg/model"
 )
 
 var configPath string
 var cpuProfile string
 var memProfile string
+var mongoURI string
 var globalLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 func main() {
 	flag.StringVar(&cpuProfile, "cpuprofile", "", "write cpu profile to `file`")
 	flag.StringVar(&memProfile, "memprofile", "", "write memory profile to `file`")
 	flag.StringVar(&configPath, "config", "", "configuration file")
+	flag.StringVar(&mongoURI, "mongo", "", "mongodb uri")
 	flag.Parse()
 
 	if configPath == "" {
@@ -59,7 +63,23 @@ func main() {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
 
-	apps, err := cfg.newApplicationsWithContext(ctx)
+	var mongoConfig *internal.MongoConfig
+
+	if mongoURI != "" {
+		var wafLog model.WAFLog
+		mongoClient, err := mongodb.Connect(mongoURI)
+		if err != nil {
+			globalLogger.Fatal().Err(err).Msg("Failed creating MongoDB client")
+		}
+		mongoConfig = &internal.MongoConfig{
+			Client:     mongoClient,
+			Database:   "waf",
+			Collection: wafLog.GetCollectionName(),
+		}
+	}
+
+	apps, err := cfg.newApplicationsWithContext(ctx, mongoConfig)
+
 	if err != nil {
 		globalLogger.Fatal().Err(err).Msg("Failed creating applications")
 	}
@@ -120,7 +140,7 @@ outer:
 				continue
 			}
 
-			apps, err := newCfg.newApplications()
+			apps, err := newCfg.newApplicationsWithContext(ctx, mongoConfig)
 			if err != nil {
 				globalLogger.Error().Err(err).Msg("Error applying configuration, using old configuration")
 				continue

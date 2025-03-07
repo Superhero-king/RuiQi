@@ -8,7 +8,7 @@ require (
 	github.com/dropmorepackets/haproxy-go v0.0.5
 	github.com/jcchavezs/mergefs v0.1.0
 	github.com/rs/zerolog v1.33.0
-	go.mongodb.org/mongo-driver v1.17.3
+	go.mongodb.org/mongo-driver/v2 v2.1.0
 	gopkg.in/yaml.v3 v3.0.1
 	istio.io/istio v0.0.0-20240218163812-d80ef7b19049
 )
@@ -21,7 +21,6 @@ require (
 	github.com/magefile/mage v1.15.1-0.20241126214340-bdc92f694516 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20240411101913-e07a1f0e8eb4 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
@@ -41,3 +40,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	rsc.io/binaryregexp v0.2.0 // indirect
 )
+
+replace github.com/HUAHUAI23/simple-waf/server => ../server

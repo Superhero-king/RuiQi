@@ -2,8 +2,8 @@ package model
 
 import "time"
 
-// FirewallLog represents a security event log
-type FirewallLog struct {
+// WAFLog represents a security event log
+type WAFLog struct {
 	RuleID          int       `json:"ruleId"`          // ID of the triggered rule
 	SecLangRaw      string    `json:"secLangRaw"`      // Raw security language definition
 	Severity        int       `json:"severity"`        // Severity level of the event
@@ -33,4 +33,8 @@ type Log struct {
 	Accuracy   int    `json:"accuracy"`   // Accuracy level of the rule match
 	SecLangRaw string `json:"secLangRaw"` // Raw security language
 	LogRaw     string `json:"logRaw"`     // Raw log data
+}
+
+func (wafLog *WAFLog) GetCollectionName() string {
+	return "waf_log"
 }
