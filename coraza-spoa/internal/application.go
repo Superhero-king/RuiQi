@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"github.com/HUAHUAI23/simple-waf/server/pkg/model"
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
 	"github.com/corazawaf/coraza/v3"
 	"github.com/corazawaf/coraza/v3/types"
@@ -400,10 +401,10 @@ func buildRequestString(req *applicationRequest, headers []byte) string {
 
 func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interruption *types.Interruption, req *applicationRequest, headers []byte) error {
 	// 构建日志条目
-	logs := make([]Log, 0)
+	logs := make([]model.Log, 0)
 
 	// 初始化防火墙日志
-	firewallLog := FirewallLog{
+	firewallLog := model.FirewallLog{
 		CreatedAt: time.Now(),
 		Request:   buildRequestString(req, headers),
 		Response:  "", // 暂时不处理响应
@@ -414,7 +415,7 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 	for _, matchedRule := range matchedRules {
 		if data := matchedRule.Data(); matchedRule.Rule().ID() == interruption.RuleID || len(data) > 0 {
 			// 添加日志条目
-			log := Log{
+			log := model.Log{
 				Message:    matchedRule.Message(),
 				Payload:    matchedRule.Data(),
 				RuleID:     matchedRule.Rule().ID(),

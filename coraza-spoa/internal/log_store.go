@@ -4,13 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/HUAHUAI23/simple-waf/server/pkg/model"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // LogStore 定义日志存储接口
 type LogStore interface {
-	Store(log FirewallLog) error
+	Store(log model.FirewallLog) error
 	Start(ctx context.Context)
 	Close()
 }
@@ -20,7 +21,7 @@ type MongoLogStore struct {
 	mongo           *mongo.Client
 	mongoDB         string
 	mongoCollection string
-	logChan         chan FirewallLog
+	logChan         chan model.FirewallLog
 	logger          zerolog.Logger
 }
 
@@ -34,13 +35,13 @@ func NewMongoLogStore(client *mongo.Client, database, collection string, logger 
 		mongo:           client,
 		mongoDB:         database,
 		mongoCollection: collection,
-		logChan:         make(chan FirewallLog, defaultChannelSize),
+		logChan:         make(chan model.FirewallLog, defaultChannelSize),
 		logger:          logger,
 	}
 }
 
 // Store 非阻塞地发送日志到存储通道
-func (s *MongoLogStore) Store(log FirewallLog) error {
+func (s *MongoLogStore) Store(log model.FirewallLog) error {
 	select {
 	case s.logChan <- log:
 		return nil
