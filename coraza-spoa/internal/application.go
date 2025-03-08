@@ -32,7 +32,6 @@ type MongoConfig struct {
 }
 
 type AppConfig struct {
-	Name           string
 	Directives     string
 	ResponseCheck  bool
 	Logger         zerolog.Logger

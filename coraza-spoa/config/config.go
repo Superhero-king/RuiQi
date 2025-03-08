@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"context"
@@ -14,8 +14,14 @@ import (
 	"github.com/HUAHUAI23/simple-waf/coraza-spoa/internal"
 )
 
-func readConfig() (*config, error) {
-	open, err := os.Open(configPath)
+var ConfigPath string
+var CpuProfile string
+var MemProfile string
+var MongoURI string
+var GlobalLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+
+func ReadConfig() (*config, error) {
+	open, err := os.Open(ConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +36,7 @@ func readConfig() (*config, error) {
 	}
 
 	if len(cfg.Applications) == 0 {
-		globalLogger.Warn().Msg("no applications defined")
+		GlobalLogger.Warn().Msg("no applications defined")
 	}
 
 	return &cfg, nil
@@ -38,9 +44,9 @@ func readConfig() (*config, error) {
 
 type config struct {
 	Bind         string    `yaml:"bind"`
-	Log          logConfig `yaml:",inline"`
+	Log          LogConfig `yaml:",inline"`
 	Applications []struct {
-		Log              logConfig `yaml:",inline"`
+		Log              LogConfig `yaml:",inline"`
 		Name             string    `yaml:"name"`
 		Directives       string    `yaml:"directives"`
 		ResponseCheck    bool      `yaml:"response_check"`
@@ -48,7 +54,7 @@ type config struct {
 	} `yaml:"applications"`
 }
 
-func (c config) networkAddressFromBind() (network string, address string) {
+func (c config) NetworkAddressFromBind() (network string, address string) {
 	bindUrl, err := url.Parse(c.Bind)
 	if err == nil {
 		return bindUrl.Scheme, bindUrl.Path
@@ -57,11 +63,11 @@ func (c config) networkAddressFromBind() (network string, address string) {
 	return "tcp", c.Bind
 }
 
-func (c config) newApplicationsWithContext(ctx context.Context, mongoConfig *internal.MongoConfig) (map[string]*internal.Application, error) {
+func (c config) NewApplicationsWithContext(ctx context.Context, mongoConfig *internal.MongoConfig) (map[string]*internal.Application, error) {
 	allApps := make(map[string]*internal.Application)
 
 	for index, a := range c.Applications {
-		logger, err := a.Log.newLogger()
+		logger, err := a.Log.NewLogger()
 		if err != nil {
 			return nil, fmt.Errorf("creating logger for application %q: %v", index, err)
 		}
@@ -84,17 +90,17 @@ func (c config) newApplicationsWithContext(ctx context.Context, mongoConfig *int
 	return allApps, nil
 }
 
-func (c config) newApplications() (map[string]*internal.Application, error) {
-	return c.newApplicationsWithContext(context.Background(), nil)
+func (c config) NewApplications() (map[string]*internal.Application, error) {
+	return c.NewApplicationsWithContext(context.Background(), nil)
 }
 
-type logConfig struct {
+type LogConfig struct {
 	Level  string `yaml:"log_level"`
 	File   string `yaml:"log_file"`
 	Format string `yaml:"log_format"`
 }
 
-func (lc logConfig) outputWriter() (io.Writer, error) {
+func (lc LogConfig) outputWriter() (io.Writer, error) {
 	var out io.Writer
 	if lc.File == "" || lc.File == "/dev/stdout" {
 		out = os.Stdout
@@ -114,10 +120,10 @@ func (lc logConfig) outputWriter() (io.Writer, error) {
 	return out, nil
 }
 
-func (lc logConfig) newLogger() (zerolog.Logger, error) {
+func (lc LogConfig) NewLogger() (zerolog.Logger, error) {
 	out, err := lc.outputWriter()
 	if err != nil {
-		return globalLogger, err
+		return GlobalLogger, err
 	}
 
 	switch lc.Format {
@@ -127,7 +133,7 @@ func (lc logConfig) newLogger() (zerolog.Logger, error) {
 		}
 	case "json":
 	default:
-		return globalLogger, fmt.Errorf("unknown log format: %v", lc.Format)
+		return GlobalLogger, fmt.Errorf("unknown log format: %v", lc.Format)
 	}
 
 	if lc.Level == "" {
@@ -135,7 +141,7 @@ func (lc logConfig) newLogger() (zerolog.Logger, error) {
 	}
 	lvl, err := zerolog.ParseLevel(lc.Level)
 	if err != nil {
-		return globalLogger, err
+		return GlobalLogger, err
 	}
 
 	return zerolog.New(out).Level(lvl).With().Timestamp().Logger(), nil

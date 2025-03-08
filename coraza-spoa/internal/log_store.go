@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/pkg/model"
+	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )

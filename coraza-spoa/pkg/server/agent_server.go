@@ -10,9 +10,11 @@ import (
 
 	"github.com/rs/zerolog"
 
+	cfg "github.com/HUAHUAI23/simple-waf/coraza-spoa/config"
 	"github.com/HUAHUAI23/simple-waf/coraza-spoa/internal"
-	mongodb "github.com/HUAHUAI23/simple-waf/server/pkg/database/mongo"
-	"github.com/HUAHUAI23/simple-waf/server/pkg/model"
+	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
+	"github.com/HUAHUAI23/simple-waf/pkg/model"
+	"github.com/HUAHUAI23/simple-waf/pkg/utils/network"
 )
 
 var globalLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
@@ -42,9 +44,7 @@ type AgentServer struct {
 	mongoURI     string
 }
 
-// NewAgentServer 创建AgentServer实例
-func NewAgentServer(logger zerolog.Logger, mongoURI string, network, address string, appConfigs []internal.AppConfig) *AgentServer {
-
+func NewAgentServer(logger zerolog.Logger, mongoURI string, bind string, config model.Config) *AgentServer {
 	mongoClient, err := mongodb.Connect(mongoURI)
 	if err != nil {
 		globalLogger.Fatal().Err(err).Msg("Failed creating MongoDB client")
@@ -58,15 +58,44 @@ func NewAgentServer(logger zerolog.Logger, mongoURI string, network, address str
 		Database:   "waf",
 		Collection: wafLog.GetCollectionName(),
 	}
-	// Convert slice to map
+
+	// 从 Config 中提取 AppConfig 列表
+	appConfigs := config.Engine.AppConfig
+
+	// Convert model.AppConfig to internal.AppConfig and create applications
 	allApps := make(map[string]*internal.Application)
-	for _, app := range appConfigs {
-		application, err := app.NewApplicationWithContext(ctx, mongoConfig)
-		if err != nil {
-			globalLogger.Fatal().Err(err).Msg("Failed creating applications")
+	for _, modelAppConfig := range appConfigs {
+		// 创建日志配置
+		logConfig := cfg.LogConfig{
+			Level:  modelAppConfig.LogLevel,
+			File:   modelAppConfig.LogFile,
+			Format: modelAppConfig.LogFormat,
 		}
-		allApps[app.Name] = application
+
+		// 创建日志记录器
+		appLogger, err := logConfig.NewLogger()
+		if err != nil {
+			globalLogger.Warn().Err(err).Str("app", modelAppConfig.Name).Msg("使用默认日志记录器")
+			appLogger = globalLogger
+		}
+
+		// 创建内部 AppConfig
+		internalAppConfig := internal.AppConfig{
+			Directives:     modelAppConfig.Directives,
+			ResponseCheck:  config.IsResponseCheck, // 使用全局响应检查设置
+			Logger:         appLogger,
+			TransactionTTL: modelAppConfig.TransactionTTL,
+		}
+
+		// 创建应用
+		application, err := internalAppConfig.NewApplicationWithContext(ctx, mongoConfig)
+		if err != nil {
+			globalLogger.Fatal().Err(err).Msg("Failed creating application: " + modelAppConfig.Name)
+		}
+
+		allApps[modelAppConfig.Name] = application
 	}
+	network, address := network.NetworkAddressFromBind(bind)
 
 	return &AgentServer{
 		network:      network,
@@ -158,7 +187,7 @@ func (s *AgentServer) Restart() error {
 }
 
 // UpdateApplications 更新应用配置 support hot reload
-func (s *AgentServer) UpdateApplications(appConfigs []internal.AppConfig) {
+func (s *AgentServer) UpdateApplications(config model.Config) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -174,18 +203,46 @@ func (s *AgentServer) UpdateApplications(appConfigs []internal.AppConfig) {
 		Collection: wafLog.GetCollectionName(),
 	}
 
+	// 从 Config 中提取 AppConfig 列表
+	appConfigs := config.Engine.AppConfig
+
+	// Convert model.AppConfig to internal.AppConfig and create applications
 	allApps := make(map[string]*internal.Application)
-	for _, app := range appConfigs {
-		application, err := app.NewApplicationWithContext(s.ctx, mongoConfig)
-		if err != nil {
-			s.logger.Fatal().Err(err).Msg("Failed creating applications")
+	for _, modelAppConfig := range appConfigs {
+		// 创建日志配置
+		logConfig := cfg.LogConfig{
+			Level:  modelAppConfig.LogLevel,
+			File:   modelAppConfig.LogFile,
+			Format: modelAppConfig.LogFormat,
 		}
-		allApps[app.Name] = application
+
+		// 创建日志记录器
+		appLogger, err := logConfig.NewLogger()
+		if err != nil {
+			s.logger.Warn().Err(err).Str("app", modelAppConfig.Name).Msg("使用默认日志记录器")
+			appLogger = globalLogger
+		}
+
+		// 创建内部 AppConfig
+		internalAppConfig := internal.AppConfig{
+			Directives:     modelAppConfig.Directives,
+			ResponseCheck:  config.IsResponseCheck, // 使用全局响应检查设置
+			Logger:         appLogger,
+			TransactionTTL: modelAppConfig.TransactionTTL,
+		}
+
+		// 创建应用
+		application, err := internalAppConfig.NewApplicationWithContext(s.ctx, mongoConfig)
+		if err != nil {
+			s.logger.Fatal().Err(err).Msg("Failed creating application: " + modelAppConfig.Name)
+		}
+
+		allApps[modelAppConfig.Name] = application
 	}
 
 	s.applications = allApps
 
-	// 如果服务正在运行，更新Agent的应用
+	// 如果服务正在运行，热更新Agent的应用
 	if s.state == ServerRunning && s.agent != nil {
 		s.agent.ReplaceApplications(allApps)
 		s.logger.Info().Msg("应用配置已更新")
