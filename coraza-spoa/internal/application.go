@@ -13,7 +13,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
-	"github.com/HUAHUAI23/simple-waf/server/pkg/model"
+	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
 	"github.com/corazawaf/coraza/v3"
 	"github.com/corazawaf/coraza/v3/types"
