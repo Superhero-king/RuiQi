@@ -3,7 +3,7 @@ module github.com/HUAHUAI23/simple-waf/coraza-spoa
 go 1.24.1
 
 require (
-	github.com/HUAHUAI23/simple-waf/pkg v0.0.0-20250308083432-9ec51c77f34b
+	github.com/HUAHUAI23/simple-waf/pkg v0.0.0-20250308155714-ed5fc0181ffa
 	github.com/corazawaf/coraza-coreruleset v0.0.0-20240226094324-415b1017abdc
 	github.com/corazawaf/coraza/v3 v3.3.2
 	github.com/dropmorepackets/haproxy-go v0.0.5

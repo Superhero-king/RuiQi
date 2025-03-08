@@ -75,6 +75,7 @@ func (s *MongoLogStore) processLogs(ctx context.Context) {
 
 			// 使用带超时的上下文进行存储操作
 			storeCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+
 			_, err := collection.InsertOne(storeCtx, log)
 			cancel()
 
