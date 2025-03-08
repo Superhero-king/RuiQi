@@ -5,6 +5,7 @@ import (
 )
 
 type Config struct {
+	Name            string        `bson:"name" json:"name"`
 	Engine          EngineConfig  `bson:"engine" json:"engine"`
 	Haproxy         HaproxyConfig `bson:"haproxy" json:"haproxy"`
 	CreatedAt       time.Time     `bson:"createdAt" json:"createdAt"`
@@ -13,15 +14,19 @@ type Config struct {
 }
 
 type EngineConfig struct {
-	Name             string `bson:"name" json:"name"`
-	Bind             string `bson:"bind" json:"bind"`
-	UseBuiltinRules  bool   `bson:"useBuiltinRules" json:"useBuiltinRules"`
-	Directives       string `bson:"directives" json:"directives"`
-	ResponseCheck    bool   `bson:"responseCheck" json:"responseCheck"`
-	TransactionTTLMs int    `bson:"transactionTtlMs" json:"transactionTtlMs"`
-	LogLevel         string `bson:"logLevel" json:"logLevel"`
-	LogFile          string `bson:"logFile" json:"logFile"`
-	LogFormat        string `bson:"logFormat" json:"logFormat"`
+	Name            string      `bson:"name" json:"name"`
+	Bind            string      `bson:"bind" json:"bind"`
+	UseBuiltinRules bool        `bson:"useBuiltinRules" json:"useBuiltinRules"`
+	AppConfig       []AppConfig `bson:"appConfig" json:"appConfig"`
+}
+
+type AppConfig struct {
+	Name           string        `bson:"name" json:"name"`
+	Directives     string        `bson:"directives" json:"directives"`
+	TransactionTTL time.Duration `bson:"transactionTTL" json:"transactionTTL"`
+	LogLevel       string        `bson:"logLevel" json:"logLevel"`
+	LogFile        string        `bson:"logFile" json:"logFile"`
+	LogFormat      string        `bson:"logFormat" json:"logFormat"`
 }
 
 type HaproxyConfig struct {
@@ -33,5 +38,5 @@ type HaproxyConfig struct {
 }
 
 func (c *Config) GetCollectionName() string {
-	return "configs"
+	return "config"
 }

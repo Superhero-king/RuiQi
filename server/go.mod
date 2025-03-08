@@ -3,6 +3,7 @@ module github.com/HUAHUAI23/simple-waf/server
 go 1.24.1
 
 require (
+	github.com/HUAHUAI23/simple-waf/coraza-spoa v0.0.0-20250308155714-ed5fc0181ffa
 	github.com/gin-gonic/gin v1.10.0
 	github.com/haproxytech/client-native/v6 v6.1.2
 	github.com/rs/zerolog v1.33.0
@@ -60,3 +61,5 @@ require (
 	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/HUAHUAI23/simple-waf/coraza-spoa => ../coraza-spoa

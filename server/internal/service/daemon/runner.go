@@ -31,9 +31,11 @@ func NewServiceRunner() *ServiceRunner {
 	}
 
 	// 创建 Engine 服务
-	engineService := engine.NewMockEngineService(engine.MockConfig{
-		Name: "TestEngine",
-	})
+	engineService, err := engine.NewEngineService(logger, config.Global.DBConfig.URI)
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("初始化 Engine 服务失败")
+		// 可以返回 nil 或使用默认配置继续
+	}
 
 	return &ServiceRunner{
 		haproxyService: haproxyService,
