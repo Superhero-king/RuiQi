@@ -137,7 +137,7 @@ func (s *AgentServer) Start() error {
 
 	// 在后台goroutine中启动服务
 	go func() {
-		s.logger.Info().Msg("启动 coraza-spoa 服务")
+		s.logger.Info().Msg("启动 coraza-spoa 服务, 监听地址: " + s.address + " " + s.network)
 		if err := s.agent.Serve(l); err != nil {
 			s.mu.Lock()
 			s.state = ServerError

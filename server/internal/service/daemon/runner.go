@@ -55,12 +55,33 @@ func (r *ServiceRunner) StartServices() {
 
 		siteList := GetTestSites()
 
-		config.Logger.Info().Msg("启动HAProxy服务...")
-		r.haproxyService.RemoveConfig()
-		r.haproxyService.InitSpoeConfig()
-		r.haproxyService.InitHAProxyConfig()
-		r.haproxyService.AddCorazaBackend()
-		r.haproxyService.CreateHAProxyCrtStore()
+		config.Logger.Info().Msg("开始启动HAProxy服务...")
+
+		err := r.haproxyService.RemoveConfig()
+		if err != nil {
+			r.logger.Error().Err(err).Msg("删除HAProxy配置失败")
+		}
+
+		err = r.haproxyService.InitSpoeConfig()
+		if err != nil {
+			r.logger.Error().Err(err).Msg("初始化HAProxy配置失败")
+		}
+
+		err = r.haproxyService.InitHAProxyConfig()
+		if err != nil {
+			r.logger.Error().Err(err).Msg("初始化HAProxy配置失败")
+		}
+
+		err = r.haproxyService.AddCorazaBackend()
+		if err != nil {
+			r.logger.Error().Err(err).Msg("添加Coraza后端失败")
+		}
+
+		err = r.haproxyService.CreateHAProxyCrtStore()
+		if err != nil {
+			r.logger.Error().Err(err).Msg("创建HAProxy证书存储失败")
+		}
+
 		for i, site := range siteList {
 			err := r.haproxyService.AddSiteConfig(site)
 			if err != nil {
