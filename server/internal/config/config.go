@@ -8,6 +8,7 @@ import (
 
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -30,6 +31,13 @@ type DBConfig struct {
 
 // InitConfig 从环境变量初始化配置
 func InitConfig() error {
+	// 加载.env文件
+	err := godotenv.Load()
+	if err != nil {
+		// 如果.env文件不存在，只记录一个信息，不返回错误
+		GlobalLogger.Info().Msg(".env file not found, using default environment variables")
+	}
+
 	// 设置默认值
 	Global = Config{
 		Bind:         "0.0.0.0:2333",
@@ -74,7 +82,6 @@ func InitConfig() error {
 	}
 
 	// 初始化logger
-	var err error
 	Logger, err = Global.Log.newLogger()
 	if err != nil {
 		return fmt.Errorf("failed to initialize logger: %w", err)

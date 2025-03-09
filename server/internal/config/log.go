@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// globalLogger 是默认的全局日志器
-var globalLogger = zerolog.New(os.Stdout).With().Timestamp().Logger()
+// GlobalLogger 是默认的全局日志器
+var GlobalLogger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 // Logger 全局日志实例
 var Logger zerolog.Logger
@@ -43,7 +43,7 @@ func (lc LogConfig) outputWriter() (io.Writer, error) {
 func (lc LogConfig) newLogger() (zerolog.Logger, error) {
 	out, err := lc.outputWriter()
 	if err != nil {
-		return globalLogger, err
+		return GlobalLogger, err
 	}
 
 	switch lc.Format {
@@ -81,7 +81,7 @@ func (lc LogConfig) newLogger() (zerolog.Logger, error) {
 	case "json":
 		// 使用默认的JSON格式
 	default:
-		return globalLogger, fmt.Errorf("unknown log format: %v", lc.Format)
+		return GlobalLogger, fmt.Errorf("unknown log format: %v", lc.Format)
 	}
 
 	if lc.Level == "" {
@@ -89,7 +89,7 @@ func (lc LogConfig) newLogger() (zerolog.Logger, error) {
 	}
 	lvl, err := zerolog.ParseLevel(lc.Level)
 	if err != nil {
-		return globalLogger, err
+		return GlobalLogger, err
 	}
 
 	return zerolog.New(out).Level(lvl).With().Timestamp().Logger(), nil
