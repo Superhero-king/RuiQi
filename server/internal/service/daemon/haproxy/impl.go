@@ -509,7 +509,7 @@ func (s *HAProxyServiceImpl) InitSpoeConfig() error {
 	reqMsg := &models.SpoeMessage{
 		Name:  StringP("coraza-req"),
 		Event: reqEvent,
-		Args:  "app=str(sample_app) src-ip=src src-port=src_port dst-ip=dst dst-port=dst_port method=method path=path query=query version=req.ver headers=req.hdrs body=req.body",
+		Args:  "app=str(coraza) src-ip=src src-port=src_port dst-ip=dst dst-port=dst_port method=method path=path query=query version=req.ver headers=req.hdrs body=req.body",
 	}
 
 	// 在 coraza section 下创建 message
@@ -527,7 +527,7 @@ func (s *HAProxyServiceImpl) InitSpoeConfig() error {
 		resMsg := &models.SpoeMessage{
 			Name:  StringP("coraza-res"),
 			Event: resEvent,
-			Args:  "app=str(sample_app) id=var(txn.coraza.id) version=res.ver status=status headers=res.hdrs body=res.body",
+			Args:  "app=str(coraza) id=var(txn.coraza.id) version=res.ver status=status headers=res.hdrs body=res.body",
 		}
 
 		err = singleSpoe.CreateMessage(string(scopeName), resMsg, transaction.ID, 0)

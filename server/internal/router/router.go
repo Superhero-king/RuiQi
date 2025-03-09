@@ -7,14 +7,14 @@ import (
 )
 
 // Setup configures all the routes for the application
-func Setup(engine *gin.Engine) {
+func Setup(route *gin.Engine) {
 	// Add middleware
-	engine.Use(middleware.Cors())
-	engine.Use(middleware.Logger())
-	engine.Use(gin.Recovery())
+	route.Use(middleware.Cors())
+	route.Use(middleware.Logger())
+	route.Use(gin.Recovery())
 
 	// Health check endpoint
-	engine.GET("/health", func(c *gin.Context) {
+	route.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
 		})

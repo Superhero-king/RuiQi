@@ -48,7 +48,7 @@ func InitConfig() error {
 			Format: "console",
 		},
 		DBConfig: DBConfig{
-			URI:      "mongodb://localhost:27017",
+			URI:      "",
 			Database: "waf",
 		},
 	}
@@ -136,13 +136,13 @@ func InitDB() error {
 func createDefaultConfig() model.Config {
 	now := time.Now()
 	return model.Config{
+		Name: "default config",
 		Engine: model.EngineConfig{
-			Name:            "default config",
 			Bind:            "127.0.0.1:2342",
 			UseBuiltinRules: true,
 			AppConfig: []model.AppConfig{
 				{
-					Name:           "default-app",
+					Name:           "coraza",
 					Directives:     "SecRuleEngine On",
 					TransactionTTL: 60 * time.Second,
 					LogLevel:       "info",
