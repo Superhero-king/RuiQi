@@ -125,10 +125,9 @@ func InitDB() error {
 		}
 		Logger.Info().Msg("Created default configuration")
 	} else {
-		Logger.Info().Int64("count", count).Msg("Found existing configuration documents")
+		Logger.Info().Int64("count", count).Msg("Found existing configuration documents in database, skip initialization")
 	}
 
-	Logger.Info().Str("detail", "The first run of the application, created default configuration").Msg("Database initialized successfully")
 	return nil
 }
 
@@ -142,9 +141,13 @@ func createDefaultConfig() model.Config {
 			UseBuiltinRules: true,
 			AppConfig: []model.AppConfig{
 				{
-					Name:           "coraza",
-					Directives:     "SecRuleEngine On",
-					TransactionTTL: 60 * time.Second,
+					Name: "coraza",
+					Directives: `Include @coraza.conf-recommended
+Include @crs-setup.conf.example
+Include @owasp_crs/*.conf
+SecRuleEngine On`,
+					// The transaction cache lifetime in milliseconds (60000ms = 60s)
+					TransactionTTL: 60000,
 					LogLevel:       "info",
 					LogFile:        "/dev/stdout",
 					LogFormat:      "console",
