@@ -10,7 +10,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/haproxytech/client-native/v6 v6.1.2
 	github.com/joho/godotenv v1.5.1
+	github.com/mvrilo/go-redoc v0.1.5
+	github.com/mvrilo/go-redoc/gin v0.0.0-20250209151614-3a15e2c08553
 	github.com/rs/zerolog v1.33.0
+	github.com/swaggo/files v1.0.1
+	github.com/swaggo/gin-swagger v1.6.0
+	github.com/swaggo/swag v1.16.4
 	go.mongodb.org/mongo-driver/v2 v2.1.0
 	golang.org/x/crypto v0.36.0
 )
@@ -24,7 +29,6 @@ require (
 	github.com/corazawaf/coraza-coreruleset v0.0.0-20240226094324-415b1017abdc // indirect
 	github.com/corazawaf/coraza/v3 v3.3.2 // indirect
 	github.com/corazawaf/libinjection-go v0.2.2 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/dropmorepackets/haproxy-go v0.0.5 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/gin-contrib/sse v1.0.0 // indirect
@@ -62,21 +66,15 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20240411101913-e07a1f0e8eb4 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/swaggo/files v1.0.1 // indirect
-	github.com/swaggo/gin-swagger v1.6.0 // indirect
-	github.com/swaggo/swag v1.16.4 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	github.com/urfave/cli/v2 v2.27.6 // indirect
 	github.com/valllabh/ocsf-schema-golang v1.0.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
-	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	go.mongodb.org/mongo-driver v1.17.3 // indirect
 	golang.org/x/arch v0.15.0 // indirect
@@ -89,7 +87,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	istio.io/istio v0.0.0-20240218163812-d80ef7b19049 // indirect
 	rsc.io/binaryregexp v0.2.0 // indirect
-	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
 replace github.com/HUAHUAI23/simple-waf/coraza-spoa => ../coraza-spoa

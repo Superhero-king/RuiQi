@@ -52,25 +52,25 @@ const docTemplate = `{
                     "200": {
                         "description": "登录成功",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "401": {
                         "description": "用户名或密码错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -95,13 +95,13 @@ const docTemplate = `{
                     "200": {
                         "description": "获取用户信息成功",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -140,25 +140,25 @@ const docTemplate = `{
                     "200": {
                         "description": "密码重置成功",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误或原密码错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -183,25 +183,25 @@ const docTemplate = `{
                     "200": {
                         "description": "获取用户列表成功",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "403": {
                         "description": "禁止访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -238,37 +238,37 @@ const docTemplate = `{
                     "200": {
                         "description": "用户创建成功",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "403": {
                         "description": "禁止访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "409": {
                         "description": "用户名已存在",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -314,37 +314,37 @@ const docTemplate = `{
                     "200": {
                         "description": "用户更新成功",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "403": {
                         "description": "禁止访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "404": {
                         "description": "用户不存在",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -376,31 +376,31 @@ const docTemplate = `{
                     "200": {
                         "description": "用户删除成功",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "403": {
                         "description": "禁止访问",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "404": {
                         "description": "用户不存在",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/controller.SwaggerResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -408,7 +408,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controller.SwaggerResponse": {
+        "model.APIResponse": {
             "description": "API响应的标准格式",
             "type": "object",
             "properties": {
