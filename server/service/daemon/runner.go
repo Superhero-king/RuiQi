@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/HUAHUAI23/simple-waf/server/internal/config"
-	"github.com/HUAHUAI23/simple-waf/server/internal/service/daemon/engine"
-	"github.com/HUAHUAI23/simple-waf/server/internal/service/daemon/haproxy"
+	"github.com/HUAHUAI23/simple-waf/server/config"
+	"github.com/HUAHUAI23/simple-waf/server/service/daemon/engine"
+	"github.com/HUAHUAI23/simple-waf/server/service/daemon/haproxy"
 	"github.com/rs/zerolog"
 )
 

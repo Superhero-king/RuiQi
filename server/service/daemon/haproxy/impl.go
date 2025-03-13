@@ -16,7 +16,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/internal/model"
+	"github.com/HUAHUAI23/simple-waf/server/model"
 	client_native "github.com/haproxytech/client-native/v6"
 	"github.com/haproxytech/client-native/v6/configuration"
 	cfg_opt "github.com/haproxytech/client-native/v6/configuration/options"
@@ -78,7 +78,7 @@ func (s *HAProxyServiceImpl) Start() error {
 		s.HaproxyBin,
 		"-f", s.HAProxyConfigFile,
 		"-p", s.PidFile,
-		"-Ws",
+		"-W",
 		"-S", fmt.Sprintf("unix@%s", s.SocketFile),
 	)
 

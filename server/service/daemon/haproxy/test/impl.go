@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/internal/model"
+	"github.com/HUAHUAI23/simple-waf/server/model"
 	client_native "github.com/haproxytech/client-native/v6"
 	"github.com/haproxytech/client-native/v6/configuration"
 	cfg_opt "github.com/haproxytech/client-native/v6/configuration/options"

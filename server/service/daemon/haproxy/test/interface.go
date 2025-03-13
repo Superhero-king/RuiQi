@@ -3,7 +3,7 @@ package test
 import (
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/internal/model"
+	"github.com/HUAHUAI23/simple-waf/server/model"
 )
 
 // HAProxyStatus 表示HAProxy的运行状态

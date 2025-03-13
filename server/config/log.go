@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// GlobalLogger 是默认的全局日志器
+// GlobalLogger 在 Logger 未初始化时使用
 var GlobalLogger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 // Logger 全局日志实例
@@ -95,6 +95,7 @@ func (lc LogConfig) newLogger() (zerolog.Logger, error) {
 	return zerolog.New(out).Level(lvl).With().Timestamp().Logger(), nil
 }
 
+// 基于 全局 Logger 创建包含调用者信息的日志器
 // GetLogger 获取包含调用者信息的日志器
 func GetLogger() zerolog.Logger {
 	// 获取调用者信息

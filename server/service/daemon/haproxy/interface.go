@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/HUAHUAI23/simple-waf/server/internal/config"
-	"github.com/HUAHUAI23/simple-waf/server/internal/model"
+	"github.com/HUAHUAI23/simple-waf/server/config"
+	"github.com/HUAHUAI23/simple-waf/server/model"
 )
 
 type HAProxyService interface {

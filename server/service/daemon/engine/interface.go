@@ -8,7 +8,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/coraza-spoa/pkg/server"
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
-	"github.com/HUAHUAI23/simple-waf/server/internal/config"
+	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
