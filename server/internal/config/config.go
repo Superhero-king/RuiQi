@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
-	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
+	"github.com/HUAHUAI23/simple-waf/server/internal/utils/jwt"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 // Global 全局配置实例
@@ -21,12 +23,19 @@ type Config struct {
 	IsProduction bool
 	Log          LogConfig
 	DBConfig     DBConfig
+	JWT          JWTConfig
 }
 
 // DBConfig 数据库配置
 type DBConfig struct {
 	URI      string
 	Database string
+}
+
+// JWTConfig JWT配置
+type JWTConfig struct {
+	Secret        string
+	ExpirationHrs int
 }
 
 // InitConfig 从环境变量初始化配置
@@ -50,6 +59,10 @@ func InitConfig() error {
 		DBConfig: DBConfig{
 			URI:      "",
 			Database: "waf",
+		},
+		JWT: JWTConfig{
+			Secret:        "default-jwt-secret-key",
+			ExpirationHrs: 24,
 		},
 	}
 
@@ -81,6 +94,22 @@ func InitConfig() error {
 		Global.DBConfig.Database = env
 	}
 
+	// JWT配置
+	if env := os.Getenv("JWT_SECRET"); env != "" {
+		Global.JWT.Secret = env
+	}
+	if env := os.Getenv("JWT_EXPIRATION_HRS"); env != "" {
+		if hrs, err := strconv.Atoi(env); err == nil {
+			Global.JWT.ExpirationHrs = hrs
+		}
+	}
+
+	// 初始化JWT
+	err = jwt.InitJWTSecret(Global.JWT.Secret)
+	if err != nil {
+		return fmt.Errorf("failed to initialize JWT: %w", err)
+	}
+
 	// 初始化logger
 	Logger, err = Global.Log.newLogger()
 	if err != nil {
@@ -91,26 +120,15 @@ func InitConfig() error {
 	return nil
 }
 
-func InitDB() error {
-	// 连接数据库
-	client, err := mongodb.Connect(Global.DBConfig.URI)
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	// 测试连接
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// 获取数据库
-	db := client.Database(Global.DBConfig.Database)
-
+func InitDB(db *mongo.Database) error {
 	// 检查配置集合是否存在
 	var cfg model.Config
 	configCollection := db.Collection(cfg.GetCollectionName())
 
 	// 检查是否有配置记录 - 使用 v2 语法
 	filter := bson.D{}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	count, err := configCollection.CountDocuments(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("failed to count documents: %w", err)

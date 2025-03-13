@@ -9,12 +9,35 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
+	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
+	_ "github.com/HUAHUAI23/simple-waf/server/docs" // 导入 swagger 文档
 	"github.com/HUAHUAI23/simple-waf/server/internal/config"
 	"github.com/HUAHUAI23/simple-waf/server/internal/router"
 	"github.com/HUAHUAI23/simple-waf/server/internal/service/daemon"
 )
 
+// @title           Simple-WAF API
+// @version         1.0
+// @description     简单的 Web 应用防火墙管理系统 API
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:2333
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey  BearerAuth
+// @in                          header
+// @name                        Authorization
+// @description                 使用 Bearer {token} 格式进行身份验证
 func main() {
 	// Load configuration
 	err := config.InitConfig()
@@ -23,7 +46,17 @@ func main() {
 		return
 	}
 
-	err = config.InitDB()
+	// 连接数据库
+	client, err := mongodb.Connect(config.Global.DBConfig.URI)
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to connect to database")
+		return
+	}
+
+	// 获取数据库
+	db := client.Database(config.Global.DBConfig.Database)
+
+	err = config.InitDB(db)
 	if err != nil {
 		config.Logger.Error().Err(err).Msg("Failed to initialize database")
 	}
@@ -43,7 +76,16 @@ func main() {
 	route := gin.New()
 
 	// Setup the router
-	router.Setup(route)
+	router.Setup(route, db)
+
+	// 设置 Swagger 文档
+	route.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+		ginSwagger.URL("/swagger/doc.json"),
+		ginSwagger.DefaultModelsExpandDepth(2),
+		ginSwagger.DocExpansion("list"),
+		ginSwagger.DeepLinking(true),
+		ginSwagger.PersistAuthorization(true),
+	))
 
 	// 创建HTTP服务器
 	srv := &http.Server{

@@ -78,7 +78,7 @@ func (s *HAProxyServiceImpl) Start() error {
 		s.HaproxyBin,
 		"-f", s.HAProxyConfigFile,
 		"-p", s.PidFile,
-		"-Ws",
+		"-W",
 		"-S", fmt.Sprintf("unix@%s", s.SocketFile),
 	)
 

@@ -1,11 +1,14 @@
 package middleware
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/HUAHUAI23/simple-waf/server/internal/config"
+	"github.com/HUAHUAI23/simple-waf/server/internal/model"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // Logger middleware logs the request/response details
@@ -65,8 +68,39 @@ func Cors() gin.HandlerFunc {
 	}
 }
 
-func ErrorHandler() gin.HandlerFunc {
+// RequestID middleware generates and attaches a unique ID to each request
+func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		requestID := uuid.New().String()
+		c.Set("RequestID", requestID)
+		c.Header("X-Request-ID", requestID)
 		c.Next()
 	}
+}
+
+// CustomErrorHandler 简化版的错误处理函数
+func CustomErrorHandler(c *gin.Context, err any) {
+	requestID, _ := c.Get("RequestID")
+	requestIDStr, _ := requestID.(string)
+
+	// 记录错误日志
+	config.Logger.Error().
+		Interface("error", err).
+		Str("request", c.Request.URL.Path).
+		Str("requestId", requestIDStr).
+		Msg("Recovery from panic")
+
+	// 创建标准错误响应
+	errorResp := model.NewErrorResponse(
+		http.StatusInternalServerError,
+		"服务器内部错误",
+		nil,
+		// fmt.Errorf("%v", err),
+	)
+
+	// 添加请求ID
+	errorResp.RequestID = requestIDStr
+
+	// 返回标准错误响应
+	c.JSON(http.StatusInternalServerError, errorResp)
 }

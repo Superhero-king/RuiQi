@@ -1,1 +1,2 @@
-项目的上下文信息文件如下
+@server 
+@context.txt  为 server 的项目上下文信息，后续做的变更需要同步到 context.txt 上下文文件中
