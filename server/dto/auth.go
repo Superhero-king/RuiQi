@@ -34,3 +34,5 @@ type LoginResponseData struct {
 	Token string     `json:"token" example:"eyJhbGciOiJIUzI1NiIs..."` // JWT token
 	User  model.User `json:"user"`                                    // 用户信息
 }
+
+type ResetPasswordResponseData = model.TSuccessResponse[model.User]

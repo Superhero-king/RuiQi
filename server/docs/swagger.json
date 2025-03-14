@@ -244,7 +244,7 @@
                     "200": {
                         "description": "用户创建成功",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.ResetPasswordResponseData"
                         }
                     },
                     "400": {
@@ -429,6 +429,34 @@
                             "$ref": "#/definitions/model.User"
                         }
                     ]
+                }
+            }
+        },
+        "dto.ResetPasswordResponseData": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "data": {
+                    "$ref": "#/definitions/model.User"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "操作成功"
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2023-01-01T12:00:00Z"
                 }
             }
         },
