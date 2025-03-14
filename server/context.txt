@@ -43,6 +43,9 @@ server/repository/role_repository.go 角色仓库，处理角色数据存取，�
 server/utils 工具类，负责工具类定义
 server/utils/response 响应工具包，提供统一的API响应处理
 server/utils/jwt JWT工具包，处理令牌生成和验证，包含用户角色和权限信息
+server/validator 验证器层，负责验证器处理，例如结构体验证，请求参数验证等
+server/validator/validators.go 验证器定义，包含验证器注册函数和统一初始化函数
+server/validator/struct_validators.go 结构体验证器定义，包含结构体验证器注册函数和统一初始化函数
 
 server/pkg 对外包，可被其他模块调用
 

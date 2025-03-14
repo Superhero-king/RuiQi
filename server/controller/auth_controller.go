@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/HUAHUAI23/simple-waf/server/dto"
 	"github.com/HUAHUAI23/simple-waf/server/model"
 	"github.com/HUAHUAI23/simple-waf/server/service"
 	"github.com/HUAHUAI23/simple-waf/server/utils/response"
@@ -34,19 +35,19 @@ func NewAuthController(authService service.AuthService) AuthController {
 
 // Login 用户登录
 //
-//	@Summary		用户登录
-//	@Description	用户登录并获取JWT令牌
-//	@Tags			认证
-//	@Accept			json
-//	@Produce		json
-//	@Param			request	body		model.UserLoginRequest	true	"登录信息"
-//	@Success		200		{object}	model.APIResponse		"登录成功"
-//	@Failure		400		{object}	model.APIResponse		"请求参数错误"
-//	@Failure		401		{object}	model.APIResponse		"用户名或密码错误"
-//	@Failure		500		{object}	model.APIResponse		"服务器内部错误"
-//	@Router			/auth/login [post]
+// @Summary      用户登录
+// @Description  用户登录并获取JWT令牌
+// @Tags         认证
+// @Accept       json
+// @Produce      json
+// @Param        request  body      dto.UserLoginRequest                                    true  "登录信息"
+// @Success      200      {object}  model.SuccessResponse{data=dto.LoginResponseData}      "登录成功"
+// @Failure      400      {object}  model.ErrResponse                                      "请求参数错误"
+// @Failure      401      {object}  model.ErrResponse                                      "用户名或密码错误"
+// @Failure      500      {object}  model.ErrResponse                                      "服务器内部错误"
+// @Router       /auth/login [post]
 func (c *AuthControllerImpl) Login(ctx *gin.Context) {
-	var req model.UserLoginRequest
+	var req dto.UserLoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, "无效的请求参数", err, false)
 		return
@@ -77,7 +78,7 @@ func (c *AuthControllerImpl) Login(ctx *gin.Context) {
 //	@Tags			认证
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body	model.UserPasswordResetRequest	true	"密码重置信息"
+//	@Param			request	body	dto.UserPasswordResetRequest	true	"密码重置信息"
 //	@Security		BearerAuth
 //	@Success		200	{object}	model.APIResponse	"密码重置成功"
 //	@Failure		400	{object}	model.APIResponse	"请求参数错误或原密码错误"
@@ -85,7 +86,7 @@ func (c *AuthControllerImpl) Login(ctx *gin.Context) {
 //	@Failure		500	{object}	model.APIResponse	"服务器内部错误"
 //	@Router			/auth/reset-password [post]
 func (c *AuthControllerImpl) ResetPassword(ctx *gin.Context) {
-	var req model.UserPasswordResetRequest
+	var req dto.UserPasswordResetRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, "无效的请求参数", err, false)
 		return
@@ -119,7 +120,7 @@ func (c *AuthControllerImpl) ResetPassword(ctx *gin.Context) {
 //	@Tags			用户管理
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body	model.UserCreateRequest	true	"用户创建信息"
+//	@Param			request	body	dto.UserCreateRequest	true	"用户创建信息"
 //	@Security		BearerAuth
 //	@Success		200	{object}	model.APIResponse	"用户创建成功"
 //	@Failure		400	{object}	model.APIResponse	"请求参数错误"
@@ -129,7 +130,7 @@ func (c *AuthControllerImpl) ResetPassword(ctx *gin.Context) {
 //	@Failure		500	{object}	model.APIResponse	"服务器内部错误"
 //	@Router			/users [post]
 func (c *AuthControllerImpl) CreateUser(ctx *gin.Context) {
-	var req model.UserCreateRequest
+	var req dto.UserCreateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(ctx, "无效的请求参数", err, false)
 		return
@@ -233,7 +234,7 @@ func (c *AuthControllerImpl) DeleteUser(ctx *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path	string					true	"用户ID"
-//	@Param			request	body	model.UserUpdateRequest	true	"用户更新信息"
+//	@Param			request	body	dto.UserUpdateRequest	true	"用户更新信息"
 //	@Security		BearerAuth
 //	@Success		200	{object}	model.APIResponse	"用户更新成功"
 //	@Failure		400	{object}	model.APIResponse	"请求参数错误"

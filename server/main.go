@@ -80,6 +80,10 @@ func main() {
 	// Setup the router
 	router.Setup(route, db)
 
+	// 初始化验证器
+	// validators.InitValidators()
+	// validators.InitStructValidators()
+
 	// 添加 Redoc 文档支持
 	doc := redoc.Redoc{
 		Title:       "Simple-WAF API",

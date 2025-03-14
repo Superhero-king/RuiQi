@@ -44,7 +44,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UserLoginRequest"
+                            "$ref": "#/definitions/dto.UserLoginRequest"
                         }
                     }
                 ],
@@ -52,25 +52,37 @@ const docTemplate = `{
                     "200": {
                         "description": "登录成功",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.LoginResponseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponse"
                         }
                     },
                     "401": {
                         "description": "用户名或密码错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponse"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponse"
                         }
                     }
                 }
@@ -132,7 +144,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UserPasswordResetRequest"
+                            "$ref": "#/definitions/dto.UserPasswordResetRequest"
                         }
                     }
                 ],
@@ -230,7 +242,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UserCreateRequest"
+                            "$ref": "#/definitions/dto.UserCreateRequest"
                         }
                     }
                 ],
@@ -306,7 +318,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.UserUpdateRequest"
+                            "$ref": "#/definitions/dto.UserUpdateRequest"
                         }
                     }
                 ],
@@ -408,6 +420,107 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.LoginResponseData": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "description": "JWT token",
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIs..."
+                },
+                "user": {
+                    "description": "用户信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "dto.UserCreateRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "role",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "admin",
+                        "user"
+                    ]
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
+        "dto.UserLoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserPasswordResetRequest": {
+            "type": "object",
+            "required": [
+                "newPassword",
+                "oldPassword"
+            ],
+            "properties": {
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "oldPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "needReset": {
+                    "type": "boolean"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "role": {
+                    "type": "string",
+                    "enum": [
+                        "admin",
+                        "auditor",
+                        "configurator",
+                        "user"
+                    ]
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 3
+                }
+            }
+        },
         "model.APIResponse": {
             "description": "API响应的标准格式",
             "type": "object",
@@ -447,86 +560,95 @@ const docTemplate = `{
                 }
             }
         },
-        "model.UserCreateRequest": {
+        "model.ErrResponse": {
+            "description": "错误的API响应标准格式",
             "type": "object",
-            "required": [
-                "password",
-                "role",
-                "username"
-            ],
             "properties": {
-                "password": {
-                    "type": "string",
-                    "minLength": 6
+                "code": {
+                    "type": "integer",
+                    "example": 400
                 },
-                "role": {
+                "error": {
                     "type": "string",
-                    "enum": [
-                        "admin",
-                        "user"
-                    ]
+                    "example": "参数错误"
                 },
-                "username": {
+                "message": {
                     "type": "string",
-                    "maxLength": 20,
-                    "minLength": 3
+                    "example": "请求参数错误"
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2023-01-01T12:00:00Z"
                 }
             }
         },
-        "model.UserLoginRequest": {
+        "model.SuccessResponse": {
+            "description": "成功的API响应标准格式",
             "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
             "properties": {
-                "password": {
-                    "type": "string"
+                "code": {
+                    "type": "integer",
+                    "example": 200
                 },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.UserPasswordResetRequest": {
-            "type": "object",
-            "required": [
-                "newPassword",
-                "oldPassword"
-            ],
-            "properties": {
-                "newPassword": {
+                "data": {},
+                "message": {
                     "type": "string",
-                    "minLength": 6
+                    "example": "操作成功"
                 },
-                "oldPassword": {
-                    "type": "string"
+                "requestId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2023-01-01T12:00:00Z"
                 }
             }
         },
-        "model.UserUpdateRequest": {
+        "model.User": {
             "type": "object",
             "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastLogin": {
+                    "type": "string"
+                },
                 "needReset": {
+                    "description": "是否需要重置密码",
                     "type": "boolean"
                 },
-                "password": {
-                    "type": "string",
-                    "minLength": 6
+                "permissions": {
+                    "description": "额外权限",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "role": {
-                    "type": "string",
-                    "enum": [
-                        "admin",
-                        "auditor",
-                        "configurator",
-                        "user"
-                    ]
+                    "description": "用户角色",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 },
                 "username": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "minLength": 3
+                    "type": "string"
                 }
             }
         }

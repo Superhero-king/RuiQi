@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/HUAHUAI23/simple-waf/server/config"
+	"github.com/HUAHUAI23/simple-waf/server/dto"
 	"github.com/HUAHUAI23/simple-waf/server/model"
 	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
@@ -22,9 +23,9 @@ var (
 
 // AuthService 认证服务接口
 type AuthService interface {
-	Login(ctx context.Context, req model.UserLoginRequest) (string, *model.User, error)
-	ResetPassword(ctx context.Context, userID string, req model.UserPasswordResetRequest) error
-	CreateUser(ctx context.Context, adminID string, req model.UserCreateRequest) (*model.User, error)
+	Login(ctx context.Context, req dto.UserLoginRequest) (string, *model.User, error)
+	ResetPassword(ctx context.Context, userID string, req dto.UserPasswordResetRequest) error
+	CreateUser(ctx context.Context, adminID string, req dto.UserCreateRequest) (*model.User, error)
 	GetUsers(ctx context.Context) ([]*model.User, error)
 }
 
@@ -45,7 +46,7 @@ func NewAuthService(userRepo repository.UserRepository, roleRepo repository.Role
 }
 
 // Login 用户登录
-func (s *AuthServiceImpl) Login(ctx context.Context, req model.UserLoginRequest) (string, *model.User, error) {
+func (s *AuthServiceImpl) Login(ctx context.Context, req dto.UserLoginRequest) (string, *model.User, error) {
 	// 查找用户
 	user, err := s.userRepo.FindByUsername(ctx, req.Username)
 	if err != nil {
@@ -76,7 +77,7 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req model.UserLoginRequest)
 }
 
 // ResetPassword 重置密码
-func (s *AuthServiceImpl) ResetPassword(ctx context.Context, userID string, req model.UserPasswordResetRequest) error {
+func (s *AuthServiceImpl) ResetPassword(ctx context.Context, userID string, req dto.UserPasswordResetRequest) error {
 	// 查找用户
 	user, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
@@ -106,7 +107,7 @@ func (s *AuthServiceImpl) ResetPassword(ctx context.Context, userID string, req 
 }
 
 // CreateUser 创建用户（仅管理员可用）
-func (s *AuthServiceImpl) CreateUser(ctx context.Context, adminID string, req model.UserCreateRequest) (*model.User, error) {
+func (s *AuthServiceImpl) CreateUser(ctx context.Context, adminID string, req dto.UserCreateRequest) (*model.User, error) {
 	// 验证管理员权限
 	admin, err := s.userRepo.FindByID(ctx, adminID)
 	if err != nil {

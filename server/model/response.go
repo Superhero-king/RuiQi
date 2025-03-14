@@ -5,6 +5,39 @@ import (
 	"time"
 )
 
+// TypedResponse 带泛型的API响应, 用于 swagger 文档
+type TypedResponse[T any] struct {
+	Code      int       `json:"code"`
+	Success   bool      `json:"success"`
+	Message   string    `json:"message,omitempty"`
+	Data      T         `json:"data,omitempty"`
+	Error     string    `json:"error,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+	RequestID string    `json:"requestId,omitempty"`
+}
+
+// ErrResponse 是错误的API响应结构体
+// @Description 错误的API响应标准格式
+type ErrResponse struct {
+	Code      int       `json:"code" example:"400"`
+	Success   bool      `json:"success" example:"false"`
+	Message   string    `json:"message" example:"请求参数错误"`
+	Error     string    `json:"error" example:"参数错误"`
+	Timestamp time.Time `json:"timestamp" example:"2023-01-01T12:00:00Z"`
+	RequestID string    `json:"requestId,omitempty" example:"550e8400-e29b-41d4-a716-446655440000"`
+}
+
+// SuccessResponse 是成功的API响应结构体
+// @Description 成功的API响应标准格式
+type SuccessResponse struct {
+	Code      int         `json:"code" example:"200"`
+	Success   bool        `json:"success" example:"true"`
+	Message   string      `json:"message,omitempty" example:"操作成功"`
+	Data      interface{} `json:"data,omitempty"`
+	Timestamp time.Time   `json:"timestamp" example:"2023-01-01T12:00:00Z"`
+	RequestID string      `json:"requestId,omitempty" example:"550e8400-e29b-41d4-a716-446655440000"`
+}
+
 // APIResponse 是统一的API响应结构体
 // @Description API响应的标准格式
 type APIResponse struct {
