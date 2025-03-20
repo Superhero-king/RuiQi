@@ -1,0 +1,45 @@
+ui-design 是 ui 设计文件，为样式稿导出的 html 文件，项目的样式需要与其对齐
+
+@src 
+@context.txt  为项目的上下文信息，后续做的变更需要同步到 context.txt 上下文文件中
+
+@openapi.json  是后端 api 定义文件
+
+完成用户登录页面的开发，要求如下，
+1. 使用 shadcn 的组件库
+2. 使用 tanstack query 进行数据请求
+3. 使用 react-hook-form 和 zod 进行表单验证
+4. 页面简洁大方
+
+---
+对齐后端 api
+完成 
+/auth/login
+/auth/reset-password  接口管理
+
+---
+要求
+封装统一的接口请求，定义统一的 api 函数
+用 zustand 对状态进行管理
+icon 使用 lucide-react
+
+src/
+├── api/                   # API相关文件
+│   ├── index.ts           # 基础配置和拦截器
+│   ├── auth.ts            # 认证相关API
+│   ├── waf.ts             # WAF日志相关API
+│   ├── sites.ts           # 站点管理相关API
+│   └── services.ts        # 统一导出所有API服务
+├── features/              # 功能模块（包含特定功能的组件和hooks）
+│   ├── auth/              # 认证相关功能
+│   │   ├── components/    # 认证相关组件
+│   │   └── hooks.ts       # 认证相关自定义hook
+│   └── ... 
+├── store/                 # 全局状态管理
+│   ├── auth.ts
+│   ├── logs.ts
+│   └── index.ts
+├── validations/           # 表单验证逻辑
+│   ├── auth.ts
+│   └── index.ts
+

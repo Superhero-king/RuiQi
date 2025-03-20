@@ -5,6 +5,8 @@
 ui 使用的是 shadcn
 主要分为左右布局，左边是sidebar 负责主导航，右边是内容区。
 内容区顶部为 breadcrumb，breadcrumb负责子导航，sidebar 不同的导航点进来会有不同的 breadcrumb 路径。
+项目 icon 使用 lucide-react
+
 ---
 项目要求
 1. 结构完整，功能完整，代码规范，可维护性强
@@ -22,8 +24,73 @@ ui 使用的是 shadcn
 13. 支持中英文切换，默认使用中文
 14. 使用 i18next-http-backend 加载翻译文件
 15. 使用 i18next-browser-languagedetector 检测用户语言
+16. 项目 icon 使用 lucide-react
 ---
-项目主要目录结构介绍
-ui-design 是 ui 设计文件，为样式稿导出的 html 文件，项目的样式需要与其对齐
 
-src/routes 下是路由配置文件，负责路由的配置和面包屑的配置，具体配置在 src/routes/config.tsx 中
+项目主要目录结构介绍
+静态资源
+public
+public/locales 是国际化文件夹，负责项目的国际化配置
+public/locales/en/translation.json 是英文翻译文件
+public/locales/zh/translation.json 是中文翻译文件
+src/assets 是项目静态资源文件夹，负责项目的静态资源管理
+
+入口与配置
+index.html 单应用挂载点，入口文件
+src/main.tsx 是项目入口文件，负责项目的初始化
+src/App.tsx 是项目主组件，负责项目的根组件
+src/i18n.ts 是国际化 i18n 配置文件，负责项目的国际化配置
+eslint.config.js 是 eslint 的配置文件，负责项目的 eslint 配置
+package.json 包文件
+vite.config.ts 是 vite 的配置文件，负责项目的 vite 配置
+components.json 是 shadcn 的配置文件，负责项目的 shadcn 配置
+
+样式
+src/index.css 是项目样式文件，负责项目的样式
+tailwind.config.ts 是 tailwindcss 的配置文件
+
+项目内容
+路由配置
+src/routes 下是路由配置文件，负责路由的配置和面包屑的配置，
+src/routes/config.tsx 是路由配置文件，负责路由的配置和面包屑的配置
+src/routes/constants.ts 定义路由路径常量，例如 ROUTES
+
+布局
+src/components/layout 下是布局文件，负责项目的布局管理
+src/components/layout/root-layout.tsx 是根布局文件，负责项目的根布局管理
+src/components/layout/sidebar.tsx 是侧边栏文件，负责项目的侧边栏管理
+src/components/layout/breadcrumb.tsx 是面包屑文件，负责项目的面包屑管理
+
+路由端点 页面
+src/pages 下是页面文件，负责项目的页面管理
+src/pages/logs 下是日志页面文件，负责项目的日志页面管理
+src/pages/logs/components 下是日志页面组件文件，负责项目的日志页面组件管理
+src/pages/logs/components/logs-attack.tsx 是日志攻击页面组件文件，负责项目的日志攻击页面组件管理
+src/pages/logs/components/logs-protect.tsx 是日志保护页面组件文件，负责项目的日志保护页面组件管理
+
+src/pages/monitor 下是监控页面文件，负责项目的监控页面管理
+src/pages/rules 下是规则页面文件，负责项目的规则页面管理
+src/pages/settings 下是设置页面文件，负责项目的设置页面管理
+
+src/lib 公共库
+src/lib 下是项目公共库文件，负责项目的公共库管理
+
+src/hooks hook
+src/hooks 下是项目 hooks 文件，负责项目的 hooks 管理
+
+src/types 类型
+src/types 下是项目 types 文件，负责项目的 types 管理
+src/types/i18next.d.ts 是 i18next 的类型文件，它扩展了 i18next 模块的类型定义，目的是提供更好的类型检查和代码补全功能。
+
+src/components 项目组件
+src/components/common 下是项目公共组件文件，负责项目的公共组件管理
+src/components/layout 下是项目布局组件文件，负责项目的布局组件管理
+src/components/table 下是项目表格组件文件，负责项目的表格组件管理，将tanstack table 进行封装
+src/components/ui shadcn ui基础组件，由 shadcn 命令行生成
+
+
+src/utils 工具函数
+src/utils 下是项目 utils 文件，负责项目的 utils 管理
+
+
+
