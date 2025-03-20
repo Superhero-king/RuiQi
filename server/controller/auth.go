@@ -9,6 +9,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/service"
 	"github.com/HUAHUAI23/simple-waf/server/utils/response"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // AuthController 认证控制器
@@ -100,7 +101,13 @@ func (c *AuthControllerImpl) ResetPassword(ctx *gin.Context) {
 	}
 
 	// 重置密码
-	err := c.authService.ResetPassword(ctx, userID.(string), req)
+	userID, err := bson.ObjectIDFromHex(userID.(string))
+	if err != nil {
+		response.Unauthorized(ctx, nil)
+		return
+	}
+
+	err = c.authService.ResetPassword(ctx, userID.(bson.ObjectID), req)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidPassword) {
 			response.Error(ctx, model.NewAPIError(http.StatusBadRequest, "原密码错误", err), false)
@@ -143,8 +150,14 @@ func (c *AuthControllerImpl) CreateUser(ctx *gin.Context) {
 		return
 	}
 
+	adminID, err := bson.ObjectIDFromHex(adminID.(string))
+	if err != nil {
+		response.Unauthorized(ctx, nil)
+		return
+	}
+
 	// 创建用户
-	user, err := c.authService.CreateUser(ctx, adminID.(string), req)
+	user, err := c.authService.CreateUser(ctx, adminID.(bson.ObjectID), req)
 	if err != nil {
 		if errors.Is(err, service.ErrUserAlreadyExist) {
 			response.Error(ctx, model.NewAPIError(http.StatusConflict, "用户名已存在", err), false)

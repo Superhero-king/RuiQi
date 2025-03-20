@@ -11,6 +11,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
 	"github.com/rs/zerolog"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // 定义错误
@@ -24,8 +25,8 @@ var (
 // AuthService 认证服务接口
 type AuthService interface {
 	Login(ctx context.Context, req dto.UserLoginRequest) (string, *model.User, error)
-	ResetPassword(ctx context.Context, userID string, req dto.UserPasswordResetRequest) error
-	CreateUser(ctx context.Context, adminID string, req dto.UserCreateRequest) (*model.User, error)
+	ResetPassword(ctx context.Context, userID bson.ObjectID, req dto.UserPasswordResetRequest) error
+	CreateUser(ctx context.Context, adminID bson.ObjectID, req dto.UserCreateRequest) (*model.User, error)
 	GetUsers(ctx context.Context) ([]*model.User, error)
 }
 
@@ -64,7 +65,7 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req dto.UserLoginRequest) (
 	// 更新最后登录时间
 	err = s.userRepo.UpdateLastLogin(ctx, user.ID)
 	if err != nil {
-		s.logger.Warn().Err(err).Str("userId", user.ID).Msg("更新登录时间失败")
+		s.logger.Warn().Err(err).Str("userId", user.ID.Hex()).Msg("更新登录时间失败")
 	}
 
 	// 生成令牌
@@ -77,7 +78,7 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req dto.UserLoginRequest) (
 }
 
 // ResetPassword 重置密码
-func (s *AuthServiceImpl) ResetPassword(ctx context.Context, userID string, req dto.UserPasswordResetRequest) error {
+func (s *AuthServiceImpl) ResetPassword(ctx context.Context, userID bson.ObjectID, req dto.UserPasswordResetRequest) error {
 	// 查找用户
 	user, err := s.userRepo.FindByID(ctx, userID)
 	if err != nil {
@@ -107,7 +108,7 @@ func (s *AuthServiceImpl) ResetPassword(ctx context.Context, userID string, req 
 }
 
 // CreateUser 创建用户（仅管理员可用）
-func (s *AuthServiceImpl) CreateUser(ctx context.Context, adminID string, req dto.UserCreateRequest) (*model.User, error) {
+func (s *AuthServiceImpl) CreateUser(ctx context.Context, adminID bson.ObjectID, req dto.UserCreateRequest) (*model.User, error) {
 	// 验证管理员权限
 	admin, err := s.userRepo.FindByID(ctx, adminID)
 	if err != nil {

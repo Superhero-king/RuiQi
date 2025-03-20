@@ -10,6 +10,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
 	"github.com/HUAHUAI23/simple-waf/server/utils/response"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // HasPermission 权限检查中间件
@@ -107,7 +108,13 @@ func JWTAuth() gin.HandlerFunc {
 
 		// 获取用户信息
 		userRepo := c.MustGet("userRepo").(repository.UserRepository)
-		user, err := userRepo.FindByID(c, claims.UserID)
+		userID, err := bson.ObjectIDFromHex(claims.UserID)
+		if err != nil {
+			response.Unauthorized(c, nil)
+			c.Abort()
+			return
+		}
+		user, err := userRepo.FindByID(c, userID)
 		if err != nil || user == nil {
 			response.Unauthorized(c, nil)
 			c.Abort()
@@ -115,7 +122,7 @@ func JWTAuth() gin.HandlerFunc {
 		}
 
 		// 将用户信息存储在上下文中
-		c.Set("userID", user.ID)
+		c.Set("userID", user.ID.Hex())
 		c.Set("username", user.Username)
 		c.Set("userRole", user.Role)
 		c.Set("userPermissions", user.Permissions)

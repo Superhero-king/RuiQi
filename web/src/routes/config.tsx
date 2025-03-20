@@ -1,19 +1,41 @@
 import { type RouteObject } from "react-router"
 import { Navigate } from "react-router"
+import { Suspense, lazy, ReactElement } from "react"
+import { RoutePath, ROUTES } from "./constants"
+import { useTranslation } from 'react-i18next'
+import { TFunction } from 'i18next'
+import { Loader } from "lucide-react"
+import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute"
+
+// 直接导入布局组件
 import { RootLayout } from "@/components/layout/root-layout"
 import { LogsPage } from "@/pages/logs/page"
 import { MonitorPage } from "@/pages/monitor/page"
-import { RoutePath, ROUTES } from "./constants"
+import { RulesPage } from "@/pages/rules/page"
+import { SettingsPage } from "@/pages/settings/page"
+
+// 直接导入子组件
 import { LogsAttack, LogsProtect } from "@/pages/logs/components"
-import { RulesPage } from "@/pages/rules/pages"
-import { SettingsPage } from "@/pages/settings/pages"
 import { GlobalSetting, SiteManager, CertManager } from "@/pages/settings/components"
-import { ReactElement } from 'react'
-import { useTranslation } from 'react-i18next'
-import { TFunction } from 'i18next'
 import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
 import { SysRules, UserRules, IpGroup } from "@/pages/rules/components"
 
+// 懒加载认证页面
+const LoginPage = lazy(() => import("@/pages/auth/login"))
+const ResetPasswordPage = lazy(() => import("@/pages/auth/reset-password"))
+
+// 懒加载组件包装器
+const lazyLoad = (Component: React.ComponentType) => (
+    <Suspense fallback={
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader className="h-6 w-6 animate-spin text-primary" />
+        </div>
+    }>
+        <Component />
+    </Suspense>
+)
+
+// 面包屑项类型定义
 interface BreadcrumbItem {
     title: string
     path: string
@@ -25,90 +47,75 @@ interface BreadcrumbConfig {
     items: BreadcrumbItem[]
 }
 
-// 创建一个配置生成函数
+// 创建面包屑配置
 export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, BreadcrumbConfig> {
     return {
         [ROUTES.LOGS]: {
             defaultPath: "protect",
             items: [
-                {
-                    title: t('breadcrumb.logs.protect'),
-                    path: "protect",
-                    component: <LogsProtect />
-                },
-                {
-                    title: t('breadcrumb.logs.attack'),
-                    path: "attack",
-                    component: <LogsAttack />
-                }
+                { title: t('breadcrumb.logs.protect'), path: "protect", component: <LogsProtect /> },
+                { title: t('breadcrumb.logs.attack'), path: "attack", component: <LogsAttack /> }
             ]
         },
         [ROUTES.MONITOR]: {
             defaultPath: "overview",
             items: [
-                {
-                    title: t('breadcrumb.monitor.overview'),
-                    path: "overview",
-                    component: <MonitorOverview columns={columns} data={payments} />
-                }
+                { title: t('breadcrumb.monitor.overview'), path: "overview", component: <MonitorOverview columns={columns} data={payments} /> }
             ]
         },
         [ROUTES.RULES]: {
             defaultPath: "system",
             items: [
-                {
-                    title: t('breadcrumb.rules.system'),
-                    path: "system",
-                    component: <SysRules />
-                },
-                {
-                    title: t('breadcrumb.rules.user'),
-                    path: "user",
-                    component: <UserRules />
-                },
-                {
-                    title: t('breadcrumb.rules.ipGroup'),
-                    path: "ip",
-                    component: <IpGroup />
-                }
-
+                { title: t('breadcrumb.rules.system'), path: "system", component: <SysRules /> },
+                { title: t('breadcrumb.rules.user'), path: "user", component: <UserRules /> },
+                { title: t('breadcrumb.rules.ipGroup'), path: "ip", component: <IpGroup /> }
             ]
         },
         [ROUTES.SETTINGS]: {
             defaultPath: "settings",
             items: [
-                {
-                    title: t('breadcrumb.settings.settings'),
-                    path: "settings",
-                    component: <GlobalSetting />
-                },
-                {
-                    title: t('breadcrumb.settings.siteManager'),
-                    path: "site",
-                    component: <SiteManager />
-                },
-                {
-                    title: t('breadcrumb.settings.certManager'),
-                    path: "cert",
-                    component: <CertManager />
-                }
+                { title: t('breadcrumb.settings.settings'), path: "settings", component: <GlobalSetting /> },
+                { title: t('breadcrumb.settings.siteManager'), path: "site", component: <SiteManager /> },
+                { title: t('breadcrumb.settings.certManager'), path: "cert", component: <CertManager /> }
             ]
         }
     }
 }
 
-// 创建一个配置提供组件
+// 获取当前语言的面包屑配置
 export function useBreadcrumbMap() {
     const { t } = useTranslation()
     return createBreadcrumbConfig(t)
+}
+
+// 生成子路由配置
+function createChildRoutes(config: BreadcrumbConfig): RouteObject[] {
+    return [
+        {
+            path: "",
+            element: <Navigate to={config.defaultPath} replace />
+        },
+        ...config.items.map(item => ({
+            path: item.path,
+            element: item.component
+        }))
+    ]
 }
 
 // 路由配置
 export function useRoutes(): RouteObject[] {
     const breadcrumbMap = useBreadcrumbMap()
 
-    return [
-        {
+    // 认证路由
+    const authRoutes: RouteObject[] = [
+        { path: "/login", element: lazyLoad(LoginPage) },
+        { path: "/reset-password", element: lazyLoad(ResetPasswordPage) }
+    ]
+
+    // 应用路由
+    const appRoutes: RouteObject = {
+        element: <ProtectedRoute />,
+        children: [{
             element: <RootLayout />,
             children: [
                 {
@@ -118,63 +125,29 @@ export function useRoutes(): RouteObject[] {
                 {
                     path: ROUTES.LOGS,
                     element: <LogsPage />,
-                    children: [
-                        {
-                            path: "",
-                            element: <Navigate to={breadcrumbMap[ROUTES.LOGS].defaultPath} replace />
-                        },
-                        ...breadcrumbMap[ROUTES.LOGS].items.map(item => ({
-                            path: item.path,
-                            element: item.component
-                        }))
-                    ]
+                    children: createChildRoutes(breadcrumbMap[ROUTES.LOGS])
                 },
                 {
                     path: ROUTES.MONITOR,
                     element: <MonitorPage />,
-                    children: [
-                        {
-                            path: "",
-                            element: <Navigate to={breadcrumbMap[ROUTES.MONITOR].defaultPath} replace />
-                        },
-                        ...breadcrumbMap[ROUTES.MONITOR].items.map(item => ({
-                            path: item.path,
-                            element: item.component
-                        }))
-                    ]
+                    children: createChildRoutes(breadcrumbMap[ROUTES.MONITOR])
                 },
                 {
                     path: ROUTES.RULES,
                     element: <RulesPage />,
-                    children: [
-                        {
-                            path: "",
-                            element: <Navigate to={breadcrumbMap[ROUTES.RULES].defaultPath} replace />
-                        },
-                        ...breadcrumbMap[ROUTES.RULES].items.map(item => ({
-                            path: item.path,
-                            element: item.component
-                        }))
-                    ]
+                    children: createChildRoutes(breadcrumbMap[ROUTES.RULES])
                 },
                 {
                     path: ROUTES.SETTINGS,
                     element: <SettingsPage />,
-                    children: [
-                        {
-                            path: "",
-                            element: <Navigate to={breadcrumbMap[ROUTES.SETTINGS].defaultPath} replace />
-                        },
-                        ...breadcrumbMap[ROUTES.SETTINGS].items.map(item => ({
-                            path: item.path,
-                            element: item.component
-                        }))
-                    ]
+                    children: createChildRoutes(breadcrumbMap[ROUTES.SETTINGS])
                 }
             ]
-        }
-    ]
+        }]
+    }
+
+    return [...authRoutes, appRoutes]
 }
 
-// Export a default breadcrumb config for TypeScript type inference
-export const breadcrumbMap = createBreadcrumbConfig(((key: string) => key) as unknown as TFunction) as ReturnType<typeof createBreadcrumbConfig> 
+// 默认面包屑配置，用于类型推断
+export const breadcrumbMap = createBreadcrumbConfig(((key: string) => key) as unknown as TFunction) as ReturnType<typeof createBreadcrumbConfig>

@@ -14,11 +14,11 @@ import (
 
 // UserRepository 用户仓库接口
 type UserRepository interface {
-	FindByID(ctx context.Context, id string) (*model.User, error)
+	FindByID(ctx context.Context, id bson.ObjectID) (*model.User, error)
 	FindByUsername(ctx context.Context, username string) (*model.User, error)
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
-	UpdateLastLogin(ctx context.Context, id string) error
+	UpdateLastLogin(ctx context.Context, id bson.ObjectID) error
 	FindAll(ctx context.Context) ([]*model.User, error)
 	InitAdminUser() error
 }
@@ -62,14 +62,14 @@ func NewUserRepository(db *mongo.Database) UserRepository {
 }
 
 // FindByID 根据ID查找用户
-func (r *MongoUserRepository) FindByID(ctx context.Context, id string) (*model.User, error) {
+func (r *MongoUserRepository) FindByID(ctx context.Context, id bson.ObjectID) (*model.User, error) {
 	var user model.User
 	err := r.collection.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
-		r.logger.Error().Err(err).Str("id", id).Msg("查询用户失败")
+		r.logger.Error().Err(err).Str("id", id.Hex()).Msg("查询用户失败")
 		return nil, err
 	}
 	return &user, nil
@@ -108,7 +108,7 @@ func (r *MongoUserRepository) Create(ctx context.Context, user *model.User) erro
 
 	// 将生成的ObjectID赋值给用户ID
 	if oid, ok := result.InsertedID.(bson.ObjectID); ok {
-		user.ID = oid.Hex() // 转换为字符串
+		user.ID = oid
 	}
 
 	return nil
@@ -119,14 +119,14 @@ func (r *MongoUserRepository) Update(ctx context.Context, user *model.User) erro
 	user.UpdatedAt = time.Now()
 	_, err := r.collection.ReplaceOne(ctx, bson.D{{Key: "_id", Value: user.ID}}, user)
 	if err != nil {
-		r.logger.Error().Err(err).Str("id", user.ID).Msg("更新用户失败")
+		r.logger.Error().Err(err).Str("id", user.ID.Hex()).Msg("更新用户失败")
 		return err
 	}
 	return nil
 }
 
 // UpdateLastLogin 更新最后登录时间
-func (r *MongoUserRepository) UpdateLastLogin(ctx context.Context, id string) error {
+func (r *MongoUserRepository) UpdateLastLogin(ctx context.Context, id bson.ObjectID) error {
 	_, err := r.collection.UpdateOne(
 		ctx,
 		bson.D{{Key: "_id", Value: id}},
@@ -136,7 +136,7 @@ func (r *MongoUserRepository) UpdateLastLogin(ctx context.Context, id string) er
 		}}},
 	)
 	if err != nil {
-		r.logger.Error().Err(err).Str("id", id).Msg("更新登录时间失败")
+		r.logger.Error().Err(err).Str("id", id.Hex()).Msg("更新登录时间失败")
 		return err
 	}
 	return nil
