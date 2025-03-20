@@ -43,13 +43,13 @@ func NewAuthController(authService service.AuthService) AuthController {
 //	@Param			request	body		dto.UserLoginRequest								true	"登录信息"
 //	@Success		200		{object}	model.SuccessResponse{data=dto.LoginResponseData}	"登录成功"
 //	@Failure		400		{object}	model.ErrResponse									"请求参数错误"
-//	@Failure		401		{object}	model.ErrResponse									"用户名或密码错误"
-//	@Failure		500		{object}	model.ErrResponse									"服务器内部错误"
+//	@Failure		401		{object}	model.ErrResponseDontShowError						"用户名或密码错误"
+//	@Failure		500		{object}	model.ErrResponseDontShowError						"服务器内部错误"
 //	@Router			/auth/login [post]
 func (c *AuthControllerImpl) Login(ctx *gin.Context) {
 	var req dto.UserLoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, "无效的请求参数", err, false)
+		response.BadRequest(ctx, err, true)
 		return
 	}
 
@@ -80,15 +80,15 @@ func (c *AuthControllerImpl) Login(ctx *gin.Context) {
 //	@Produce		json
 //	@Param			request	body	dto.UserPasswordResetRequest	true	"密码重置信息"
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.APIResponse	"密码重置成功"
-//	@Failure		400	{object}	model.APIResponse	"请求参数错误或原密码错误"
-//	@Failure		401	{object}	model.APIResponse	"未授权访问"
-//	@Failure		500	{object}	model.APIResponse	"服务器内部错误"
+//	@Success		200	{object}	model.SuccessResponseNoData		"密码重置成功"
+//	@Failure		400	{object}	model.ErrResponseDontShowError	"请求参数错误或原密码错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError	"未授权访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError	"服务器内部错误"
 //	@Router			/auth/reset-password [post]
 func (c *AuthControllerImpl) ResetPassword(ctx *gin.Context) {
 	var req dto.UserPasswordResetRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, "无效的请求参数", err, false)
+		response.BadRequest(ctx, err, false)
 		return
 	}
 
@@ -123,16 +123,16 @@ func (c *AuthControllerImpl) ResetPassword(ctx *gin.Context) {
 //	@Param			request	body	dto.UserCreateRequest	true	"用户创建信息"
 //	@Security		BearerAuth
 //	@Success		200	{object}	dto.ResetPasswordResponseData	"用户创建成功"
-//	@Failure		400	{object}	model.APIResponse				"请求参数错误"
-//	@Failure		401	{object}	model.APIResponse				"未授权访问"
-//	@Failure		403	{object}	model.APIResponse				"禁止访问"
-//	@Failure		409	{object}	model.APIResponse				"用户名已存在"
-//	@Failure		500	{object}	model.APIResponse				"服务器内部错误"
+//	@Failure		400	{object}	model.ErrResponse				"请求参数错误"
+//	@Failure		401	{object}	model.ErrResponseDontShowError	"未授权访问"
+//	@Failure		403	{object}	model.ErrResponseDontShowError	"禁止访问"
+//	@Failure		409	{object}	model.ErrResponseDontShowError	"用户名已存在"
+//	@Failure		500	{object}	model.ErrResponseDontShowError	"服务器内部错误"
 //	@Router			/users [post]
 func (c *AuthControllerImpl) CreateUser(ctx *gin.Context) {
 	var req dto.UserCreateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(ctx, "无效的请求参数", err, false)
+		response.BadRequest(ctx, err, true)
 		return
 	}
 
@@ -167,10 +167,10 @@ func (c *AuthControllerImpl) CreateUser(ctx *gin.Context) {
 //	@Tags			用户管理
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.APIResponse	"获取用户列表成功"
-//	@Failure		401	{object}	model.APIResponse	"未授权访问"
-//	@Failure		403	{object}	model.APIResponse	"禁止访问"
-//	@Failure		500	{object}	model.APIResponse	"服务器内部错误"
+//	@Success		200	{object}	model.SuccessResponse{data=[]model.User}	"获取用户列表成功"
+//	@Failure		401	{object}	model.ErrResponseDontShowError				"未授权访问"
+//	@Failure		403	{object}	model.ErrResponseDontShowError				"禁止访问"
+//	@Failure		500	{object}	model.ErrResponseDontShowError				"服务器内部错误"
 //	@Router			/users [get]
 func (c *AuthControllerImpl) GetUsers(ctx *gin.Context) {
 	// 获取所有用户
@@ -190,8 +190,8 @@ func (c *AuthControllerImpl) GetUsers(ctx *gin.Context) {
 //	@Tags			认证
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Success		200	{object}	model.APIResponse	"获取用户信息成功"
-//	@Failure		401	{object}	model.APIResponse	"未授权访问"
+//	@Success		200	{object}	model.SuccessResponse{data=dto.GetUserInfoResponseData}	"获取用户信息成功"
+//	@Failure		401	{object}	model.ErrResponseDontShowError							"未授权访问"
 //	@Router			/auth/me [get]
 func (c *AuthControllerImpl) GetUserInfo(ctx *gin.Context) {
 	// 从上下文中获取用户信息

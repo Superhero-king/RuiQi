@@ -21,32 +21,54 @@ server 后端，负责后端接口处理，haproxy 启动管理，配置生成�
 server 后端 web服务框架采用 go gin 框，gin-swagger 和 go-redoc 生成接口文档
 server/main.go 入口包，主函数，包含 swagger 和 redoc 文档配置
 server/config 配置文件
-server/controller 控制器 mvc 中控制层
-server/controller/auth_controller.go 认证控制器，处理登录、注册、密码重置和用户管理等
 server/model 模型层，负责数据模型定义
 server/model/response.go 统一的API响应模型定义
 server/model/user.go 用户模型定义，包含角色系统
 server/model/role.go 角色和权限模型定义，支持RBAC权限控制
+server/model/site.go 站点模型定义，包含站点配置、证书、后端服务器等信息
+
+server/dto dto 层，负责数据传输对象定义，例如请求数据，响应数据模型等
+server/dto/auth.go 认证请求数据模型定义
+server/dto/site.go 站点请求和响应数据模型定义
+
+server/controller 控制器 mvc 中控制层
+server/controller/auth.go 认证控制器，处理登录、注册、密码重置和用户管理等
+server/controller/site.go 站点控制器，处理站点的CRUD操作
+
 server/service 服务层，负责业务逻辑处理
-server/service/auth_service.go 认证服务，处理用户认证逻辑、密码重置和用户管理
+server/service/auth.go 认证服务，处理用户认证逻辑、密码重置和用户管理
+server/service/site.go 站点服务，处理站点的业务逻辑
 server/service/daemon 守护进程层，负责守护进程管理,例如 haproxy 守护进程，corazawaf spoe（ engine） 守护进程等
 server/service/engine 引擎层，负责引擎管理,例如 corazawaf spoe（ engine） 引擎管理等
 server/service/haproxy 负责haproxy 的启动管理等，配置生成等
 server/service/daemon/runner 负责守护进程管理,例如 haproxy 守护进程，corazawaf spoe（ engine） 守护进程等
+
 server/router 路由层，负责路由定义
 server/router/router.go 路由定义，基于RBAC的权限控制，按功能模块组织路由
+
+server/repository 仓库层，负责数据库操作
+server/repository/user.go 用户仓库，处理用户数据存取，包含初始用户创建
+server/repository/role.go 角色仓库，处理角色数据存取，包含默认角色初始化
+server/repository/site.go 站点仓库，处理站点数据的CRUD操作
+server/repository/waf_log.go WAF日志仓库，处理WAF攻击日志的查询和聚合
+
 server/middleware 中间件层，负责中间件处理，例如日志处理，jwt 鉴权，统一错误处理等
 server/middleware/auth.go JWT认证中间件，包含基于权限的访问控制
-server/repository 仓库层，负责数据库操作
-server/repository/user_repository.go 用户仓库，处理用户数据存取，包含初始用户创建
-server/repository/role_repository.go 角色仓库，处理角色数据存取，包含默认角色初始化
+
 server/utils 工具类，负责工具类定义
 server/utils/response 响应工具包，提供统一的API响应处理
 server/utils/jwt JWT工具包，处理令牌生成和验证，包含用户角色和权限信息
+
 server/validator 验证器层，负责验证器处理，例如结构体验证，请求参数验证等
 server/validator/validators.go 验证器定义，包含验证器注册函数和统一初始化函数
 server/validator/struct_validators.go 结构体验证器定义，包含结构体验证器注册函数和统一初始化函数
 
 server/pkg 对外包，可被其他模块调用
+
+server/service/waf_log.go WAF日志服务，提供WAF日志查询和聚合的业务逻辑
+
+server/controller/waf_log.go WAF日志控制器，处理WAF日志查询和聚合的HTTP请求
+
+server/dto/waf_log.go WAF日志数据传输对象，包含请求参数和响应格式定义
 
 

@@ -49,7 +49,7 @@ func Error(c *gin.Context, apiErr *model.APIError, showErr bool) {
 }
 
 // BadRequest 返回400错误
-func BadRequest(c *gin.Context, message string, err error, showErr bool) {
+func BadRequest(c *gin.Context, err error, showErr bool) {
 	Error(c, model.ErrBadRequest(err), showErr)
 }
 

@@ -1,6 +1,8 @@
 package dto
 
-import "github.com/HUAHUAI23/simple-waf/server/model"
+import (
+	"github.com/HUAHUAI23/simple-waf/server/model"
+)
 
 // UserLoginRequest 用户登录请求
 type UserLoginRequest struct {
@@ -36,3 +38,10 @@ type LoginResponseData struct {
 }
 
 type ResetPasswordResponseData = model.TSuccessResponse[model.User]
+
+type GetUserInfoResponseData struct {
+	ID        string `json:"id" example:"1234567890"`
+	Username  string `json:"username" example:"user123"`
+	Role      string `json:"role" example:"admin"`
+	NeedReset bool   `json:"needReset" example:"false"`
+}

@@ -24,6 +24,550 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/sites": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取所有站点配置列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "站点管理"
+                ],
+                "summary": "获取站点列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取站点列表成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SiteListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建一个新的站点配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "站点管理"
+                ],
+                "summary": "创建新站点",
+                "parameters": [
+                    {
+                        "description": "站点信息",
+                        "name": "site",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSiteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "站点创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SiteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "域名和端口组合已存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/sites/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据ID获取站点详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "站点管理"
+                ],
+                "summary": "获取单个站点",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "站点ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取站点详情成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SiteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "站点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新指定站点的配置",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "站点管理"
+                ],
+                "summary": "更新站点",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "站点ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "站点更新信息",
+                        "name": "site",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSiteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "站点更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.SiteResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "站点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "域名和端口组合已被其他站点使用",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除指定的站点配置",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "站点管理"
+                ],
+                "summary": "删除站点",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "站点ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "站点删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/model.SuccessResponseNoData"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "站点不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/waf/logs": {
+            "get": {
+                "description": "Retrieve detailed attack logs with filtering and pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WAF Logs"
+                ],
+                "summary": "Get individual attack logs",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Rule ID",
+                        "name": "ruleId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Client IP Address",
+                        "name": "clientIpAddress",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Domain name",
+                        "name": "domain",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Port number",
+                        "name": "port",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start time (RFC3339 format)",
+                        "name": "startTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (RFC3339 format)",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 10)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.AttackLogResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/waf/logs/events": {
+            "get": {
+                "description": "Retrieve attack events aggregated by client IP and domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "WAF Logs"
+                ],
+                "summary": "Get aggregated attack events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client IP Address",
+                        "name": "clientIpAddress",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Domain name",
+                        "name": "domain",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Port number",
+                        "name": "port",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start time (RFC3339 format)",
+                        "name": "startTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (RFC3339 format)",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default: 10)",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.AttackEventResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "用户登录并获取JWT令牌",
@@ -76,13 +620,13 @@ const docTemplate = `{
                     "401": {
                         "description": "用户名或密码错误",
                         "schema": {
-                            "$ref": "#/definitions/model.ErrResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/model.ErrResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     }
                 }
@@ -107,13 +651,25 @@ const docTemplate = `{
                     "200": {
                         "description": "获取用户信息成功",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.GetUserInfoResponseData"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     }
                 }
@@ -152,25 +708,25 @@ const docTemplate = `{
                     "200": {
                         "description": "密码重置成功",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.SuccessResponseNoData"
                         }
                     },
                     "400": {
                         "description": "请求参数错误或原密码错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     }
                 }
@@ -195,25 +751,40 @@ const docTemplate = `{
                     "200": {
                         "description": "获取用户列表成功",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.User"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "403": {
                         "description": "禁止访问",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     }
                 }
@@ -256,31 +827,31 @@ const docTemplate = `{
                     "400": {
                         "description": "请求参数错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponse"
                         }
                     },
                     "401": {
                         "description": "未授权访问",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "403": {
                         "description": "禁止访问",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "409": {
                         "description": "用户名已存在",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     },
                     "500": {
                         "description": "服务器内部错误",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
                     }
                 }
@@ -420,6 +991,246 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "dto.AttackEventAggregateResult": {
+            "description": "攻击事件聚合结果，按客户端IP和域名分组统计",
+            "type": "object",
+            "properties": {
+                "clientIpAddress": {
+                    "description": "客户端IP地址",
+                    "type": "string",
+                    "example": "192.168.1.100"
+                },
+                "count": {
+                    "description": "攻击次数",
+                    "type": "integer",
+                    "example": 15
+                },
+                "domain": {
+                    "description": "域名",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "durationInMinutes": {
+                    "description": "攻击持续时间(分钟)",
+                    "type": "number",
+                    "example": 18.2
+                },
+                "firstAttackTime": {
+                    "description": "首次攻击时间",
+                    "type": "string",
+                    "example": "2024-03-18T08:12:33Z"
+                },
+                "isOngoing": {
+                    "description": "是否正在进行中",
+                    "type": "boolean",
+                    "example": true
+                },
+                "lastAttackTime": {
+                    "description": "最近攻击时间",
+                    "type": "string",
+                    "example": "2024-03-18T08:30:45Z"
+                }
+            }
+        },
+        "dto.AttackEventResponse": {
+            "description": "攻击事件分页查询结果",
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "description": "当前页码",
+                    "type": "integer",
+                    "example": 1
+                },
+                "pageSize": {
+                    "description": "每页大小",
+                    "type": "integer",
+                    "example": 10
+                },
+                "results": {
+                    "description": "聚合结果列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AttackEventAggregateResult"
+                    }
+                },
+                "totalCount": {
+                    "description": "总记录数",
+                    "type": "integer",
+                    "example": 35
+                },
+                "totalPages": {
+                    "description": "总页数",
+                    "type": "integer",
+                    "example": 4
+                }
+            }
+        },
+        "dto.AttackLogResponse": {
+            "description": "攻击日志分页查询结果",
+            "type": "object",
+            "properties": {
+                "currentPage": {
+                    "description": "当前页码",
+                    "type": "integer",
+                    "example": 1
+                },
+                "pageSize": {
+                    "description": "每页大小",
+                    "type": "integer",
+                    "example": 10
+                },
+                "results": {
+                    "description": "日志记录列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WAFLog"
+                    }
+                },
+                "totalCount": {
+                    "description": "总记录数",
+                    "type": "integer",
+                    "example": 128
+                },
+                "totalPages": {
+                    "description": "总页数",
+                    "type": "integer",
+                    "example": 13
+                }
+            }
+        },
+        "dto.BackendDTO": {
+            "type": "object",
+            "required": [
+                "servers"
+            ],
+            "properties": {
+                "servers": {
+                    "description": "服务器列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ServerDTO"
+                    }
+                }
+            }
+        },
+        "dto.CertificateDTO": {
+            "type": "object",
+            "required": [
+                "certName",
+                "expireDate",
+                "fingerPrint",
+                "issuerName",
+                "privateKey",
+                "publicKey"
+            ],
+            "properties": {
+                "certName": {
+                    "description": "证书名称",
+                    "type": "string",
+                    "example": "my-cert"
+                },
+                "expireDate": {
+                    "description": "过期时间",
+                    "type": "string"
+                },
+                "fingerPrint": {
+                    "description": "证书指纹",
+                    "type": "string"
+                },
+                "issuerName": {
+                    "description": "颁发机构",
+                    "type": "string",
+                    "example": "Let's Encrypt"
+                },
+                "privateKey": {
+                    "description": "私钥内容",
+                    "type": "string"
+                },
+                "publicKey": {
+                    "description": "公钥内容",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateSiteRequest": {
+            "description": "创建站点的请求参数",
+            "type": "object",
+            "required": [
+                "backend",
+                "domain",
+                "listenPort",
+                "name"
+            ],
+            "properties": {
+                "backend": {
+                    "description": "后端服务器配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.BackendDTO"
+                        }
+                    ]
+                },
+                "certificate": {
+                    "description": "证书信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CertificateDTO"
+                        }
+                    ]
+                },
+                "domain": {
+                    "description": "域名",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "enableHTTPS": {
+                    "description": "是否启用HTTPS",
+                    "type": "boolean",
+                    "example": false
+                },
+                "listenPort": {
+                    "description": "监听端口",
+                    "type": "integer",
+                    "example": 8080
+                },
+                "name": {
+                    "description": "站点名称",
+                    "type": "string",
+                    "example": "my-site"
+                },
+                "wafEnabled": {
+                    "description": "是否启用WAF",
+                    "type": "boolean",
+                    "example": false
+                },
+                "wafMode": {
+                    "description": "WAF模式",
+                    "type": "string",
+                    "example": "observation"
+                }
+            }
+        },
+        "dto.GetUserInfoResponseData": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "1234567890"
+                },
+                "needReset": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "role": {
+                    "type": "string",
+                    "example": "admin"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "user123"
+                }
+            }
+        },
         "dto.LoginResponseData": {
             "type": "object",
             "properties": {
@@ -463,6 +1274,168 @@ const docTemplate = `{
                 "timestamp": {
                     "type": "string",
                     "example": "2023-01-01T12:00:00Z"
+                }
+            }
+        },
+        "dto.ServerDTO": {
+            "type": "object",
+            "required": [
+                "host",
+                "port"
+            ],
+            "properties": {
+                "host": {
+                    "description": "主机地址",
+                    "type": "string",
+                    "example": "backend.example.com"
+                },
+                "isSSL": {
+                    "description": "是否启用SSL",
+                    "type": "boolean",
+                    "example": false
+                },
+                "port": {
+                    "description": "端口",
+                    "type": "integer",
+                    "example": 80
+                }
+            }
+        },
+        "dto.SiteListResponse": {
+            "description": "站点列表响应",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "站点列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Site"
+                    }
+                },
+                "total": {
+                    "description": "总数",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.SiteResponse": {
+            "description": "站点信息响应",
+            "type": "object",
+            "properties": {
+                "activeStatus": {
+                    "description": "站点是否激活",
+                    "type": "boolean"
+                },
+                "backend": {
+                    "description": "后端服务器配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Backend"
+                        }
+                    ]
+                },
+                "certificate": {
+                    "description": "证书信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Certificate"
+                        }
+                    ]
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "domain": {
+                    "description": "域名，如 a.com",
+                    "type": "string"
+                },
+                "enableHTTPS": {
+                    "description": "是否启用HTTPS",
+                    "type": "boolean"
+                },
+                "id": {
+                    "description": "站点ID",
+                    "type": "string"
+                },
+                "listenPort": {
+                    "description": "监听端口，如 9000",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "站点名称",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "wafEnabled": {
+                    "description": "是否启用WAF",
+                    "type": "boolean"
+                },
+                "wafMode": {
+                    "description": "WAF防护模式",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.WAFMode"
+                        }
+                    ]
+                }
+            }
+        },
+        "dto.UpdateSiteRequest": {
+            "description": "更新站点的请求参数",
+            "type": "object",
+            "properties": {
+                "activeStatus": {
+                    "description": "站点状态",
+                    "type": "boolean",
+                    "example": true
+                },
+                "backend": {
+                    "description": "后端服务器配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.BackendDTO"
+                        }
+                    ]
+                },
+                "certificate": {
+                    "description": "证书信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CertificateDTO"
+                        }
+                    ]
+                },
+                "domain": {
+                    "description": "域名",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "enableHTTPS": {
+                    "description": "是否启用HTTPS",
+                    "type": "boolean",
+                    "example": false
+                },
+                "listenPort": {
+                    "description": "监听端口",
+                    "type": "integer",
+                    "example": 8080
+                },
+                "name": {
+                    "description": "站点名称",
+                    "type": "string",
+                    "example": "my-site"
+                },
+                "wafEnabled": {
+                    "description": "是否启用WAF",
+                    "type": "boolean",
+                    "example": false
+                },
+                "wafMode": {
+                    "description": "WAF模式",
+                    "type": "string",
+                    "example": "observation"
                 }
             }
         },
@@ -588,6 +1561,47 @@ const docTemplate = `{
                 }
             }
         },
+        "model.Backend": {
+            "type": "object",
+            "properties": {
+                "servers": {
+                    "description": "服务器列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Server"
+                    }
+                }
+            }
+        },
+        "model.Certificate": {
+            "type": "object",
+            "properties": {
+                "certName": {
+                    "description": "证书名称/别名",
+                    "type": "string"
+                },
+                "expireDate": {
+                    "description": "证书过期日期",
+                    "type": "string"
+                },
+                "fingerPrint": {
+                    "description": "证书指纹",
+                    "type": "string"
+                },
+                "issuerName": {
+                    "description": "颁发机构",
+                    "type": "string"
+                },
+                "privateKey": {
+                    "description": "私钥内容（PEM格式）",
+                    "type": "string"
+                },
+                "publicKey": {
+                    "description": "公钥内容（PEM格式）",
+                    "type": "string"
+                }
+            }
+        },
         "model.ErrResponse": {
             "description": "错误的API响应标准格式",
             "type": "object",
@@ -618,6 +1632,163 @@ const docTemplate = `{
                 }
             }
         },
+        "model.ErrResponseDontShowError": {
+            "description": "错误的API响应标准格式,不展示 error",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 400
+                },
+                "message": {
+                    "type": "string",
+                    "example": "请求参数错误"
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2023-01-01T12:00:00Z"
+                }
+            }
+        },
+        "model.Log": {
+            "description": "WAF 日志条目，包含详细的规则匹配信息",
+            "type": "object",
+            "properties": {
+                "accuracy": {
+                    "description": "Accuracy level of the rule match (0-10)",
+                    "type": "integer",
+                    "example": 9
+                },
+                "logRaw": {
+                    "description": "Raw log data",
+                    "type": "string",
+                    "example": "[2024-03-18 08:12:33] [error] 12345#12345: *1234 ModSecurity: Access denied with code 403 (phase 1). Matched \\\"Operator 'Rx' with parameter '(?:acunetix|Morfeus|ZmEu)' against variable 'REQUEST_HEADERS:User-Agent'\\\" [file \\\"/etc/nginx/modsec/coreruleset/rules/REQUEST-913-SCANNER-DETECTION.conf\\\"] [line \\\"48\\\"] [id \\\"913100\\\"] [rev \\\"1\\\"] [msg \\\"Web Application Scanner detected\\\"] [data \\\"Matched Data: acunetix found within REQUEST_HEADERS:User-Agent: Acunetix/1.0\\\"] [severity \\\"CRITICAL\\\"] [ver \\\"OWASP_CRS/3.3.0\\\"] [maturity \\\"9\\\"] [accuracy \\\"9\\\"] [tag \\\"application-multi\\\"] [tag \\\"language-multi\\\"] [tag \\\"platform-multi\\\"] [tag \\\"attack-reputation-scanner\\\"], client: 192.168.1.100, server: example.com, request: \\\"GET /api/users HTTP/1.1\\\", host: \\\"example.com\\\""
+                },
+                "message": {
+                    "description": "Log message",
+                    "type": "string",
+                    "example": "Web Application Scanner detected"
+                },
+                "payload": {
+                    "description": "Attack payload",
+                    "type": "string",
+                    "example": "Acunetix/1.0"
+                },
+                "phase": {
+                    "description": "Phase of the request processing",
+                    "type": "integer",
+                    "example": 1
+                },
+                "ruleId": {
+                    "description": "Rule identifier",
+                    "type": "integer",
+                    "example": 100012
+                },
+                "secLangRaw": {
+                    "description": "Raw security language",
+                    "type": "string",
+                    "example": "SecRule REQUEST_HEADERS:User-Agent \\\"@rx (?:acunetix|Morfeus|ZmEu)\\\" \\\"id:1008,phase:1,t:lowercase,t:none,pass,nolog,tag:'application-multi',tag:'language-multi',tag:'platform-multi',tag:'attack-reputation-scanner',severity:'CRITICAL',msg:'Web Application Scanner detected'\""
+                },
+                "secMark": {
+                    "description": "Security mark of the rule",
+                    "type": "string",
+                    "example": "web_attack_scanner"
+                },
+                "severity": {
+                    "description": "Severity level (0-5)",
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "model.Server": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "description": "主机地址，如 IP 或域名",
+                    "type": "string"
+                },
+                "isSSL": {
+                    "description": "是否启用SSL",
+                    "type": "boolean"
+                },
+                "port": {
+                    "description": "端口",
+                    "type": "integer"
+                }
+            }
+        },
+        "model.Site": {
+            "type": "object",
+            "properties": {
+                "activeStatus": {
+                    "description": "站点是否激活",
+                    "type": "boolean"
+                },
+                "backend": {
+                    "description": "后端服务器配置",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Backend"
+                        }
+                    ]
+                },
+                "certificate": {
+                    "description": "证书信息",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.Certificate"
+                        }
+                    ]
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "domain": {
+                    "description": "域名，如 a.com",
+                    "type": "string"
+                },
+                "enableHTTPS": {
+                    "description": "是否启用HTTPS",
+                    "type": "boolean"
+                },
+                "id": {
+                    "description": "站点ID",
+                    "type": "string"
+                },
+                "listenPort": {
+                    "description": "监听端口，如 9000",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "站点名称",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "wafEnabled": {
+                    "description": "是否启用WAF",
+                    "type": "boolean"
+                },
+                "wafMode": {
+                    "description": "WAF防护模式",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/model.WAFMode"
+                        }
+                    ]
+                }
+            }
+        },
         "model.SuccessResponse": {
             "description": "成功的API响应标准格式",
             "type": "object",
@@ -627,6 +1798,32 @@ const docTemplate = `{
                     "example": 200
                 },
                 "data": {},
+                "message": {
+                    "type": "string",
+                    "example": "操作成功"
+                },
+                "requestId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2023-01-01T12:00:00Z"
+                }
+            }
+        },
+        "model.SuccessResponseNoData": {
+            "description": "成功的API响应标准格式,没有 data",
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
                 "message": {
                     "type": "string",
                     "example": "操作成功"
@@ -679,6 +1876,109 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "model.WAFLog": {
+            "description": "WAF 安全事件日志记录，包含完整的攻击事件信息",
+            "type": "object",
+            "properties": {
+                "accuracy": {
+                    "description": "Accuracy level of the rule match (0-10)",
+                    "type": "integer",
+                    "example": 9
+                },
+                "clientIpAddress": {
+                    "description": "Source IP address",
+                    "type": "string",
+                    "example": "192.168.1.100"
+                },
+                "createdAt": {
+                    "description": "Timestamp of the event",
+                    "type": "string",
+                    "example": "2024-03-18T08:12:33Z"
+                },
+                "domain": {
+                    "description": "Target domain",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "logs": {
+                    "description": "Associated log entries",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Log"
+                    }
+                },
+                "message": {
+                    "description": "Event message or description",
+                    "type": "string",
+                    "example": "Web Application Scanner detected"
+                },
+                "payload": {
+                    "description": "Attack payload",
+                    "type": "string",
+                    "example": "Acunetix/1.0"
+                },
+                "phase": {
+                    "description": "Phase of the request processing",
+                    "type": "integer",
+                    "example": 1
+                },
+                "request": {
+                    "description": "Raw HTTP request",
+                    "type": "string",
+                    "example": "GET /api/users HTTP/1.1\nHost: example.com\nUser-Agent: Acunetix/1.0\nAccept: */*"
+                },
+                "response": {
+                    "description": "Raw HTTP response",
+                    "type": "string",
+                    "example": "HTTP/1.1 403 Forbidden\nServer: nginx\nDate: Wed, 18 Mar 2024 08:12:33 GMT\nContent-Type: text/html\nContent-Length: 146"
+                },
+                "ruleId": {
+                    "description": "ID of the triggered rule",
+                    "type": "integer",
+                    "example": 100012
+                },
+                "secLangRaw": {
+                    "description": "Raw security language definition",
+                    "type": "string",
+                    "example": "SecRule REQUEST_HEADERS:User-Agent \\\"@rx (?:acunetix|Morfeus|ZmEu)\\\" \\\"id:1008,phase:1,t:lowercase,t:none,pass,nolog,tag:'application-multi',tag:'language-multi',tag:'platform-multi',tag:'attack-reputation-scanner',severity:'CRITICAL',msg:'Web Application Scanner detected'\""
+                },
+                "secMark": {
+                    "description": "Security mark of the rule",
+                    "type": "string",
+                    "example": "web_attack_scanner"
+                },
+                "serverIpAddress": {
+                    "description": "Destination IP address",
+                    "type": "string",
+                    "example": "10.0.0.5"
+                },
+                "severity": {
+                    "description": "Severity level of the event (0-5)",
+                    "type": "integer",
+                    "example": 2
+                },
+                "uri": {
+                    "description": "Request URI",
+                    "type": "string",
+                    "example": "/api/users"
+                }
+            }
+        },
+        "model.WAFMode": {
+            "type": "string",
+            "enum": [
+                "protection",
+                "observation"
+            ],
+            "x-enum-comments": {
+                "WAFModeObservation": "观察模式",
+                "WAFModeProtection": "防护模式"
+            },
+            "x-enum-varnames": [
+                "WAFModeProtection",
+                "WAFModeObservation"
+            ]
         }
     },
     "securityDefinitions": {

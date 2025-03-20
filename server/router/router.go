@@ -22,13 +22,16 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	// 创建仓库
 	userRepo := repository.NewUserRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
-
+	siteRepo := repository.NewSiteRepository(db)
+	wafLogRepo := repository.NewMongoWAFLogRepository(db)
 	// 创建服务
 	authService := service.NewAuthService(userRepo, roleRepo)
-
+	siteService := service.NewSiteService(siteRepo)
+	wafLogService := service.NewWAFLogService(wafLogRepo)
 	// 创建控制器
 	authController := controller.NewAuthController(authService)
-
+	siteController := controller.NewSiteController(siteService)
+	wafLogController := controller.NewWAFLogController(wafLogService)
 	// 将仓库添加到上下文中，供中间件使用
 	route.Use(func(c *gin.Context) {
 		c.Set("userRepo", userRepo)
@@ -88,24 +91,32 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	siteRoutes := authenticated.Group("/sites")
 	{
 		// 创建站点 - 需要site:create权限
-		siteRoutes.POST("", middleware.HasPermission(model.PermSiteCreate), nil)
+		siteRoutes.POST("", middleware.HasPermission(model.PermSiteCreate), siteController.CreateSite)
 		// 获取站点列表 - 需要site:read权限
-		siteRoutes.GET("", middleware.HasPermission(model.PermSiteRead), nil)
+		siteRoutes.GET("", middleware.HasPermission(model.PermSiteRead), siteController.GetSites)
 		// 获取单个站点 - 需要site:read权限
-		siteRoutes.GET("/:id", middleware.HasPermission(model.PermSiteRead), nil)
+		siteRoutes.GET("/:id", middleware.HasPermission(model.PermSiteRead), siteController.GetSiteByID)
 		// 更新站点 - 需要site:update权限
-		siteRoutes.PUT("/:id", middleware.HasPermission(model.PermSiteUpdate), nil)
+		siteRoutes.PUT("/:id", middleware.HasPermission(model.PermSiteUpdate), siteController.UpdateSite)
 		// 删除站点 - 需要site:delete权限
-		siteRoutes.DELETE("/:id", middleware.HasPermission(model.PermSiteDelete), nil)
+		siteRoutes.DELETE("/:id", middleware.HasPermission(model.PermSiteDelete), siteController.DeleteSite)
 	}
 
+	// 配置管理模块
+	wafLogRoutes := authenticated.Group("/logs")
+	{
+		// 获取攻击事件 - 需要logs:read权限
+		wafLogRoutes.GET("/events", middleware.HasPermission(model.PermWAFLogRead), nil)
+		// 获取攻击日志 - 需要logs:read权限
+		wafLogRoutes.GET("", middleware.HasPermission(model.PermWAFLogRead), nil)
+	}
 	// 配置管理模块
 	configRoutes := authenticated.Group("/config")
 	{
 		// 获取配置 - 需要config:read权限
-		configRoutes.GET("", middleware.HasPermission(model.PermConfigRead), nil)
+		configRoutes.GET("", middleware.HasPermission(model.PermConfigRead), wafLogController.GetAttackLogs)
 		// 更新配置 - 需要config:update权限
-		configRoutes.PUT("", middleware.HasPermission(model.PermConfigUpdate), nil)
+		configRoutes.PUT("", middleware.HasPermission(model.PermConfigUpdate), wafLogController.GetAttackLogs)
 	}
 
 	// 审计日志模块

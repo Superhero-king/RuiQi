@@ -1,2 +1,12 @@
 @server 
 @context.txt  为 server 的项目上下文信息，后续做的变更需要同步到 context.txt 上下文文件中
+
+model/site.go 是站点的数据模型
+mock_data 是测试数据
+
+要求如下，
+1. 完成 site 的 curd 接口，增加站点，删除站点，获取站点列表，修改站点
+2. 完善 站点模型的 NewSite 函数
+3. 完成 站点 curd 请求的 dto 定义
+4. 要求代码有完整 swagger 注释
+5. 可以参考已经写好的 auth controller

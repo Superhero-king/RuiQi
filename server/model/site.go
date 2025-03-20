@@ -14,6 +14,7 @@ const (
 
 // Site 代表一个站点配置
 type Site struct {
+	ID           string      `bson:"_id,omitempty" json:"id,omitempty"`                  // 站点ID
 	Name         string      `bson:"name" json:"name"`                                   // 站点名称
 	Domain       string      `bson:"domain" json:"domain"`                               // 域名，如 a.com
 	ListenPort   int         `bson:"listenPort" json:"listenPort"`                       // 监听端口，如 9000
@@ -39,17 +40,14 @@ type Certificate struct {
 
 // Backend 代表后端服务器配置
 type Backend struct {
-	Name    string   `bson:"name" json:"name"`       // 后端名称，如 be_a_servers
 	Servers []Server `bson:"servers" json:"servers"` // 服务器列表
 }
 
 // Server 代表单个后端服务器
 type Server struct {
-	Name   string `bson:"name" json:"name"`     // 服务器名称，如 a1
-	Host   string `bson:"host" json:"host"`     // 主机地址，如 IP 或域名
-	Port   int    `bson:"port" json:"port"`     // 端口
-	Weight int    `bson:"weight" json:"weight"` // 权重
-	IsSSL  bool   `bson:"isSSL" json:"isSSL"`   // 是否启用SSL
+	Host  string `bson:"host" json:"host"`   // 主机地址，如 IP 或域名
+	Port  int    `bson:"port" json:"port"`   // 端口
+	IsSSL bool   `bson:"isSSL" json:"isSSL"` // 是否启用SSL
 }
 
 // IsValidWAFMode 检查WAF模式是否有效
@@ -69,10 +67,17 @@ func GetAllWAFModes() []WAFMode {
 
 // NewSite 创建一个新站点，设置默认值
 func NewSite() *Site {
+	now := time.Now()
 	return &Site{
-		WAFMode:   DefaultWAFMode(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		WAFMode:      DefaultWAFMode(),
+		WAFEnabled:   false,
+		EnableHTTPS:  false,
+		ActiveStatus: true,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+		Backend: Backend{
+			Servers: make([]Server, 0),
+		},
 	}
 }
 
@@ -91,4 +96,9 @@ func WAFModeFromString(s string) WAFMode {
 		return DefaultWAFMode()
 	}
 	return mode
+}
+
+// GetCollectionName 返回集合名称
+func (r *Site) GetCollectionName() string {
+	return "site"
 }

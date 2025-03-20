@@ -1,0 +1,285 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"math"
+	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+)
+
+// WAFLogAggregateResult represents the result of the aggregation query
+type WAFLogAggregateResult struct {
+	ClientIPAddress   string    `bson:"clientIpAddress"`
+	Domain            string    `bson:"domain"`
+	Count             int       `bson:"count"`
+	FirstAttackTime   time.Time `bson:"firstAttackTime"`
+	LastAttackTime    time.Time `bson:"lastAttackTime"`
+	DurationInMinutes float64   `bson:"durationInMinutes,omitempty"`
+	IsOngoing         bool      `bson:"isOngoing"`
+}
+
+// PaginatedResponse represents a paginated response
+type PaginatedResponse struct {
+	Results     []WAFLogAggregateResult `json:"results"`
+	TotalCount  int64                   `json:"totalCount"`
+	PageSize    int                     `json:"pageSize"`
+	CurrentPage int                     `json:"currentPage"`
+	TotalPages  int                     `json:"totalPages"`
+}
+
+// GetWAFLogAggregationPaginated performs WAF log aggregation with pagination
+func GetWAFLogAggregationPaginated(
+	ctx context.Context,
+	db *mongo.Database,
+	page int,
+	pageSize int,
+) (PaginatedResponse, error) {
+	// Validate pagination parameters
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+
+	collection := db.Collection("waf_log")
+	currentTime := time.Now()
+
+	// Define the aggregation pipeline stages
+	// Stage 1: Group by ClientIPAddress and Domain
+	groupStage := bson.D{
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: bson.D{
+				{Key: "clientIpAddress", Value: "$clientIpAddress"},
+				{Key: "domain", Value: "$domain"},
+			}},
+			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
+			{Key: "firstAttackTime", Value: bson.D{{Key: "$min", Value: "$createdAt"}}},
+			{Key: "lastAttackTime", Value: bson.D{{Key: "$max", Value: "$createdAt"}}},
+			{Key: "allTimes", Value: bson.D{{Key: "$push", Value: "$createdAt"}}},
+		}},
+	}
+
+	// Stage 2: Project the results to format the output
+	projectStage := bson.D{
+		{Key: "$project", Value: bson.D{
+			{Key: "clientIpAddress", Value: "$_id.clientIpAddress"},
+			{Key: "domain", Value: "$_id.domain"},
+			{Key: "count", Value: 1},
+			{Key: "firstAttackTime", Value: 1},
+			{Key: "lastAttackTime", Value: 1},
+			{Key: "allTimes", Value: 1},
+			{Key: "_id", Value: 0},
+		}},
+	}
+
+	// Stage 3: Sort by lastAttackTime (most recent first)
+	sortStage := bson.D{
+		{Key: "$sort", Value: bson.D{
+			{Key: "lastAttackTime", Value: -1},
+		}},
+	}
+
+	// First, get the total count of results (before pagination)
+	countPipeline := mongo.Pipeline{groupStage, projectStage}
+	countStage := bson.D{{Key: "$count", Value: "total"}}
+	countPipeline = append(countPipeline, countStage)
+
+	// Execute the count aggregation
+	countCursor, err := collection.Aggregate(ctx, countPipeline)
+	if err != nil {
+		return PaginatedResponse{}, fmt.Errorf("error executing count aggregation: %w", err)
+	}
+	defer countCursor.Close(ctx)
+
+	// Get the total count
+	var totalCount int64 = 0
+	var countResult struct {
+		Total int64 `bson:"total"`
+	}
+	if countCursor.Next(ctx) {
+		if err := countCursor.Decode(&countResult); err != nil {
+			return PaginatedResponse{}, fmt.Errorf("error decoding count result: %w", err)
+		}
+		totalCount = countResult.Total
+	}
+
+	// Calculate total pages
+	totalPages := int(math.Ceil(float64(totalCount) / float64(pageSize)))
+
+	// Add pagination stages
+	skipStage := bson.D{
+		{Key: "$skip", Value: (page - 1) * pageSize},
+	}
+	limitStage := bson.D{
+		{Key: "$limit", Value: pageSize},
+	}
+
+	// Build the complete pipeline for the data query
+	dataPipeline := mongo.Pipeline{groupStage, projectStage, sortStage, skipStage, limitStage}
+
+	// Execute the data aggregation
+	dataCursor, err := collection.Aggregate(ctx, dataPipeline)
+	if err != nil {
+		return PaginatedResponse{}, fmt.Errorf("error executing data aggregation: %w", err)
+	}
+	defer dataCursor.Close(ctx)
+
+	// Process the results
+	var results []WAFLogAggregateResult
+	for dataCursor.Next(ctx) {
+		var result struct {
+			ClientIPAddress string      `bson:"clientIpAddress"`
+			Domain          string      `bson:"domain"`
+			Count           int         `bson:"count"`
+			FirstAttackTime time.Time   `bson:"firstAttackTime"`
+			LastAttackTime  time.Time   `bson:"lastAttackTime"`
+			AllTimes        []time.Time `bson:"allTimes"`
+		}
+
+		if err := dataCursor.Decode(&result); err != nil {
+			return PaginatedResponse{}, fmt.Errorf("error decoding data result: %w", err)
+		}
+
+		// Create the result object
+		aggregateResult := WAFLogAggregateResult{
+			ClientIPAddress: result.ClientIPAddress,
+			Domain:          result.Domain,
+			Count:           result.Count,
+			FirstAttackTime: result.FirstAttackTime,
+			LastAttackTime:  result.LastAttackTime,
+		}
+
+		// Check if attack is ongoing (within last 3 minutes)
+		timeSinceLastAttack := currentTime.Sub(result.LastAttackTime).Minutes()
+		if timeSinceLastAttack < 3 {
+			aggregateResult.IsOngoing = true
+			// Calculate the duration of the continuous attack
+			aggregateResult.DurationInMinutes = calculateAttackDuration(result.AllTimes)
+		} else {
+			aggregateResult.IsOngoing = false
+		}
+
+		results = append(results, aggregateResult)
+	}
+
+	if err := dataCursor.Err(); err != nil {
+		return PaginatedResponse{}, fmt.Errorf("cursor error: %w", err)
+	}
+
+	// Create the paginated response
+	response := PaginatedResponse{
+		Results:     results,
+		TotalCount:  totalCount,
+		PageSize:    pageSize,
+		CurrentPage: page,
+		TotalPages:  totalPages,
+	}
+
+	return response, nil
+}
+
+// calculateAttackDuration calculates the duration of a continuous attack
+// by finding the longest sequence of attacks with gaps no larger than 5 minutes
+func calculateAttackDuration(attackTimes []time.Time) float64 {
+	if len(attackTimes) == 0 {
+		return 0
+	}
+
+	// Sort attack times in descending order (newest first)
+	sortedTimes := make([]time.Time, len(attackTimes))
+	copy(sortedTimes, attackTimes)
+
+	// Sort in reverse chronological order
+	for i := 0; i < len(sortedTimes)-1; i++ {
+		for j := i + 1; j < len(sortedTimes); j++ {
+			if sortedTimes[i].Before(sortedTimes[j]) {
+				sortedTimes[i], sortedTimes[j] = sortedTimes[j], sortedTimes[i]
+			}
+		}
+	}
+
+	// Start from the most recent attack time
+	lastContinuousAttackTime := sortedTimes[0]
+
+	// Find the earliest attack that is still part of the continuous sequence
+	var earliestContinuousAttackTime time.Time
+
+	for i := 1; i < len(sortedTimes); i++ {
+		// If the gap between attacks is more than 5 minutes, break the sequence
+		if lastContinuousAttackTime.Sub(sortedTimes[i]).Minutes() > 5 {
+			break
+		}
+		earliestContinuousAttackTime = sortedTimes[i]
+	}
+
+	// If we didn't find any break in the sequence, use the oldest attack time
+	if earliestContinuousAttackTime.IsZero() {
+		earliestContinuousAttackTime = sortedTimes[len(sortedTimes)-1]
+	}
+
+	// Return the duration in minutes
+	return lastContinuousAttackTime.Sub(earliestContinuousAttackTime).Minutes()
+}
+
+// Example usage
+func main() {
+	// Set up MongoDB connection
+	ctx := context.Background()
+	clientOpts := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(ctx, clientOpts)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+	defer client.Disconnect(ctx)
+
+	db := client.Database("waf_db")
+
+	// Get page 1 with 10 items per page
+	page := 1
+	pageSize := 10
+
+	response, err := GetWAFLogAggregationPaginated(ctx, db, page, pageSize)
+	if err != nil {
+		log.Fatalf("Error getting aggregation: %v", err)
+	}
+
+	// Print pagination information
+	fmt.Printf("Page %d of %d (Total items: %d)\n",
+		response.CurrentPage,
+		response.TotalPages,
+		response.TotalCount)
+	fmt.Println("--------------------------------------")
+
+	// Print the results
+	for i, result := range response.Results {
+		fmt.Printf("%d) IP: %s, Domain: %s\n",
+			i+1,
+			result.ClientIPAddress,
+			result.Domain)
+		fmt.Printf("   Count: %d attacks\n", result.Count)
+		fmt.Printf("   First Attack: %s\n", result.FirstAttackTime.Format(time.RFC3339))
+		fmt.Printf("   Last Attack: %s\n", result.LastAttackTime.Format(time.RFC3339))
+
+		if result.IsOngoing {
+			fmt.Printf("   Status: ONGOING, Duration: %.2f minutes\n", result.DurationInMinutes)
+		} else {
+			fmt.Printf("   Status: COMPLETED\n")
+		}
+		fmt.Println("----------------------------")
+	}
+
+	// Navigation prompt
+	fmt.Println("\nNavigation:")
+	if response.CurrentPage > 1 {
+		fmt.Println("- Previous page available")
+	}
+	if response.CurrentPage < response.TotalPages {
+		fmt.Println("- Next page available")
+	}
+}
