@@ -6,6 +6,7 @@ import './index.css'
 import './i18n'
 import App from './App.tsx'
 import { ErrorBoundary } from './handler/error-boundary.tsx'
+import { ENV } from './utils/env.ts'
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -29,7 +30,7 @@ createRoot(document.getElementById('root')!).render(
                 }>
                     <App />
                 </Suspense>
-                {process.env.NODE_ENV === 'development' && <ReactQueryDevtools />}
+                {ENV.isDevelopment && <ReactQueryDevtools />}
             </QueryClientProvider>
         </ErrorBoundary>
     </StrictMode>,

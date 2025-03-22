@@ -23,14 +23,14 @@ export const useLogin = () => {
                 navigate('/')
             }
         },
-        onError: (error: any) => {
-            setError(error.response?.data?.message || '登录失败，请检查用户名和密码')
-        },
+        onError: (error: ApiError) => {
+            setError(error.message || '登录失败，请检查用户名和密码')
+        }
     })
 
     return {
         login: mutation.mutate,
-        isLoading: mutation.isLoading, // 修改 isPending 为 isLoading
+        isLoading: mutation.isLoading,
         error,
         clearError: () => setError(null),
     }
@@ -58,14 +58,14 @@ export const useResetPassword = () => {
                 navigate('/')
             }
         },
-        onError: (error: any) => {
-            setError(error.response?.data?.message || '密码重置失败，请重试')
+        onError: (error: ApiError) => {
+            setError(error.message || '密码重置失败，请重试')
         },
     })
 
     return {
         resetPassword: mutation.mutate,
-        isLoading: mutation.isLoading, // 修改 isPending 为 isLoading
+        isLoading: mutation.isLoading,
         error,
         clearError: () => setError(null),
     }
