@@ -24,6 +24,362 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/certificates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "获取所有SSL/TLS证书列表，支持分页",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "证书管理"
+                ],
+                "summary": "获取证书列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取证书列表成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.CertificateListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "创建一个新的SSL/TLS证书",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "证书管理"
+                ],
+                "summary": "创建新证书",
+                "parameters": [
+                    {
+                        "description": "证书信息",
+                        "name": "certificate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CertificateCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书创建成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CertificateStore"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "证书名称已存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/certificates/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "根据ID获取证书详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "证书管理"
+                ],
+                "summary": "获取单个证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "证书ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取证书详情成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CertificateStore"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "证书不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "更新指定证书的信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "证书管理"
+                ],
+                "summary": "更新证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "证书ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "证书更新信息",
+                        "name": "certificate",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CertificateUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书更新成功",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.CertificateStore"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "证书不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "409": {
+                        "description": "证书名称已存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "删除指定的SSL/TLS证书",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "证书管理"
+                ],
+                "summary": "删除证书",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "证书ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "证书删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/model.SuccessResponseNoData"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "403": {
+                        "description": "禁止访问",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "404": {
+                        "description": "证书不存在",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrResponseDontShowError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/sites": {
             "get": {
                 "security": [
@@ -1113,6 +1469,59 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CertificateCreateRequest": {
+            "description": "创建证书的请求参数",
+            "type": "object",
+            "required": [
+                "privateKey",
+                "publicKey"
+            ],
+            "properties": {
+                "description": {
+                    "description": "证书描述",
+                    "type": "string",
+                    "example": "用于example.com的证书"
+                },
+                "domains": {
+                    "description": "证书绑定的域名列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"example.com\"]"
+                    ]
+                },
+                "expireDate": {
+                    "description": "证书过期日期",
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                },
+                "fingerPrint": {
+                    "description": "证书指纹",
+                    "type": "string",
+                    "example": "AA:BB:CC:DD:..."
+                },
+                "issuerName": {
+                    "description": "颁发机构",
+                    "type": "string",
+                    "example": "Let's Encrypt"
+                },
+                "name": {
+                    "description": "证书名称/别名",
+                    "type": "string",
+                    "example": "example-cert"
+                },
+                "privateKey": {
+                    "description": "私钥内容（PEM格式）",
+                    "type": "string"
+                },
+                "publicKey": {
+                    "description": "公钥内容（PEM格式）",
+                    "type": "string"
+                }
+            }
+        },
         "dto.CertificateDTO": {
             "type": "object",
             "required": [
@@ -1148,6 +1557,72 @@ const docTemplate = `{
                 },
                 "publicKey": {
                     "description": "公钥内容",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CertificateListResponse": {
+            "description": "证书列表响应",
+            "type": "object",
+            "properties": {
+                "items": {
+                    "description": "证书列表",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.CertificateStore"
+                    }
+                },
+                "total": {
+                    "description": "总数",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CertificateUpdateRequest": {
+            "description": "更新证书的请求参数",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "证书描述",
+                    "type": "string",
+                    "example": "用于example.com的证书"
+                },
+                "domains": {
+                    "description": "证书绑定的域名列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"example.com\"]"
+                    ]
+                },
+                "expireDate": {
+                    "description": "证书过期日期",
+                    "type": "string",
+                    "example": "2023-12-31T23:59:59Z"
+                },
+                "fingerPrint": {
+                    "description": "证书指纹",
+                    "type": "string",
+                    "example": "AA:BB:CC:DD:..."
+                },
+                "issuerName": {
+                    "description": "颁发机构",
+                    "type": "string",
+                    "example": "Let's Encrypt"
+                },
+                "name": {
+                    "description": "证书名称/别名",
+                    "type": "string",
+                    "example": "example-cert"
+                },
+                "privateKey": {
+                    "description": "私钥内容（PEM格式）",
+                    "type": "string"
+                },
+                "publicKey": {
+                    "description": "公钥内容（PEM格式）",
                     "type": "string"
                 }
             }
@@ -1598,6 +2073,58 @@ const docTemplate = `{
                 },
                 "publicKey": {
                     "description": "公钥内容（PEM格式）",
+                    "type": "string"
+                }
+            }
+        },
+        "model.CertificateStore": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "description": "创建时间",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "证书描述",
+                    "type": "string"
+                },
+                "domains": {
+                    "description": "证书绑定的域名列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "expireDate": {
+                    "description": "证书过期日期",
+                    "type": "string"
+                },
+                "fingerPrint": {
+                    "description": "证书指纹",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "证书ID",
+                    "type": "string"
+                },
+                "issuerName": {
+                    "description": "颁发机构",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "证书名称/别名",
+                    "type": "string"
+                },
+                "privateKey": {
+                    "description": "私钥内容（PEM格式）",
+                    "type": "string"
+                },
+                "publicKey": {
+                    "description": "公钥内容（PEM格式）",
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "description": "更新时间",
                     "type": "string"
                 }
             }

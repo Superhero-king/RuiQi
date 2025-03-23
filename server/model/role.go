@@ -24,6 +24,12 @@ const (
 	PermSiteUpdate = "site:update"
 	PermSiteDelete = "site:delete"
 
+	// 证书管理权限
+	PermCertCreate = "cert:create"
+	PermCertRead   = "cert:read"
+	PermCertUpdate = "cert:update"
+	PermCertDelete = "cert:delete"
+
 	// 配置管理权限
 	PermConfigRead   = "config:read"
 	PermConfigUpdate = "config:update"
@@ -60,6 +66,7 @@ func GetDefaultRolePermissions() map[string][]string {
 			PermAuditRead,
 			PermSystemRestart, PermSystemStatus,
 			PermWAFLogRead,
+			PermCertCreate, PermCertRead, PermCertUpdate, PermCertDelete,
 		},
 		RoleAuditor: {
 			// 审计员可以查看用户、站点、配置和审计日志
@@ -69,6 +76,7 @@ func GetDefaultRolePermissions() map[string][]string {
 			PermAuditRead,
 			PermSystemStatus,
 			PermWAFLogRead,
+			PermCertRead,
 		},
 		RoleConfigurator: {
 			// 配置管理员可以管理站点和配置
@@ -76,12 +84,14 @@ func GetDefaultRolePermissions() map[string][]string {
 			PermConfigRead, PermConfigUpdate,
 			PermSystemStatus,
 			PermWAFLogRead,
+			PermCertRead, PermCertUpdate, PermCertDelete,
 		},
 		RoleUser: {
 			// 普通用户只能查看站点和系统状态
 			PermSiteRead,
 			PermSystemStatus,
 			PermWAFLogRead,
+			PermCertRead,
 		},
 	}
 }

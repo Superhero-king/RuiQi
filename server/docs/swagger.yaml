@@ -92,6 +92,46 @@ definitions:
     required:
     - servers
     type: object
+  dto.CertificateCreateRequest:
+    description: 创建证书的请求参数
+    properties:
+      description:
+        description: 证书描述
+        example: 用于example.com的证书
+        type: string
+      domains:
+        description: 证书绑定的域名列表
+        example:
+        - '["example.com"]'
+        items:
+          type: string
+        type: array
+      expireDate:
+        description: 证书过期日期
+        example: "2023-12-31T23:59:59Z"
+        type: string
+      fingerPrint:
+        description: 证书指纹
+        example: AA:BB:CC:DD:...
+        type: string
+      issuerName:
+        description: 颁发机构
+        example: Let's Encrypt
+        type: string
+      name:
+        description: 证书名称/别名
+        example: example-cert
+        type: string
+      privateKey:
+        description: 私钥内容（PEM格式）
+        type: string
+      publicKey:
+        description: 公钥内容（PEM格式）
+        type: string
+    required:
+    - privateKey
+    - publicKey
+    type: object
   dto.CertificateDTO:
     properties:
       certName:
@@ -121,6 +161,55 @@ definitions:
     - issuerName
     - privateKey
     - publicKey
+    type: object
+  dto.CertificateListResponse:
+    description: 证书列表响应
+    properties:
+      items:
+        description: 证书列表
+        items:
+          $ref: '#/definitions/model.CertificateStore'
+        type: array
+      total:
+        description: 总数
+        type: integer
+    type: object
+  dto.CertificateUpdateRequest:
+    description: 更新证书的请求参数
+    properties:
+      description:
+        description: 证书描述
+        example: 用于example.com的证书
+        type: string
+      domains:
+        description: 证书绑定的域名列表
+        example:
+        - '["example.com"]'
+        items:
+          type: string
+        type: array
+      expireDate:
+        description: 证书过期日期
+        example: "2023-12-31T23:59:59Z"
+        type: string
+      fingerPrint:
+        description: 证书指纹
+        example: AA:BB:CC:DD:...
+        type: string
+      issuerName:
+        description: 颁发机构
+        example: Let's Encrypt
+        type: string
+      name:
+        description: 证书名称/别名
+        example: example-cert
+        type: string
+      privateKey:
+        description: 私钥内容（PEM格式）
+        type: string
+      publicKey:
+        description: 公钥内容（PEM格式）
+        type: string
     type: object
   dto.CreateSiteRequest:
     description: 创建站点的请求参数
@@ -438,6 +527,44 @@ definitions:
         description: 公钥内容（PEM格式）
         type: string
     type: object
+  model.CertificateStore:
+    properties:
+      createdAt:
+        description: 创建时间
+        type: string
+      description:
+        description: 证书描述
+        type: string
+      domains:
+        description: 证书绑定的域名列表
+        items:
+          type: string
+        type: array
+      expireDate:
+        description: 证书过期日期
+        type: string
+      fingerPrint:
+        description: 证书指纹
+        type: string
+      id:
+        description: 证书ID
+        type: string
+      issuerName:
+        description: 颁发机构
+        type: string
+      name:
+        description: 证书名称/别名
+        type: string
+      privateKey:
+        description: 私钥内容（PEM格式）
+        type: string
+      publicKey:
+        description: 公钥内容（PEM格式）
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+    type: object
   model.ErrResponse:
     description: 错误的API响应标准格式
     properties:
@@ -750,6 +877,224 @@ info:
   title: Simple-WAF API
   version: "1.0"
 paths:
+  /api/v1/certificates:
+    get:
+      description: 获取所有SSL/TLS证书列表，支持分页
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取证书列表成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CertificateListResponse'
+              type: object
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 获取证书列表
+      tags:
+      - 证书管理
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的SSL/TLS证书
+      parameters:
+      - description: 证书信息
+        in: body
+        name: certificate
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CertificateCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 证书创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.CertificateStore'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/model.ErrResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "403":
+          description: 禁止访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "409":
+          description: 证书名称已存在
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 创建新证书
+      tags:
+      - 证书管理
+  /api/v1/certificates/{id}:
+    delete:
+      description: 删除指定的SSL/TLS证书
+      parameters:
+      - description: 证书ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 证书删除成功
+          schema:
+            $ref: '#/definitions/model.SuccessResponseNoData'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "403":
+          description: 禁止访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "404":
+          description: 证书不存在
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 删除证书
+      tags:
+      - 证书管理
+    get:
+      description: 根据ID获取证书详情
+      parameters:
+      - description: 证书ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取证书详情成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.CertificateStore'
+              type: object
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "404":
+          description: 证书不存在
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 获取单个证书
+      tags:
+      - 证书管理
+    put:
+      consumes:
+      - application/json
+      description: 更新指定证书的信息
+      parameters:
+      - description: 证书ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 证书更新信息
+        in: body
+        name: certificate
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CertificateUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 证书更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.CertificateStore'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/model.ErrResponse'
+        "401":
+          description: 未授权访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "403":
+          description: 禁止访问
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "404":
+          description: 证书不存在
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "409":
+          description: 证书名称已存在
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/model.ErrResponseDontShowError'
+      security:
+      - BearerAuth: []
+      summary: 更新证书
+      tags:
+      - 证书管理
   /api/v1/sites:
     get:
       description: 获取所有站点配置列表

@@ -26,8 +26,8 @@ type MongoWAFLogRepository struct {
 	logger     zerolog.Logger
 }
 
-// NewMongoWAFLogRepository creates a new WAFLogRepository instance
-func NewMongoWAFLogRepository(db *mongo.Database) WAFLogRepository {
+// NewWAFLogRepository creates a new WAFLogRepository instance
+func NewWAFLogRepository(db *mongo.Database) WAFLogRepository {
 	var wafLog model.WAFLog
 	collection := db.Collection(wafLog.GetCollectionName())
 	logger := config.GetRepositoryLogger("waf_log")
