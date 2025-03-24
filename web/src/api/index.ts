@@ -44,9 +44,6 @@ export type ApiResponseData = Record<string, unknown>
 // API 客户端配置
 // ======================
 
-// 从import.meta.env获取API基础URL (Vite环境变量方式)
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-// const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 10000)
 const API_BASE_URL = ENV.API_BASE_URL || '/api/v1'
 const API_TIMEOUT = Number(ENV.API_TIMEOUT || 10000)
 

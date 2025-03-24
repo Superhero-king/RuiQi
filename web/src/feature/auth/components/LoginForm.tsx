@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLogin } from '../hooks';
-import { loginSchema, LoginFormValues } from '@/validations/auth';
+import { loginSchema, LoginFormValues } from '@/validation/auth';
 
 export function LoginForm() {
   const { login, isLoading, error, clearError } = useLogin();

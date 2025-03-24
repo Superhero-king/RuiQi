@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router' // 修改导入路径从react-router-
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { authApi } from '@/api/services'
 import useAuthStore from '@/store/auth'
-import { LoginFormValues, PasswordResetFormValues } from '@/validations/auth'
+import { LoginFormValues, PasswordResetFormValues } from '@/validation/auth'
+import { useEffect } from 'react'
+import { GetUserInfoResponseData } from '@/types/auth'
 
 export const useLogin = () => {
     const navigate = useNavigate()
@@ -30,7 +32,7 @@ export const useLogin = () => {
 
     return {
         login: mutation.mutate,
-        isLoading: mutation.isLoading,
+        isLoading: mutation.isPending,
         error,
         clearError: () => setError(null),
     }
@@ -65,25 +67,28 @@ export const useResetPassword = () => {
 
     return {
         resetPassword: mutation.mutate,
-        isLoading: mutation.isLoading,
+        isLoading: mutation.isPending,
         error,
         clearError: () => setError(null),
     }
 }
 
+
 export const useCurrentUser = () => {
     const { user, setUser } = useAuthStore()
 
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading, error } = useQuery<GetUserInfoResponseData, ApiError>({
         queryKey: ['currentUser'],
         queryFn: () => authApi.getCurrentUser(),
         enabled: !!useAuthStore.getState().token,
-        onSuccess: (data) => {
-            if (data) {
-                setUser(data)
-            }
-        },
     })
+
+    // 监听数据变化，替代 onSuccess
+    useEffect(() => {
+        if (data) {
+            setUser(data)
+        }
+    }, [data, setUser])
 
     return {
         user: data || user,

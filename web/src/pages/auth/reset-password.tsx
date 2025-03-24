@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { PasswordResetForm } from '@/features/auth/components/PasswordResetForm'
+import { PasswordResetForm } from '@/feature/auth/components/PasswordResetForm'
 import useAuthStore from '@/store/auth'
 
 export default function ResetPasswordPage() {

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useResetPassword } from '../hooks';
-import { passwordResetSchema, PasswordResetFormValues } from '@/validations/auth';
+import { passwordResetSchema, PasswordResetFormValues } from '@/validation/auth';
 import useAuthStore from '@/store/auth';
 
 export function PasswordResetForm() {

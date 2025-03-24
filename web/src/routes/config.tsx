@@ -5,20 +5,21 @@ import { RoutePath, ROUTES } from "./constants"
 import { useTranslation } from 'react-i18next'
 import { TFunction } from 'i18next'
 import { Loader } from "lucide-react"
-import { ProtectedRoute } from "@/features/auth/components/ProtectedRoute"
+import { ProtectedRoute } from "@/feature/auth/components/ProtectedRoute"
 
 // 直接导入布局组件
 import { RootLayout } from "@/components/layout/root-layout"
 import { LogsPage } from "@/pages/logs/page"
 import { MonitorPage } from "@/pages/monitor/page"
-import { RulesPage } from "@/pages/rules/page"
-import { SettingsPage } from "@/pages/settings/page"
+import { RulesPage } from "@/pages/rule/page"
+import { SettingsPage } from "@/pages/setting/page"
 
 // 直接导入子组件
 import { LogsAttack, LogsProtect } from "@/pages/logs/components"
-import { GlobalSetting, SiteManager, CertManager } from "@/pages/settings/components"
+import { GlobalSetting, SiteManager } from "@/pages/setting/pages"
+import CertificatesPage from "@/pages/setting/pages/certificate/page"
 import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
-import { SysRules, UserRules, IpGroup } from "@/pages/rules/components"
+import { SysRules, UserRules, IpGroup } from "@/pages/rule/components"
 
 // 懒加载认证页面
 const LoginPage = lazy(() => import("@/pages/auth/login"))
@@ -76,7 +77,7 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
             items: [
                 { title: t('breadcrumb.settings.settings'), path: "settings", component: <GlobalSetting /> },
                 { title: t('breadcrumb.settings.siteManager'), path: "site", component: <SiteManager /> },
-                { title: t('breadcrumb.settings.certManager'), path: "cert", component: <CertManager /> }
+                { title: t('breadcrumb.settings.certManager'), path: "cert", component: <CertificatesPage /> }
             ]
         }
     }

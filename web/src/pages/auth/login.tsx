@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { LoginForm } from '@/features/auth/components/LoginForm'
+import { LoginForm } from '@/feature/auth/components/LoginForm'
 import useAuthStore from '@/store/auth'
 
 export default function LoginPage() {
