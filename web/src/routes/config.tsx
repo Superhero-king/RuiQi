@@ -52,10 +52,10 @@ interface BreadcrumbConfig {
 export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, BreadcrumbConfig> {
     return {
         [ROUTES.LOGS]: {
-            defaultPath: "protect",
+            defaultPath: "attack",
             items: [
+                { title: t('breadcrumb.logs.attack'), path: "attack", component: <LogsAttack /> },
                 { title: t('breadcrumb.logs.protect'), path: "protect", component: <LogsProtect /> },
-                { title: t('breadcrumb.logs.attack'), path: "attack", component: <LogsAttack /> }
             ]
         },
         [ROUTES.MONITOR]: {

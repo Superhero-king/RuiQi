@@ -76,6 +76,8 @@ const logItems = [
 export function LogsProtect() {
     const { t } = useTranslation()
 
+    const [detailDialogOpen, setDetailDialogOpen] = React.useState<number | null>(null)
+
     const columns: ColumnDef<LogItem>[] = [
         {
             id: "select",
@@ -102,21 +104,21 @@ export function LogsProtect() {
         {
             id: "status",
             accessorKey: "status",
-            header: t('protect.status'),
+            header: () => <div className="text-zinc-900 font-bold py-6">{t('protect.status')}</div>,
         },
         {
             id: "url",
             accessorKey: "url",
-            header: t('attack.url'),
+            header: () => <div className="text-zinc-900 font-bold py-6">{t('attack.url')}</div>,
         },
         {
             id: "type",
             accessorKey: "type",
-            header: t('attack.type'),
+            header: () => <div className="text-zinc-900 font-bold py-6">{t('attack.type')}</div>,
         },
         {
             id: "ip",
-            header: t('attack.ip'),
+            header: () => <div className="text-zinc-900 font-bold py-6">{t('attack.ip')}</div>,
             cell: ({ row }) => {
                 return (
                     <div className="flex flex-col">
@@ -128,7 +130,7 @@ export function LogsProtect() {
         },
         {
             id: "time",
-            header: t('time'),
+            header: () => <div className="text-zinc-900 font-bold py-6">{t('time')}</div>,
             cell: ({ row }) => {
                 const date = new Date(parseInt(row.original.timestamp))
                 const dateStr = date.toLocaleDateString('zh-CN', {
@@ -152,9 +154,7 @@ export function LogsProtect() {
         {
             id: "actions",
             cell: ({ row }) => {
-                const [open, setOpen] = React.useState(false)
                 const data = row.original
-
                 return (
                     <>
                         <DropdownMenu>
@@ -170,22 +170,22 @@ export function LogsProtect() {
                                     Copy IP
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => setOpen(true)}>
+                                <DropdownMenuItem onClick={() => setDetailDialogOpen(data.id)}>
                                     {t('view.detail')}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
                         <AttackDetailDialog
-                            open={open}
-                            onOpenChange={setOpen}
+                            open={detailDialogOpen === data.id}
+                            onOpenChange={(open) => setDetailDialogOpen(open ? data.id : null)}
                             data={{
                                 url: data.url,
                                 ip: data.ip,
-                                payload: "1 and 1=1", // 从 URL 中提取
+                                payload: "1 and 1=1",
                                 type: data.type,
                                 timestamp: data.timestamp,
-                                id: data.id,
+                                id: String(data.id),
                                 location: data.location
                             }}
                         />
@@ -218,9 +218,9 @@ export function LogsProtect() {
     })
 
     return (
-        <Card className="flex flex-col border-none shadow-none gap-6 flex-1 h-full">
+        <Card className="flex flex-col space-y-4 flex-1 h-full p-6">
 
-            <Card className="flex justify-between border rounded-md shadow-none p-4 border-black-550 bg-surface-200">
+            <Card className="border-none flex justify-between items-center bg-zinc-50  p-4 rounded-none shadow-none">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="sm">
@@ -242,35 +242,31 @@ export function LogsProtect() {
                 </div>
             </Card>
 
-            <Card className="flex flex-col justify-between border rounded-md shadow-none p-4 border-black-550 bg-surface-200 gap-4 flex-1 h-full">
-                <Card className="border border-primary-300 rounded-sm shadow-none bg-inherit flex-1">
-                    <DataTable table={table} columns={columns} style="border" />
-                </Card>
+            <DataTable table={table} columns={columns} />
 
-                <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                        0 of 5 row(s) selected.
-                    </span>
-                    <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm">列每页</span>
-                            <Button variant="outline" size="sm">12</Button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">上一页</Button>
-                            <Button variant="outline" size="sm">下一页</Button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm">跳至</span>
-                            <input
-                                type="text"
-                                className="w-12 px-2 py-1 text-sm border rounded"
-                            />
-                            <span className="text-sm">/ 120 页</span>
-                        </div>
+            <div className="flex items-center justify-between border-none">
+                <span className="text-sm text-muted-foreground">
+                    0 of 5 row(s) selected.
+                </span>
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm">列每页</span>
+                        <Button variant="outline" size="sm">12</Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm">上一页</Button>
+                        <Button variant="outline" size="sm">下一页</Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm">跳至</span>
+                        <input
+                            type="text"
+                            className="w-12 px-2 py-1 text-sm border rounded"
+                        />
+                        <span className="text-sm">/ 120 页</span>
                     </div>
                 </div>
-            </Card>
+            </div>
 
 
         </Card>

@@ -210,7 +210,7 @@ export function CertificateForm({
         if (!parsedInfo) return null
 
         return (
-            <div className="p-4 border rounded-md bg-gray-50">
+            <div className="p-4 border rounded-md bg-zinc-50">
                 <h3 className="text-sm font-medium mb-2">证书解析信息</h3>
                 <div className="space-y-2 text-sm">
                     <InfoRow label="颁发机构" value={parsedInfo.issuerName} />
@@ -386,8 +386,8 @@ interface InfoRowProps {
 function InfoRow({ label, value, className = '' }: InfoRowProps) {
     return (
         <div className="flex">
-            <span className="w-24 text-muted-foreground">{label}:</span>
-            <span className={className}>{value}</span>
+            <span className="w-24 flex-shrink-0 text-muted-foreground">{label}:</span>
+            <span className={`break-all ${className}`}>{value}</span>
         </div>
     )
 }

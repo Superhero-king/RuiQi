@@ -2,16 +2,11 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import {
     useReactTable,
     getCoreRowModel,
-    flexRender,
     ColumnDef,
 } from '@tanstack/react-table'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { certificatesApi } from '@/api/certificate'
 import { Certificate } from '@/types/certificates'
-import {
-    Table, TableBody, TableCell, TableHead,
-    TableHeader, TableRow
-} from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import {
     MoreHorizontal, Plus, Trash2, RefreshCcw, Pencil
@@ -29,6 +24,7 @@ import { Card } from '@/components/ui/card'
 import { CertificateDialog } from './CertificateDialog'
 import { Loader2 } from 'lucide-react'
 import { useDeleteCertificate } from '../hooks/useCertificates'
+import { DataTable } from '@/components/table/data-table'
 
 export function CertificateTable() {
     // 状态管理
@@ -138,12 +134,12 @@ export function CertificateTable() {
     const columns: ColumnDef<Certificate>[] = [
         {
             accessorKey: 'name',
-            header: '证书名称',
+            header: () => <div className="font-medium py-3.5">证书名称</div>,
             cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
         },
         {
             accessorKey: 'domains',
-            header: '域名',
+            header: () => <div className="font-medium py-3.5">域名</div>,
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-1 max-w-xs">
                     {row.original.domains.map((domain, index) => (
@@ -156,7 +152,7 @@ export function CertificateTable() {
         },
         {
             accessorKey: 'issuerAndExpiry',
-            header: '颁发机构与过期时间',
+            header: () => <div className="font-medium py-3.5">颁发机构与过期时间</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
                     <span className="text-sm">{row.original.issuerName}</span>
@@ -240,55 +236,7 @@ export function CertificateTable() {
                 </div>
 
                 {/* 表格 */}
-                <div className="rounded-md border">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    ))}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                                        加载中...
-                                    </TableCell>
-                                </TableRow>
-                            ) : table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={row.getIsSelected() && "selected"}
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                                        暂无数据
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-
+                <DataTable table={table} columns={columns} isLoading={isLoading} style="border" />
                 {/* 无限滚动监测元素 */}
                 <div
                     ref={sentinelRef}
