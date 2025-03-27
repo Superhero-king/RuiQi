@@ -135,7 +135,7 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		return err
 	}
 	if _, err := s.getFeCombined(site.ListenPort); err != nil {
-		err = s.createFeCombined(site.ListenPort)
+		err = s.createFeCombined(site.ListenPort, site.EnableHTTPS)
 		if err != nil {
 			return fmt.Errorf("创建前端组合失败: %v", err)
 		}
@@ -173,8 +173,10 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		aclIndex := len(aclList)
 		acl_http := &models.ACL{
 			ACLName:   fmt.Sprintf("host_%s", getDashDomain(site.Domain)), // 使用ACLName字段
-			Criterion: "hdr(host) -i",                                     // 使用Criterion字段
-			Value:     site.Domain,                                        // 使用Value字段
+			Criterion: "hdr(host) -i -m end",
+			Value:     "." + site.Domain, // 使用Value字段
+			// Criterion: "hdr(host) -i",                                     // 使用Criterion字段
+			// Value:     site.Domain,                                        // 使用Value字段
 		}
 		err = s.confClient.CreateACL(int64(aclIndex), "frontend", fmt.Sprintf("fe_%d_http", site.ListenPort), acl_http, transaction.ID, 0)
 		if err != nil {
@@ -263,8 +265,10 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		// add ack and rule backend
 		acl_https := &models.ACL{
 			ACLName:   fmt.Sprintf("host_%s", getDashDomain(site.Domain)), // 使用ACLName字段
-			Criterion: "hdr(host) -i",                                     // 使用Criterion字段
-			Value:     site.Domain,                                        // 使用Value字段
+			Criterion: "hdr(host) -i -m end",                              // 修改Criterion字段使用-m end
+			Value:     "." + site.Domain,                                  // 在域名前加上点号
+			// Criterion: "hdr(host) -i",                                     // 使用Criterion字段
+			// Value:     site.Domain,                                        // 使用Value字段
 		}
 		err = s.confClient.CreateACL(int64(aclIndex), "frontend", fmt.Sprintf("fe_%d_https", site.ListenPort), acl_https, transaction.ID, 0)
 		if err != nil {
@@ -941,7 +945,7 @@ func (s *HAProxyServiceImpl) getFeCombined(port int) (string, error) {
 	return frontend.Name, nil
 }
 
-func (s *HAProxyServiceImpl) createFeCombined(port int) error {
+func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) error {
 	// 确保配置客户端初始化
 	if err := s.ensureConfClient(); err != nil {
 		return fmt.Errorf("初始化配置客户端失败: %v", err)
@@ -1113,6 +1117,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建绑定失败: %v", err)
 	}
 
+	// 添加 spoe 过滤
 	fe_http_filter := &models.Filter{
 		Type:       "spoe",           // 过滤器类型
 		SpoeEngine: "coraza",         // SPOE引擎名称
@@ -1123,37 +1128,85 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建过滤器失败: %v", err)
 	}
 
-	fe_http_request_rule := []struct {
+	// 添加HTTP请求规则
+	var fe_http_request_rule []struct {
 		index int64
 		rule  *models.HTTPRequestRule
-	}{
-		{0, &models.HTTPRequestRule{
-			Type:       "redirect",
-			RedirCode:  Int64P(302),
-			RedirType:  "location", // 指定重定向类型
-			RedirValue: "%[var(txn.coraza.data)]",
-			Cond:       "if",
-			CondTest:   "{ var(txn.coraza.action) -m str redirect }",
-		}},
-		{1, &models.HTTPRequestRule{
-			Type:       "deny",
-			DenyStatus: Int64P(403),
-			HdrName:    "waf-block", // 设置头部名称
-			HdrFormat:  "request",   // 设置头部值
-			Cond:       "if",
-			CondTest:   "{ var(txn.coraza.action) -m str deny }",
-		}},
-		{2, &models.HTTPRequestRule{
-			Type:     "silent-drop",
-			Cond:     "if",
-			CondTest: "{ var(txn.coraza.action) -m str drop }",
-		}},
-		{3, &models.HTTPRequestRule{
-			Type:       "deny",
-			DenyStatus: Int64P(500),
-			Cond:       "if",
-			CondTest:   "{ var(txn.coraza.error) -m int gt 0 }",
-		}},
+	}
+	if isHttpsRedirect {
+		fe_http_request_rule = []struct {
+			index int64
+			rule  *models.HTTPRequestRule
+		}{
+			{0, &models.HTTPRequestRule{
+				Type:       "redirect",
+				RedirCode:  Int64P(301),
+				RedirType:  "scheme",
+				RedirValue: "https",
+			}},
+			{1, &models.HTTPRequestRule{
+				Type:       "redirect",
+				RedirCode:  Int64P(302),
+				RedirType:  "location", // 指定重定向类型
+				RedirValue: "%[var(txn.coraza.data)]",
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str redirect }",
+			}},
+			{2, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(403),
+				HdrName:    "waf-block", // 设置头部名称
+				HdrFormat:  "request",   // 设置头部值
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str deny }",
+			}},
+			{3, &models.HTTPRequestRule{
+				Type:     "silent-drop",
+				Cond:     "if",
+				CondTest: "{ var(txn.coraza.action) -m str drop }",
+			}},
+			{4, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(500),
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.error) -m int gt 0 }",
+			}},
+		}
+	} else {
+
+		fe_http_request_rule = []struct {
+			index int64
+			rule  *models.HTTPRequestRule
+		}{
+			{0, &models.HTTPRequestRule{
+				Type:       "redirect",
+				RedirCode:  Int64P(302),
+				RedirType:  "location", // 指定重定向类型
+				RedirValue: "%[var(txn.coraza.data)]",
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str redirect }",
+			}},
+			{1, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(403),
+				HdrName:    "waf-block", // 设置头部名称
+				HdrFormat:  "request",   // 设置头部值
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str deny }",
+			}},
+			{2, &models.HTTPRequestRule{
+				Type:     "silent-drop",
+				Cond:     "if",
+				CondTest: "{ var(txn.coraza.action) -m str drop }",
+			}},
+			{3, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(500),
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.error) -m int gt 0 }",
+			}},
+		}
+
 	}
 
 	for i, item := range fe_http_request_rule {
@@ -1232,6 +1285,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建绑定失败: %v", err)
 	}
 
+	// 添加 spoe 过滤
 	fe_https_filter := &models.Filter{
 		Type:       "spoe",           // 过滤器类型
 		SpoeEngine: "coraza",         // SPOE引擎名称
@@ -1242,6 +1296,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建过滤器失败: %v", err)
 	}
 
+	// 添加HTTPs请求规则
 	fe_https_request_rule := []struct {
 		index int64
 		rule  *models.HTTPRequestRule
@@ -1282,7 +1337,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		}
 	}
 
-	// 添加HTTP响应规则 - 确保HTTP响应规则结构正确
+	// 添加HTTPs响应规则 - 确保HTTP响应规则结构正确
 	fe_https_response_rule := []struct {
 		index int64
 		rule  *models.HTTPResponseRule
@@ -1411,8 +1466,5 @@ func getDashDomain(domain string) string {
 func isIPAddress(domain string) bool {
 	// 检查IPv4地址
 	ip := net.ParseIP(domain)
-	if ip != nil {
-		return true
-	}
-	return false
+	return ip != nil
 }
