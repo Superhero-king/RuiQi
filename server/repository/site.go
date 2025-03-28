@@ -23,9 +23,9 @@ var (
 type SiteRepository interface {
 	CreateSite(ctx context.Context, site *model.Site) error
 	GetSites(ctx context.Context, page, size int64) ([]model.Site, int64, error)
-	GetSiteByID(ctx context.Context, id string) (*model.Site, error)
+	GetSiteByID(ctx context.Context, id bson.ObjectID) (*model.Site, error)
 	UpdateSite(ctx context.Context, site *model.Site) error
-	DeleteSite(ctx context.Context, id string) error
+	DeleteSite(ctx context.Context, id bson.ObjectID) error
 	CheckDomainPortExists(ctx context.Context, site *model.Site) error
 	CheckDomainPortConflict(ctx context.Context, site *model.Site) error
 }
@@ -63,7 +63,7 @@ func (r *MongoSiteRepository) CreateSite(ctx context.Context, site *model.Site) 
 	}
 
 	// 设置ID
-	if id, ok := result.InsertedID.(string); ok {
+	if id, ok := result.InsertedID.(bson.ObjectID); ok {
 		site.ID = id
 	}
 
@@ -107,14 +107,14 @@ func (r *MongoSiteRepository) GetSites(ctx context.Context, page, size int64) ([
 }
 
 // GetSiteByID 根据ID获取站点
-func (r *MongoSiteRepository) GetSiteByID(ctx context.Context, id string) (*model.Site, error) {
+func (r *MongoSiteRepository) GetSiteByID(ctx context.Context, id bson.ObjectID) (*model.Site, error) {
 	var site model.Site
 	err := r.collection.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(&site)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, ErrSiteNotFound // 返回找不到错误
 		}
-		r.logger.Error().Err(err).Str("id", id).Msg("查询站点时出错")
+		r.logger.Error().Err(err).Str("id", id.Hex()).Msg("查询站点时出错")
 		return nil, err
 	}
 
@@ -132,7 +132,7 @@ func (r *MongoSiteRepository) UpdateSite(ctx context.Context, site *model.Site) 
 	)
 
 	if err != nil {
-		r.logger.Error().Err(err).Str("id", site.ID).Msg("更新站点时出错")
+		r.logger.Error().Err(err).Str("id", site.ID.Hex()).Msg("更新站点时出错")
 		return err
 	}
 
@@ -140,10 +140,10 @@ func (r *MongoSiteRepository) UpdateSite(ctx context.Context, site *model.Site) 
 }
 
 // DeleteSite 删除站点
-func (r *MongoSiteRepository) DeleteSite(ctx context.Context, id string) error {
+func (r *MongoSiteRepository) DeleteSite(ctx context.Context, id bson.ObjectID) error {
 	_, err := r.collection.DeleteOne(ctx, bson.D{{Key: "_id", Value: id}})
 	if err != nil {
-		r.logger.Error().Err(err).Str("id", id).Msg("删除站点时出错")
+		r.logger.Error().Err(err).Str("id", id.Hex()).Msg("删除站点时出错")
 		return err
 	}
 

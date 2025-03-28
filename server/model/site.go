@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // WAFMode 定义WAF工作模式类型
@@ -14,18 +16,18 @@ const (
 
 // Site 代表一个站点配置
 type Site struct {
-	ID           string      `bson:"_id,omitempty" json:"id,omitempty"`                  // 站点ID
-	Name         string      `bson:"name" json:"name"`                                   // 站点名称
-	Domain       string      `bson:"domain" json:"domain"`                               // 域名，如 a.com
-	ListenPort   int         `bson:"listenPort" json:"listenPort"`                       // 监听端口，如 9000
-	EnableHTTPS  bool        `bson:"enableHTTPS" json:"enableHTTPS"`                     // 是否启用HTTPS
-	Certificate  Certificate `bson:"certificate,omitempty" json:"certificate,omitempty"` // 证书信息
-	Backend      Backend     `bson:"backend" json:"backend"`                             // 后端服务器配置
-	WAFEnabled   bool        `bson:"wafEnabled" json:"wafEnabled"`                       // 是否启用WAF
-	WAFMode      WAFMode     `bson:"wafMode" json:"wafMode"`                             // WAF防护模式
-	CreatedAt    time.Time   `bson:"createdAt" json:"createdAt"`
-	UpdatedAt    time.Time   `bson:"updatedAt" json:"updatedAt"`
-	ActiveStatus bool        `bson:"activeStatus" json:"activeStatus"` // 站点是否激活
+	ID           bson.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`                  // 站点ID
+	Name         string        `bson:"name" json:"name"`                                   // 站点名称
+	Domain       string        `bson:"domain" json:"domain"`                               // 域名，如 a.com
+	ListenPort   int           `bson:"listenPort" json:"listenPort"`                       // 监听端口，如 9000
+	EnableHTTPS  bool          `bson:"enableHTTPS" json:"enableHTTPS"`                     // 是否启用HTTPS
+	Certificate  Certificate   `bson:"certificate,omitempty" json:"certificate,omitempty"` // 证书信息
+	Backend      Backend       `bson:"backend" json:"backend"`                             // 后端服务器配置
+	WAFEnabled   bool          `bson:"wafEnabled" json:"wafEnabled"`                       // 是否启用WAF
+	WAFMode      WAFMode       `bson:"wafMode" json:"wafMode"`                             // WAF防护模式
+	CreatedAt    time.Time     `bson:"createdAt" json:"createdAt"`
+	UpdatedAt    time.Time     `bson:"updatedAt" json:"updatedAt"`
+	ActiveStatus bool          `bson:"activeStatus" json:"activeStatus"` // 站点是否激活
 }
 
 // Certificate 代表证书信息

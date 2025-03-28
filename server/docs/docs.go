@@ -380,7 +380,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/sites": {
+        "/api/v1/site": {
             "get": {
                 "security": [
                     {
@@ -524,7 +524,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/sites/{id}": {
+        "/api/v1/site/{id}": {
             "get": {
                 "security": [
                     {
@@ -1461,8 +1461,9 @@ const docTemplate = `{
             ],
             "properties": {
                 "servers": {
-                    "description": "服务器列表",
+                    "description": "服务器列表，至少需要一个服务器",
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "$ref": "#/definitions/dto.ServerDTO"
                     }
@@ -1637,6 +1638,11 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "activeStatus": {
+                    "description": "站点状态",
+                    "type": "boolean",
+                    "example": true
+                },
                 "backend": {
                     "description": "后端服务器配置",
                     "allOf": [
@@ -1666,6 +1672,8 @@ const docTemplate = `{
                 "listenPort": {
                     "description": "监听端口",
                     "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
                     "example": 8080
                 },
                 "name": {
@@ -1681,6 +1689,10 @@ const docTemplate = `{
                 "wafMode": {
                     "description": "WAF模式",
                     "type": "string",
+                    "enum": [
+                        "protection",
+                        "observation"
+                    ],
                     "example": "observation"
                 }
             }
@@ -1772,6 +1784,8 @@ const docTemplate = `{
                 "port": {
                     "description": "端口",
                     "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
                     "example": 80
                 }
             }
@@ -1895,6 +1909,8 @@ const docTemplate = `{
                 "listenPort": {
                     "description": "监听端口",
                     "type": "integer",
+                    "maximum": 65535,
+                    "minimum": 1,
                     "example": 8080
                 },
                 "name": {
@@ -1910,6 +1926,10 @@ const docTemplate = `{
                 "wafMode": {
                     "description": "WAF模式",
                     "type": "string",
+                    "enum": [
+                        "protection",
+                        "observation"
+                    ],
                     "example": "observation"
                 }
             }

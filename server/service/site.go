@@ -9,14 +9,15 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/model"
 	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"github.com/rs/zerolog"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type SiteService interface {
 	CreateSite(ctx context.Context, req *dto.CreateSiteRequest) (*model.Site, error)
 	GetSites(ctx context.Context, pageStr, sizeStr string) ([]model.Site, int64, error)
-	GetSiteByID(ctx context.Context, id string) (*model.Site, error)
-	UpdateSite(ctx context.Context, id string, req *dto.UpdateSiteRequest) (*model.Site, error)
-	DeleteSite(ctx context.Context, id string) error
+	GetSiteByID(ctx context.Context, id bson.ObjectID) (*model.Site, error)
+	UpdateSite(ctx context.Context, id bson.ObjectID, req *dto.UpdateSiteRequest) (*model.Site, error)
+	DeleteSite(ctx context.Context, id bson.ObjectID) error
 }
 
 // SiteService 站点服务
@@ -44,7 +45,7 @@ func (s *SiteServiceImpl) CreateSite(ctx context.Context, req *dto.CreateSiteReq
 	site.EnableHTTPS = req.EnableHTTPS
 	site.WAFEnabled = req.WAFEnabled
 	site.WAFMode = model.WAFModeFromString(req.WAFMode)
-
+	site.ActiveStatus = req.ActiveStatus
 	// 设置后端服务器
 	site.Backend.Servers = make([]model.Server, len(req.Backend.Servers))
 	for i, server := range req.Backend.Servers {
@@ -111,7 +112,7 @@ func (s *SiteServiceImpl) GetSites(ctx context.Context, pageStr, sizeStr string)
 }
 
 // GetSiteByID 根据ID获取站点
-func (s *SiteServiceImpl) GetSiteByID(ctx context.Context, id string) (*model.Site, error) {
+func (s *SiteServiceImpl) GetSiteByID(ctx context.Context, id bson.ObjectID) (*model.Site, error) {
 	site, err := s.siteRepo.GetSiteByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -121,7 +122,7 @@ func (s *SiteServiceImpl) GetSiteByID(ctx context.Context, id string) (*model.Si
 }
 
 // UpdateSite 更新站点
-func (s *SiteServiceImpl) UpdateSite(ctx context.Context, id string, req *dto.UpdateSiteRequest) (*model.Site, error) {
+func (s *SiteServiceImpl) UpdateSite(ctx context.Context, id bson.ObjectID, req *dto.UpdateSiteRequest) (*model.Site, error) {
 
 	err := s.siteRepo.CheckDomainPortConflict(ctx, &model.Site{
 		ID:         id,
@@ -191,16 +192,16 @@ func (s *SiteServiceImpl) UpdateSite(ctx context.Context, id string, req *dto.Up
 	// 保存更新
 	err = s.siteRepo.UpdateSite(ctx, site)
 	if err != nil {
-		s.logger.Error().Err(err).Str("id", id).Msg("更新站点失败")
+		s.logger.Error().Err(err).Str("id", id.Hex()).Msg("更新站点失败")
 		return nil, err
 	}
 
-	s.logger.Info().Str("id", id).Str("name", site.Name).Msg("站点更新成功")
+	s.logger.Info().Str("id", id.Hex()).Str("name", site.Name).Msg("站点更新成功")
 	return site, nil
 }
 
 // DeleteSite 删除站点
-func (s *SiteServiceImpl) DeleteSite(ctx context.Context, id string) error {
+func (s *SiteServiceImpl) DeleteSite(ctx context.Context, id bson.ObjectID) error {
 	// 检查站点是否存在
 	site, err := s.siteRepo.GetSiteByID(ctx, id)
 	if err != nil {
@@ -210,10 +211,10 @@ func (s *SiteServiceImpl) DeleteSite(ctx context.Context, id string) error {
 	// 删除站点
 	err = s.siteRepo.DeleteSite(ctx, id)
 	if err != nil {
-		s.logger.Error().Err(err).Str("id", id).Msg("删除站点失败")
+		s.logger.Error().Err(err).Str("id", id.Hex()).Msg("删除站点失败")
 		return err
 	}
 
-	s.logger.Info().Str("id", id).Str("name", site.Name).Msg("站点删除成功")
+	s.logger.Info().Str("id", id.Hex()).Str("name", site.Name).Msg("站点删除成功")
 	return nil
 }

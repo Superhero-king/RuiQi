@@ -91,7 +91,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	}
 
 	// 站点管理模块
-	siteRoutes := authenticated.Group("/sites")
+	siteRoutes := authenticated.Group("/site")
 	{
 		// 创建站点 - 需要site:create权限
 		siteRoutes.POST("", middleware.HasPermission(model.PermSiteCreate), siteController.CreateSite)

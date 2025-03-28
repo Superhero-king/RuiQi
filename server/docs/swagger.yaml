@@ -85,9 +85,10 @@ definitions:
   dto.BackendDTO:
     properties:
       servers:
-        description: 服务器列表
+        description: 服务器列表，至少需要一个服务器
         items:
           $ref: '#/definitions/dto.ServerDTO'
+        minItems: 1
         type: array
     required:
     - servers
@@ -214,6 +215,10 @@ definitions:
   dto.CreateSiteRequest:
     description: 创建站点的请求参数
     properties:
+      activeStatus:
+        description: 站点状态
+        example: true
+        type: boolean
       backend:
         allOf:
         - $ref: '#/definitions/dto.BackendDTO'
@@ -233,6 +238,8 @@ definitions:
       listenPort:
         description: 监听端口
         example: 8080
+        maximum: 65535
+        minimum: 1
         type: integer
       name:
         description: 站点名称
@@ -244,6 +251,9 @@ definitions:
         type: boolean
       wafMode:
         description: WAF模式
+        enum:
+        - protection
+        - observation
         example: observation
         type: string
     required:
@@ -311,6 +321,8 @@ definitions:
       port:
         description: 端口
         example: 80
+        maximum: 65535
+        minimum: 1
         type: integer
     required:
     - host
@@ -395,6 +407,8 @@ definitions:
       listenPort:
         description: 监听端口
         example: 8080
+        maximum: 65535
+        minimum: 1
         type: integer
       name:
         description: 站点名称
@@ -406,6 +420,9 @@ definitions:
         type: boolean
       wafMode:
         description: WAF模式
+        enum:
+        - protection
+        - observation
         example: observation
         type: string
     type: object
@@ -1095,7 +1112,7 @@ paths:
       summary: 更新证书
       tags:
       - 证书管理
-  /api/v1/sites:
+  /api/v1/site:
     get:
       description: 获取所有站点配置列表
       parameters:
@@ -1182,7 +1199,7 @@ paths:
       summary: 创建新站点
       tags:
       - 站点管理
-  /api/v1/sites/{id}:
+  /api/v1/site/{id}:
     delete:
       description: 删除指定的站点配置
       parameters:

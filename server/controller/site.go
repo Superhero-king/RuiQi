@@ -12,6 +12,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/utils/response"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 // SiteController 站点控制器接口
@@ -39,6 +40,7 @@ func NewSiteController(siteService service.SiteService) SiteController {
 }
 
 // CreateSite 创建站点
+//
 //	@Summary		创建新站点
 //	@Description	创建一个新的站点配置
 //	@Tags			站点管理
@@ -52,7 +54,7 @@ func NewSiteController(siteService service.SiteService) SiteController {
 //	@Failure		403	{object}	model.ErrResponseDontShowError					"禁止访问"
 //	@Failure		409	{object}	model.ErrResponseDontShowError					"域名和端口组合已存在"
 //	@Failure		500	{object}	model.ErrResponseDontShowError					"服务器内部错误"
-//	@Router			/api/v1/sites [post]
+//	@Router			/api/v1/site [post]
 func (c *SiteControllerImpl) CreateSite(ctx *gin.Context) {
 	var req dto.CreateSiteRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -74,11 +76,12 @@ func (c *SiteControllerImpl) CreateSite(ctx *gin.Context) {
 		return
 	}
 
-	c.logger.Info().Str("id", site.ID).Str("name", site.Name).Msg("站点创建成功")
+	c.logger.Info().Str("id", site.ID.Hex()).Str("name", site.Name).Msg("站点创建成功")
 	response.Success(ctx, "站点创建成功", site)
 }
 
 // GetSites 获取站点列表
+//
 //	@Summary		获取站点列表
 //	@Description	获取所有站点配置列表
 //	@Tags			站点管理
@@ -89,7 +92,7 @@ func (c *SiteControllerImpl) CreateSite(ctx *gin.Context) {
 //	@Success		200	{object}	model.SuccessResponse{data=dto.SiteListResponse}	"获取站点列表成功"
 //	@Failure		401	{object}	model.ErrResponseDontShowError						"未授权访问"
 //	@Failure		500	{object}	model.ErrResponseDontShowError						"服务器内部错误"
-//	@Router			/api/v1/sites [get]
+//	@Router			/api/v1/site [get]
 func (c *SiteControllerImpl) GetSites(ctx *gin.Context) {
 	page := ctx.DefaultQuery("page", "1")
 	size := ctx.DefaultQuery("size", "10")
@@ -102,6 +105,10 @@ func (c *SiteControllerImpl) GetSites(ctx *gin.Context) {
 		return
 	}
 
+	if sites == nil {
+		sites = []model.Site{}
+	}
+
 	c.logger.Info().Int64("total", total).Msg("获取站点列表成功")
 	response.Success(ctx, "获取站点列表成功", gin.H{
 		"total": total,
@@ -110,6 +117,7 @@ func (c *SiteControllerImpl) GetSites(ctx *gin.Context) {
 }
 
 // GetSiteByID 获取单个站点
+//
 //	@Summary		获取单个站点
 //	@Description	根据ID获取站点详情
 //	@Tags			站点管理
@@ -120,12 +128,18 @@ func (c *SiteControllerImpl) GetSites(ctx *gin.Context) {
 //	@Failure		401	{object}	model.ErrResponseDontShowError					"未授权访问"
 //	@Failure		404	{object}	model.ErrResponseDontShowError					"站点不存在"
 //	@Failure		500	{object}	model.ErrResponseDontShowError					"服务器内部错误"
-//	@Router			/api/v1/sites/{id} [get]
+//	@Router			/api/v1/site/{id} [get]
 func (c *SiteControllerImpl) GetSiteByID(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	c.logger.Info().Str("id", id).Msg("获取站点详情请求")
-	site, err := c.siteService.GetSiteByID(ctx, id)
+	objectID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		c.logger.Error().Err(err).Str("id", id).Msg("无效的ID格式")
+		response.BadRequest(ctx, err, true)
+		return
+	}
+	site, err := c.siteService.GetSiteByID(ctx, objectID)
 	if err != nil {
 		if errors.Is(err, repository.ErrSiteNotFound) {
 			response.Error(ctx, model.NewAPIError(http.StatusNotFound, "站点不存在", err), false)
@@ -141,6 +155,7 @@ func (c *SiteControllerImpl) GetSiteByID(ctx *gin.Context) {
 }
 
 // UpdateSite 更新站点
+//
 //	@Summary		更新站点
 //	@Description	更新指定站点的配置
 //	@Tags			站点管理
@@ -156,7 +171,7 @@ func (c *SiteControllerImpl) GetSiteByID(ctx *gin.Context) {
 //	@Failure		404	{object}	model.ErrResponseDontShowError					"站点不存在"
 //	@Failure		409	{object}	model.ErrResponseDontShowError					"域名和端口组合已被其他站点使用"
 //	@Failure		500	{object}	model.ErrResponseDontShowError					"服务器内部错误"
-//	@Router			/api/v1/sites/{id} [put]
+//	@Router			/api/v1/site/{id} [put]
 func (c *SiteControllerImpl) UpdateSite(ctx *gin.Context) {
 	id := ctx.Param("id")
 	var req dto.UpdateSiteRequest
@@ -167,7 +182,13 @@ func (c *SiteControllerImpl) UpdateSite(ctx *gin.Context) {
 	}
 
 	c.logger.Info().Str("id", id).Msg("更新站点请求")
-	site, err := c.siteService.UpdateSite(ctx, id, &req)
+	objectID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		c.logger.Error().Err(err).Str("id", id).Msg("无效的ID格式")
+		response.BadRequest(ctx, err, true)
+		return
+	}
+	site, err := c.siteService.UpdateSite(ctx, objectID, &req)
 	if err != nil {
 		if errors.Is(err, repository.ErrSiteNotFound) {
 			response.Error(ctx, model.NewAPIError(http.StatusNotFound, "站点不存在", err), false)
@@ -186,6 +207,7 @@ func (c *SiteControllerImpl) UpdateSite(ctx *gin.Context) {
 }
 
 // DeleteSite 删除站点
+//
 //	@Summary		删除站点
 //	@Description	删除指定的站点配置
 //	@Tags			站点管理
@@ -197,12 +219,18 @@ func (c *SiteControllerImpl) UpdateSite(ctx *gin.Context) {
 //	@Failure		403	{object}	model.ErrResponseDontShowError	"禁止访问"
 //	@Failure		404	{object}	model.ErrResponseDontShowError	"站点不存在"
 //	@Failure		500	{object}	model.ErrResponseDontShowError	"服务器内部错误"
-//	@Router			/api/v1/sites/{id} [delete]
+//	@Router			/api/v1/site/{id} [delete]
 func (c *SiteControllerImpl) DeleteSite(ctx *gin.Context) {
 	id := ctx.Param("id")
 
 	c.logger.Info().Str("id", id).Msg("删除站点请求")
-	err := c.siteService.DeleteSite(ctx, id)
+	objectID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		c.logger.Error().Err(err).Str("id", id).Msg("无效的ID格式")
+		response.BadRequest(ctx, err, true)
+		return
+	}
+	err = c.siteService.DeleteSite(ctx, objectID)
 	if err != nil {
 		if errors.Is(err, repository.ErrSiteNotFound) {
 			response.Error(ctx, model.NewAPIError(http.StatusNotFound, "站点不存在", err), false)

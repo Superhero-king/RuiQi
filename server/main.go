@@ -17,6 +17,7 @@ import (
 	_ "github.com/HUAHUAI23/simple-waf/server/docs" // 导入 swagger 文档
 	"github.com/HUAHUAI23/simple-waf/server/router"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
+	"github.com/HUAHUAI23/simple-waf/server/validator"
 	"github.com/mvrilo/go-redoc"
 	ginredoc "github.com/mvrilo/go-redoc/gin"
 )
@@ -81,7 +82,7 @@ func main() {
 	router.Setup(route, db)
 
 	// 初始化验证器
-	// validators.InitValidators()
+	validator.InitValidators()
 	// validators.InitStructValidators()
 
 	// 添加 Redoc 文档支持
