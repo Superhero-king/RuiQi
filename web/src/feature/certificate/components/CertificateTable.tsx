@@ -23,7 +23,7 @@ import {
 import { Card } from '@/components/ui/card'
 import { CertificateDialog } from './CertificateDialog'
 import { Loader2 } from 'lucide-react'
-import { useDeleteCertificate } from '../hooks/useCertificates'
+import { useDeleteCertificate } from '../hooks/useCertificate'
 import { DataTable } from '@/components/table/data-table'
 
 export function CertificateTable() {
@@ -55,6 +55,12 @@ export function CertificateTable() {
         },
     })
 
+    // 扁平化分页数据
+    const flatData = useMemo(() =>
+        data?.pages.flatMap(page => page.items) || [],
+        [data]
+    )
+
     // 无限滚动实现
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -79,11 +85,6 @@ export function CertificateTable() {
         }
     }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-    // 扁平化分页数据
-    const flatData = useMemo(() =>
-        data?.pages.flatMap(page => page.items) || [],
-        [data]
-    )
 
     // 处理删除证书
     const handleDeleteCertificate = () => {

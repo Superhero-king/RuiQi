@@ -1,5 +1,5 @@
 // src/routes/AppRouter.tsx
-import { createBrowserRouter, RouteObject, RouterProvider } from "react-router" // 改为 react-router 而不是 react-router-dom
+import { createBrowserRouter, RouteObject, RouterProvider } from "react-router"
 import { useRoutes } from "./config"
 import { RouteErrorBoundary } from "@/handler/error-boundary"
 

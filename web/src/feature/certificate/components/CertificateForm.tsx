@@ -13,10 +13,10 @@ import {
     FormMessage,
 } from '@/components/ui/form'
 import { Upload, FileText, X, AlertCircle, Info } from 'lucide-react'
-import { certificateFormSchema } from '@/validation/certificates'
+import { certificateFormSchema } from '@/validation/certificate'
 import { parseCertificate, readFileAsText } from '@/utils/certificate-parser'
 import { CertificateCreateRequest, ParsedCertificate } from '@/types/certificates'
-import { useCreateCertificate, useUpdateCertificate } from '../hooks/useCertificates'
+import { useCreateCertificate, useUpdateCertificate } from '../hooks/useCertificate'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface CertificateFormProps {
@@ -383,7 +383,7 @@ interface InfoRowProps {
     className?: string
 }
 
-function InfoRow({ label, value, className = '' }: InfoRowProps) {
+export function InfoRow({ label, value, className = '' }: InfoRowProps) {
     return (
         <div className="flex">
             <span className="w-24 flex-shrink-0 text-muted-foreground">{label}:</span>

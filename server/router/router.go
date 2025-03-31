@@ -115,11 +115,11 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		certRoutes.DELETE("/:id", middleware.HasPermission(model.PermCertDelete), certController.DeleteCertificate)
 	}
 
-	// 配置管理模块
-	wafLogRoutes := authenticated.Group("/logs")
+	// 日志
+	wafLogRoutes := authenticated.Group("/log")
 	{
 		// 获取攻击事件 - 需要logs:read权限
-		wafLogRoutes.GET("/events", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackEvents)
+		wafLogRoutes.GET("/event", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackEvents)
 		// 获取攻击日志 - 需要logs:read权限
 		wafLogRoutes.GET("", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackLogs)
 	}

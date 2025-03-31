@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	"github.com/HUAHUAI23/simple-waf/server/dto"
 	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -102,6 +103,10 @@ func (s *WAFLogServiceImpl) GetAttackEvents(
 		return nil, fmt.Errorf("error getting aggregated events: %w", err)
 	}
 
+	// 确保 results 不为 null
+	if results == nil {
+		results = []dto.AttackEventAggregateResult{}
+	}
 	// Create response
 	response := &dto.AttackEventResponse{
 		Results:     results,
@@ -140,6 +145,10 @@ func (s *WAFLogServiceImpl) GetAttackLogs(
 	results, err := s.wafLogRepository.FindAttackLogs(ctx, filter, skip, limit)
 	if err != nil {
 		return nil, fmt.Errorf("error finding attack logs: %w", err)
+	}
+
+	if results == nil {
+		results = []model.WAFLog{}
 	}
 
 	// Create response

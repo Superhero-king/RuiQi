@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Outlet } from "react-router"
 
-export function SettingsPage() {
+export function SettingPage() {
     return (
         <Card className="flex-1  h-full border-none shadow-none p-0">
             <Outlet />

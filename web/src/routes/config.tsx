@@ -9,15 +9,17 @@ import { ProtectedRoute } from "@/feature/auth/components/ProtectedRoute"
 
 // 直接导入布局组件
 import { RootLayout } from "@/components/layout/root-layout"
-import { LogsPage } from "@/pages/logs/page"
 import { MonitorPage } from "@/pages/monitor/page"
 import { RulesPage } from "@/pages/rule/page"
-import { SettingsPage } from "@/pages/setting/page"
+import { SettingPage } from "@/pages/setting/page"
+import { LogAndEventPage } from "@/pages/logs/page"
 
 // 直接导入子组件
-import { LogsAttack, LogsProtect } from "@/pages/logs/components"
-import { GlobalSetting, SiteManager } from "@/pages/setting/pages"
+import { GlobalSetting } from "@/pages/setting/pages"
 import CertificatesPage from "@/pages/setting/pages/certificate/page"
+import EventsPage from "@/pages/logs/pages/event/page"
+import LogsPage from "@/pages/logs/pages/log/page"
+import SiteManagerPage from "@/pages/setting/pages/site/index"
 import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
 import { SysRules, UserRules, IpGroup } from "@/pages/rule/components"
 
@@ -54,8 +56,8 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
         [ROUTES.LOGS]: {
             defaultPath: "attack",
             items: [
-                { title: t('breadcrumb.logs.attack'), path: "attack", component: <LogsAttack /> },
-                { title: t('breadcrumb.logs.protect'), path: "protect", component: <LogsProtect /> },
+                { title: t('breadcrumb.logs.attack'), path: "attack", component: <EventsPage /> },
+                { title: t('breadcrumb.logs.protect'), path: "protect", component: <LogsPage /> },
             ]
         },
         [ROUTES.MONITOR]: {
@@ -76,7 +78,7 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
             defaultPath: "settings",
             items: [
                 { title: t('breadcrumb.settings.settings'), path: "settings", component: <GlobalSetting /> },
-                { title: t('breadcrumb.settings.siteManager'), path: "site", component: <SiteManager /> },
+                { title: t('breadcrumb.settings.siteManager'), path: "site", component: <SiteManagerPage /> },
                 { title: t('breadcrumb.settings.certManager'), path: "cert", component: <CertificatesPage /> }
             ]
         }
@@ -125,7 +127,7 @@ export function useRoutes(): RouteObject[] {
                 },
                 {
                     path: ROUTES.LOGS,
-                    element: <LogsPage />,
+                    element: <LogAndEventPage />,
                     children: createChildRoutes(breadcrumbMap[ROUTES.LOGS])
                 },
                 {
@@ -140,7 +142,7 @@ export function useRoutes(): RouteObject[] {
                 },
                 {
                     path: ROUTES.SETTINGS,
-                    element: <SettingsPage />,
+                    element: <SettingPage />,
                     children: createChildRoutes(breadcrumbMap[ROUTES.SETTINGS])
                 }
             ]
