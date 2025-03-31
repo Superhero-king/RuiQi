@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/HUAHUAI23/simple-waf/server/config"
+
 	"github.com/HUAHUAI23/simple-waf/server/model"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -185,4 +186,28 @@ func (r *MongoSiteRepository) CheckDomainPortConflict(ctx context.Context, site 
 		return ErrDomainPortConflict
 	}
 	return nil
+}
+
+// GetAllSites 获取所有站点，不分页
+func GetAllSites(ctx context.Context, collection *mongo.Collection) ([]model.Site, error) {
+	// 设置查询选项，按创建时间降序排序
+	findOptions := options.Find().
+		SetSort(bson.D{{Key: "createdAt", Value: -1}})
+
+	// 执行查询
+	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("查询所有站点时出错")
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	// 解析结果
+	var sites []model.Site
+	if err = cursor.All(ctx, &sites); err != nil {
+		config.Logger.Error().Err(err).Msg("解析所有站点数据时出错")
+		return nil, err
+	}
+
+	return sites, nil
 }

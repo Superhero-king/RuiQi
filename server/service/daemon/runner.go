@@ -4,7 +4,11 @@ import (
 	"context"
 	"sync"
 
+	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
+
 	"github.com/HUAHUAI23/simple-waf/server/config"
+	"github.com/HUAHUAI23/simple-waf/server/model"
+	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon/engine"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon/haproxy"
 	"github.com/rs/zerolog"
@@ -53,11 +57,27 @@ func (r *ServiceRunner) StartServices() {
 	go func() {
 		defer r.wg.Done()
 
-		siteList := GetTestSites()
+		client, err := mongodb.Connect(config.Global.DBConfig.URI)
+		if err != nil {
+			config.Logger.Error().Err(err).Msg("Failed to connect to database")
+			return
+		}
 
-		config.Logger.Info().Msg("开始启动HAProxy服务...")
+		// 获取数据库
+		db := client.Database(config.Global.DBConfig.Database)
 
-		err := r.haproxyService.RemoveConfig()
+		var site model.Site
+		siteList, err := repository.GetAllSites(r.ctx, db.Collection(site.GetCollectionName()))
+		if err != nil {
+			r.logger.Error().Err(err).Msg("获取站点列表失败")
+			return
+		}
+
+		// siteList := GetTestSites()
+
+		r.logger.Info().Msg("开始启动HAProxy服务...")
+
+		err = r.haproxyService.RemoveConfig()
 		if err != nil {
 			r.logger.Error().Err(err).Msg("删除HAProxy配置失败")
 		}
