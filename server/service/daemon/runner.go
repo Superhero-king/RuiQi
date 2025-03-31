@@ -14,8 +14,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type ServiceRunner interface {
+	StartServices()
+	StopServices()
+}
+
 // ServiceRunner 负责管理和协调所有后台服务
-type ServiceRunner struct {
+type ServiceRunnerImpl struct {
 	haproxyService haproxy.HAProxyService
 	engineService  engine.EngineService
 	wg             sync.WaitGroup
@@ -25,7 +30,7 @@ type ServiceRunner struct {
 }
 
 // NewServiceRunner 创建一个新的服务运行器
-func NewServiceRunner() *ServiceRunner {
+func NewServiceRunner() ServiceRunner {
 	ctx, cancel := context.WithCancel(context.Background())
 	logger := config.GetLogger().With().Str("component", "runner").Logger()
 	haproxyService, err := haproxy.NewHAProxyService("", "", ctx)
@@ -41,7 +46,7 @@ func NewServiceRunner() *ServiceRunner {
 		// 可以返回 nil 或使用默认配置继续
 	}
 
-	return &ServiceRunner{
+	return &ServiceRunnerImpl{
 		haproxyService: haproxyService,
 		engineService:  engineService,
 		ctx:            ctx,
@@ -51,7 +56,7 @@ func NewServiceRunner() *ServiceRunner {
 }
 
 // StartServices 启动所有服务
-func (r *ServiceRunner) StartServices() {
+func (r *ServiceRunnerImpl) StartServices() {
 	// 启动HAProxy服务
 	r.wg.Add(1)
 	go func() {
@@ -126,7 +131,7 @@ func (r *ServiceRunner) StartServices() {
 }
 
 // StopServices 停止所有服务
-func (r *ServiceRunner) StopServices() {
+func (r *ServiceRunnerImpl) StopServices() {
 	config.Logger.Info().Msg("停止所有服务...")
 
 	// 1. 首先取消上下文，通知所有使用该上下文的操作
