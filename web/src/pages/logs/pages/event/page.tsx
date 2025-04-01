@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router"
 import { Card } from "@/components/ui/card"
 import {
@@ -17,21 +17,54 @@ import { AttackEventAggregateResult } from "@/types/waf"
 import { useAttackEvents } from "@/feature/log/hook/useAttackEvents"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import { ExternalLink, AlertTriangle } from "lucide-react"
+import { ExternalLink, AlertTriangle, History } from "lucide-react"
 
 export default function EventsPage() {
     const { t } = useTranslation()
     const navigate = useNavigate()
+    const pollingTimerRef = useRef<number | null>(null)
 
     const [queryParams, setQueryParams] = useState<AttackEventQueryFormValues>({
         page: 1,
         pageSize: 10
     })
+    
+    // 轮询状态
+    const [enablePolling, setEnablePolling] = useState(false)
+    const [pollingInterval, setPollingInterval] = useState(30) // 默认30秒
 
-    const { data, isLoading, isError } = useAttackEvents(queryParams)
+    const { data, isLoading, isError, refetch } = useAttackEvents(queryParams)
+
+    // 设置轮询
+    useEffect(() => {
+        // 清除现有的轮询
+        if (pollingTimerRef.current !== null) {
+            clearInterval(pollingTimerRef.current)
+            pollingTimerRef.current = null
+        }
+        
+        // 如果启用了轮询，设置新的轮询
+        if (enablePolling) {
+            pollingTimerRef.current = window.setInterval(() => {
+                refetch()
+            }, pollingInterval * 1000)
+        }
+        
+        // 组件卸载时清除轮询
+        return () => {
+            if (pollingTimerRef.current !== null) {
+                clearInterval(pollingTimerRef.current)
+            }
+        }
+    }, [enablePolling, pollingInterval, refetch])
 
     const handleFilter = (values: AttackEventQueryFormValues) => {
         setQueryParams(values)
+    }
+
+    const handlePollingChange = (enabled: boolean, interval: number) => {
+        setEnablePolling(enabled)
+        setPollingInterval(interval)
     }
 
     const handlePageChange = (page: number) => {
@@ -101,34 +134,38 @@ export default function EventsPage() {
             header: t('status'),
             cell: ({ row }) => {
                 const isOngoing = row.getValue("isOngoing")
-                return isOngoing ? (
-                    <div className="flex flex-col items-center gap-1">
-                        <Badge variant="destructive" className="flex items-center gap-1 animate-pulse">
-                            <AlertTriangle className="h-3 w-3" />
-                            {t('ongoing')}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{t('under.attack')}</span>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center gap-1">
-                        <Badge variant="outline">{t('ended')}</Badge>
-                        <span className="text-xs text-muted-foreground">{t('no.ongoing.attack')}</span>
-                    </div>
-                )
-            }
-        },
-        {
-            accessorKey: "durationInMinutes",
-            header: t('duration'),
-            cell: ({ row }) => {
                 const minutes = row.getValue<number>("durationInMinutes")
                 const hours = Math.floor(minutes / 60)
                 const remainingMinutes = Math.round(minutes % 60)
-
-                if (hours > 0) {
-                    return `${hours}h ${remainingMinutes}m`
-                }
-                return `${remainingMinutes}m`
+                
+                const durationText = hours > 0 
+                    ? `${hours}h ${remainingMinutes}m` 
+                    : `${remainingMinutes}m`
+                
+                return isOngoing ? (
+                    <div className="flex flex-col items-center gap-1">
+                        <Badge variant="destructive" className="flex items-center gap-1 animate-pulse bg-red-500 text-white">
+                            <AlertTriangle className="h-3 w-3" />
+                            {t('ongoing')}
+                        </Badge>
+                        <span className="text-xs text-destructive font-medium">
+                            {t('under.attack')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                            {t('duration')}: {durationText}
+                        </span>
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center gap-1">
+                        <Badge variant="warning" className="flex items-center gap-1 bg-amber-400 text-amber-900 border-amber-500">
+                            <History className="h-3 w-3" />
+                            {t('ended')}
+                        </Badge>
+                        <span className="text-xs text-amber-500 font-medium">
+                            {t('no.ongoing.attack')}
+                        </span>
+                    </div>
+                )
             }
         }
     ]
@@ -162,7 +199,13 @@ export default function EventsPage() {
         <div className="space-y-4 p-8">
             <h1 className="text-2xl font-bold">{t('attack.events')}</h1>
 
-            <AttackEventFilter onFilter={handleFilter} defaultValues={queryParams} />
+            <AttackEventFilter 
+                onFilter={handleFilter} 
+                defaultValues={queryParams}
+                enablePolling={enablePolling}
+                pollingInterval={pollingInterval}
+                onPollingChange={handlePollingChange}
+            />
 
             <Card className="p-4">
                 {isError ? (

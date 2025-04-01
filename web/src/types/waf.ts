@@ -103,6 +103,7 @@ export interface AttackDetailData {
     payload: string          // 攻击载荷
     message: string          // 消息
     ruleId: number           // 规则ID
+    requestId: string        // 请求ID
     createdAt: string        // 创建时间
     request: string          // 请求内容
     response: string         // 响应内容

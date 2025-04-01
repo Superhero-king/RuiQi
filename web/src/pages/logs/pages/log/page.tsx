@@ -17,7 +17,7 @@ import { WAFLog, AttackDetailData } from "@/types/waf"
 import { useAttackLogs } from "@/feature/log/hook/useAttackLogs"
 import { format } from "date-fns"
 import { AttackDetailDialog } from "@/feature/log/components/attack-detail-dialog"
-import { Eye, Shield } from "lucide-react"
+import { Eye } from "lucide-react"
 
 export default function LogsPage() {
     const { t } = useTranslation()
@@ -70,6 +70,7 @@ export default function LogsPage() {
             payload: log.payload,
             message: log.message,
             ruleId: log.ruleId,
+            requestId: log.requestId,
             createdAt: log.createdAt,
             request: log.request,
             response: log.response,

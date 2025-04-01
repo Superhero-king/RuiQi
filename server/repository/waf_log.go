@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"time"
 
@@ -173,7 +174,12 @@ func (r *MongoWAFLogRepository) CountAttackLogs(ctx context.Context, filter bson
 // by finding the longest sequence of attacks with gaps no larger than 5 minutes
 func (r *MongoWAFLogRepository) calculateAttackDuration(attackTimes []time.Time) float64 {
 	if len(attackTimes) == 0 {
-		return 0
+		return 1.0 // 即使没有攻击时间，也至少返回1分钟
+	}
+
+	// 处理只有单个攻击点的情况，直接返回1分钟
+	if len(attackTimes) == 1 {
+		return 1.0
 	}
 
 	// Sort attack times in descending order (newest first)
@@ -185,25 +191,39 @@ func (r *MongoWAFLogRepository) calculateAttackDuration(attackTimes []time.Time)
 		return sortedTimes[i].After(sortedTimes[j])
 	})
 
-	// Start from the most recent attack time
-	lastContinuousAttackTime := sortedTimes[0]
+	// 从最新攻击时间开始
+	var currentSequenceStart time.Time = sortedTimes[0]
+	var previousTime time.Time = sortedTimes[0]
+	var foundContinuousSequence bool = false
 
-	// Find the earliest attack that is still part of the continuous sequence
-	var earliestContinuousAttackTime time.Time
-
+	// 查找最早的仍在连续序列中的攻击时间
 	for i := 1; i < len(sortedTimes); i++ {
-		// If the gap between attacks is more than 5 minutes, break the sequence
-		if lastContinuousAttackTime.Sub(sortedTimes[i]).Minutes() > 5 {
+		currentTime := sortedTimes[i]
+
+		// 检查与前一次攻击的时间差是否小于5分钟
+		if previousTime.Sub(currentTime).Minutes() <= 5 {
+			// 仍在连续序列中
+			previousTime = currentTime
+			foundContinuousSequence = true
+		} else {
+			// 连续序列中断
 			break
 		}
-		earliestContinuousAttackTime = sortedTimes[i]
 	}
 
-	// If we didn't find any break in the sequence, use the oldest attack time
-	if earliestContinuousAttackTime.IsZero() {
-		earliestContinuousAttackTime = sortedTimes[len(sortedTimes)-1]
+	// 如果没有找到连续序列（最新与其他所有攻击间隔都大于5分钟）
+	if !foundContinuousSequence {
+		return 1.0 // 返回最小持续时间1分钟
 	}
 
-	// Return the duration in minutes
-	return lastContinuousAttackTime.Sub(earliestContinuousAttackTime).Minutes()
+	// 计算持续时间（最新时间减去序列中最早的时间）
+	duration := currentSequenceStart.Sub(previousTime).Minutes()
+
+	// 将持续时间向上取整到至少1分钟
+	if duration < 1.0 {
+		return 1.0
+	}
+
+	// 返回整数分钟数（向上取整）
+	return math.Ceil(duration)
 }

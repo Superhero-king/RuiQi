@@ -45,7 +45,8 @@ func Logger() gin.HandlerFunc {
 			event.Str("method", method).
 				Str("path", path).
 				Int("status", statusCode).
-				Dur("latency", elapsed).
+				// Dur("latency", elapsed). //单位是毫秒
+				Str("latency", elapsed.String()).
 				Msg("HTTP Request")
 		}
 	}

@@ -5,16 +5,27 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Card } from "@/components/ui/card"
-import { Search, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
+import { Search, RefreshCw, ChevronDown, ChevronUp, Clock } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
+import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface AttackEventFilterProps {
   onFilter: (values: AttackEventQueryFormValues) => void
+  enablePolling: boolean
+  pollingInterval: number
+  onPollingChange: (enabled: boolean, interval: number) => void
   defaultValues?: Partial<AttackEventQueryFormValues>
 }
 
-export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventFilterProps) {
+export function AttackEventFilter({ 
+  onFilter, 
+  enablePolling, 
+  pollingInterval,
+  onPollingChange,
+  defaultValues = {} 
+}: AttackEventFilterProps) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   
@@ -52,20 +63,53 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
     onFilter(form.getValues())
   }
 
+  const pollingIntervals = [5, 10, 30, 60]
+
   return (
     <Card className="p-3">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="flex items-center justify-between mb-2">
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setExpanded(!expanded)}
-              className="flex items-center gap-1 font-medium"
-            >
-              {t('filter')} {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1 font-medium"
+              >
+                {t('filter')} {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+              
+              <div className="flex items-center gap-2 border-l pl-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <Switch 
+                    checked={enablePolling}
+                    onCheckedChange={(checked) => onPollingChange(checked, pollingInterval)}
+                  />
+                  <span className="text-sm font-medium">{t('auto.refresh')}</span>
+                </div>
+                
+                {enablePolling && (
+                  <Select 
+                    value={pollingInterval.toString()} 
+                    onValueChange={(value) => onPollingChange(enablePolling, parseInt(value))}
+                  >
+                    <SelectTrigger className="h-8 w-24">
+                      <SelectValue placeholder={t('interval')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pollingIntervals.map(interval => (
+                        <SelectItem key={interval} value={interval.toString()}>
+                          {interval} {t('seconds')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
             
             <div className="flex gap-2">
               <Button 
