@@ -42,22 +42,25 @@ export default function EventsPage() {
         setQueryParams(prev => ({ ...prev, page: 1, pageSize }))
     }
 
-    const navigateToLogs = (domain: string, clientIpAddress: string) => {
-        navigate(`/logs/log?domain=${encodeURIComponent(domain)}&clientIpAddress=${encodeURIComponent(clientIpAddress)}`,
-            // { replace: true } // 替换当前历史记录条目)
-        )
+    const navigateToLogs = (domain: string, srcIp: string) => {
+        navigate(`/logs/protect?domain=${encodeURIComponent(domain)}&srcIp=${encodeURIComponent(srcIp)}`)
     }
 
     const columns: ColumnDef<AttackEventAggregateResult>[] = [
         {
             accessorKey: "domain",
             header: t('domain'),
-            cell: ({ row }) => <span className="font-medium">{row.getValue("domain")}</span>
+            cell: ({ row }) => <span className="font-medium break-all">{row.getValue("domain")}</span>
         },
         {
-            accessorKey: "clientIpAddress",
-            header: t('client.ip'),
-            cell: ({ row }) => <span>{row.getValue("clientIpAddress")}</span>
+            accessorKey: "dstPort",
+            header: t('dst.port'),
+            cell: ({ row }) => <span>{row.getValue("dstPort")}</span>
+        },
+        {
+            accessorKey: "srcIp",
+            header: t('src.ip'),
+            cell: ({ row }) => <span className="break-all">{row.getValue("srcIp")}</span>
         },
         {
             accessorKey: "count",
@@ -65,7 +68,7 @@ export default function EventsPage() {
             cell: ({ row }) => (
                 <Button
                     variant="link"
-                    onClick={() => navigateToLogs(row.original.domain, row.original.clientIpAddress)}
+                    onClick={() => navigateToLogs(row.original.domain, row.original.srcIp)}
                     className="flex items-center gap-1 p-0"
                 >
                     {row.getValue("count")}
@@ -76,12 +79,22 @@ export default function EventsPage() {
         {
             accessorKey: "firstAttackTime",
             header: t('first.attack.time'),
-            cell: ({ row }) => <span>{format(new Date(row.getValue("firstAttackTime")), "yyyy-MM-dd HH:mm:ss")}</span>
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span>{format(new Date(row.getValue("firstAttackTime")), "yyyy-MM-dd")}</span>
+                    <span className="text-sm text-muted-foreground">{format(new Date(row.getValue("firstAttackTime")), "HH:mm:ss")}</span>
+                </div>
+            )
         },
         {
             accessorKey: "lastAttackTime",
             header: t('last.attack.time'),
-            cell: ({ row }) => <span>{format(new Date(row.getValue("lastAttackTime")), "yyyy-MM-dd HH:mm:ss")}</span>
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span>{format(new Date(row.getValue("lastAttackTime")), "yyyy-MM-dd")}</span>
+                    <span className="text-sm text-muted-foreground">{format(new Date(row.getValue("lastAttackTime")), "HH:mm:ss")}</span>
+                </div>
+            )
         },
         {
             accessorKey: "isOngoing",
@@ -89,12 +102,18 @@ export default function EventsPage() {
             cell: ({ row }) => {
                 const isOngoing = row.getValue("isOngoing")
                 return isOngoing ? (
-                    <Badge variant="destructive" className="flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        {t('ongoing')}
-                    </Badge>
+                    <div className="flex flex-col items-center gap-1">
+                        <Badge variant="destructive" className="flex items-center gap-1 animate-pulse">
+                            <AlertTriangle className="h-3 w-3" />
+                            {t('ongoing')}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">{t('under.attack')}</span>
+                    </div>
                 ) : (
-                    <Badge variant="outline">{t('ended')}</Badge>
+                    <div className="flex flex-col items-center gap-1">
+                        <Badge variant="outline">{t('ended')}</Badge>
+                        <span className="text-xs text-muted-foreground">{t('no.ongoing.attack')}</span>
+                    </div>
                 )
             }
         },

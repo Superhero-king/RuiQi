@@ -26,14 +26,7 @@
       "certManager": "证书管理"
     }
   },
-  "action": "动作",
-  "attack": {
-    "url": "攻击地址",
-    "type": "攻击类型",
-    "ip": "源 IP"
-  },
-  "time": "时间",
-  "protect": {
-    "status": "防护状态"
-  }
+  "filter": "筛选",
+  "reset": "重置",
+  "search": "搜索"
 }

@@ -405,6 +405,11 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 		Request:   buildRequestString(req, headers),
 		Response:  "", // 暂时不处理响应
 		Domain:    getHostFromRequest(req),
+		SrcIP:     req.SrcIp.String(),
+		DstIP:     req.DstIp.String(),
+		SrcPort:   int(req.SrcPort),
+		DstPort:   int(req.DstPort),
+		RequestID: req.ID,
 	}
 
 	// 遍历所有匹配的规则
@@ -453,10 +458,10 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 				firewallLog.URI = uri
 			}
 			if clientIP := matchedRule.ClientIPAddress(); clientIP != "" {
-				firewallLog.ClientIPAddress = clientIP
+				firewallLog.SrcIP = clientIP
 			}
 			if serverIP := matchedRule.ServerIPAddress(); serverIP != "" {
-				firewallLog.ServerIPAddress = serverIP
+				firewallLog.DstIP = serverIP
 			}
 		}
 	}
@@ -587,7 +592,16 @@ func getHeaderValue(headers []byte, targetHeader string) (string, error) {
 
 func getHostFromRequest(req *applicationRequest) string {
 	if host, err := getHeaderValue(req.Headers, "host"); err == nil && host != "" {
+		// 分离主机名和端口号
+		if colonIndex := strings.Index(host, ":"); colonIndex != -1 {
+			return host[:colonIndex]
+		}
 		return host
 	}
-	return req.DstIp.String()
+	// 如果目标IP也可能包含端口，也做分离处理
+	dstIpStr := req.DstIp.String()
+	if colonIndex := strings.Index(dstIpStr, ":"); colonIndex != -1 {
+		return dstIpStr[:colonIndex]
+	}
+	return dstIpStr
 }

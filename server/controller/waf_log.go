@@ -18,6 +18,7 @@ type WAFLogControllerImpl struct {
 	wafLogService service.WAFLogService
 }
 
+// NewWAFLogController 创建新的WAF日志控制器实例
 func NewWAFLogController(wafLogService service.WAFLogService) WAFLogController {
 	return &WAFLogControllerImpl{
 		wafLogService: wafLogService,
@@ -26,21 +27,23 @@ func NewWAFLogController(wafLogService service.WAFLogService) WAFLogController {
 
 // GetAttackEvents godoc
 //
-//	@Summary		Get aggregated attack events
-//	@Description	Retrieve attack events aggregated by client IP and domain
-//	@Tags			WAF Logs
+//	@Summary		获取聚合攻击事件
+//	@Description	按来源IP、目标端口和域名聚合的攻击事件统计，支持多维度筛选和分页
+//	@Tags			WAF安全日志
 //	@Accept			json
 //	@Produce		json
-//	@Param			clientIpAddress	query		string												false	"Client IP Address"
-//	@Param			domain			query		string												false	"Domain name"
-//	@Param			port			query		integer												false	"Port number"
-//	@Param			startTime		query		string												false	"Start time (RFC3339 format)"
-//	@Param			endTime			query		string												false	"End time (RFC3339 format)"
-//	@Param			page			query		integer												false	"Page number (default: 1)"
-//	@Param			pageSize		query		integer												false	"Page size (default: 10)"
-//	@Success		200				{object}	model.SuccessResponse{data=dto.AttackEventResponse}	"Successful response"
-//	@Failure		400				{object}	model.ErrResponse									"Bad request"
-//	@Failure		500				{object}	model.ErrResponseDontShowError						"Internal server error"
+//	@Param			srcIp		query		string												false	"来源IP地址，攻击者地址"
+//	@Param			dstIp		query		string												false	"目标IP地址，被攻击的服务器地址"
+//	@Param			domain		query		string												false	"域名，被攻击的站点域名"
+//	@Param			srcPort		query		integer												false	"来源端口号，发起攻击的端口"
+//	@Param			dstPort		query		integer												false	"目标端口号，被攻击的服务端口"
+//	@Param			startTime	query		string												false	"查询起始时间 (ISO8601格式，如: 2024-03-17T00:00:00Z)"
+//	@Param			endTime		query		string												false	"查询结束时间 (ISO8601格式，如: 2024-03-18T23:59:59Z)"
+//	@Param			page		query		integer												false	"当前页码，从1开始计数 (默认: 1)"
+//	@Param			pageSize	query		integer												false	"每页记录数，最大100条 (默认: 10)"
+//	@Success		200			{object}	model.SuccessResponse{data=dto.AttackEventResponse}	"成功"
+//	@Failure		400			{object}	model.ErrResponse									"请求参数错误"
+//	@Failure		500			{object}	model.ErrResponseDontShowError						"服务器内部错误"
 //	@Router			/api/v1/waf/logs/events [get]
 func (c *WAFLogControllerImpl) GetAttackEvents(ctx *gin.Context) {
 	var req dto.AttackEventRequset
@@ -71,6 +74,8 @@ func (c *WAFLogControllerImpl) GetAttackEvents(ctx *gin.Context) {
 	pageSize := req.PageSize
 	if pageSize <= 0 {
 		pageSize = 10
+	} else if pageSize > 100 {
+		pageSize = 100 // 限制最大每页数量
 	}
 
 	// 调用服务
@@ -85,22 +90,25 @@ func (c *WAFLogControllerImpl) GetAttackEvents(ctx *gin.Context) {
 
 // GetAttackLogs godoc
 //
-//	@Summary		Get individual attack logs
-//	@Description	Retrieve detailed attack logs with filtering and pagination
-//	@Tags			WAF Logs
+//	@Summary		获取详细攻击日志
+//	@Description	查询详细的WAF攻击日志记录，提供多条件筛选和分页功能，支持按规则ID、IP、域名、端口和时间范围过滤
+//	@Tags			WAF安全日志
 //	@Accept			json
 //	@Produce		json
-//	@Param			ruleId			query		integer												false	"Rule ID"
-//	@Param			clientIpAddress	query		string												false	"Client IP Address"
-//	@Param			domain			query		string												false	"Domain name"
-//	@Param			port			query		integer												false	"Port number"
-//	@Param			startTime		query		string												false	"Start time (RFC3339 format)"
-//	@Param			endTime			query		string												false	"End time (RFC3339 format)"
-//	@Param			page			query		integer												false	"Page number (default: 1)"
-//	@Param			pageSize		query		integer												false	"Page size (default: 10)"
-//	@Success		200				{object}	model.SuccessResponse{data=dto.AttackLogResponse}	"Successful response"
-//	@Failure		400				{object}	model.ErrResponse									"Bad request"
-//	@Failure		500				{object}	model.ErrResponseDontShowError						"Internal server error"
+//	@Param			ruleId		query		integer												false	"规则ID，触发攻击检测的WAF规则标识"
+//	@Param			srcIp		query		string												false	"来源IP地址，攻击者地址"
+//	@Param			dstIp		query		string												false	"目标IP地址，被攻击的服务器地址"
+//	@Param			domain		query		string												false	"域名，被攻击的站点域名"
+//	@Param			srcPort		query		integer												false	"来源端口号，发起攻击的端口"
+//	@Param			dstPort		query		integer												false	"目标端口号，被攻击的服务端口"
+//	@Param			requestId	query		string												false	"请求ID，唯一标识HTTP请求的ID"
+//	@Param			startTime	query		string												false	"查询起始时间 (ISO8601格式，如: 2024-03-17T00:00:00Z)"
+//	@Param			endTime		query		string												false	"查询结束时间 (ISO8601格式，如: 2024-03-18T23:59:59Z)"
+//	@Param			page		query		integer												false	"当前页码，从1开始计数 (默认: 1)"
+//	@Param			pageSize	query		integer												false	"每页记录数，最大100条 (默认: 10)"
+//	@Success		200			{object}	model.SuccessResponse{data=dto.AttackLogResponse}	"成功"
+//	@Failure		400			{object}	model.ErrResponse									"请求参数错误"
+//	@Failure		500			{object}	model.ErrResponseDontShowError						"服务器内部错误"
 //	@Router			/api/v1/waf/logs [get]
 func (c *WAFLogControllerImpl) GetAttackLogs(ctx *gin.Context) {
 	var req dto.AttackLogRequest
@@ -131,6 +139,8 @@ func (c *WAFLogControllerImpl) GetAttackLogs(ctx *gin.Context) {
 	pageSize := req.PageSize
 	if pageSize <= 0 {
 		pageSize = 10
+	} else if pageSize > 100 {
+		pageSize = 100 // 限制最大每页数量
 	}
 
 	// 调用服务

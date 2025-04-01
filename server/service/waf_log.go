@@ -44,7 +44,8 @@ func (s *WAFLogServiceImpl) GetAttackEvents(
 	groupStage := bson.D{
 		{Key: "$group", Value: bson.D{
 			{Key: "_id", Value: bson.D{
-				{Key: "clientIpAddress", Value: "$clientIpAddress"},
+				{Key: "srcIp", Value: "$srcIp"},
+				{Key: "dstPort", Value: "$dstPort"},
 				{Key: "domain", Value: "$domain"},
 			}},
 			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
@@ -57,7 +58,8 @@ func (s *WAFLogServiceImpl) GetAttackEvents(
 	// Project stage to format the output
 	projectStage := bson.D{
 		{Key: "$project", Value: bson.D{
-			{Key: "clientIpAddress", Value: "$_id.clientIpAddress"},
+			{Key: "srcIp", Value: "$_id.srcIp"},
+			{Key: "dstPort", Value: "$_id.dstPort"},
 			{Key: "domain", Value: "$_id.domain"},
 			{Key: "count", Value: 1},
 			{Key: "firstAttackTime", Value: 1},
@@ -167,14 +169,20 @@ func (s *WAFLogServiceImpl) GetAttackLogs(
 func (s *WAFLogServiceImpl) buildAttackEventFilter(req dto.AttackEventRequset) bson.D {
 	filter := bson.D{}
 
-	if req.ClientIPAddress != "" {
-		filter = append(filter, bson.E{Key: "clientIpAddress", Value: req.ClientIPAddress})
+	if req.SrcIP != "" {
+		filter = append(filter, bson.E{Key: "srcIp", Value: req.SrcIP})
+	}
+	if req.DstIP != "" {
+		filter = append(filter, bson.E{Key: "dstIp", Value: req.DstIP})
+	}
+	if req.SrcPort > 0 {
+		filter = append(filter, bson.E{Key: "srcPort", Value: req.SrcPort})
+	}
+	if req.DstPort > 0 {
+		filter = append(filter, bson.E{Key: "dstPort", Value: req.DstPort})
 	}
 	if req.Domain != "" {
 		filter = append(filter, bson.E{Key: "domain", Value: req.Domain})
-	}
-	if req.Port > 0 {
-		filter = append(filter, bson.E{Key: "port", Value: req.Port})
 	}
 
 	// Add time range filter if provided
@@ -196,14 +204,20 @@ func (s *WAFLogServiceImpl) buildAttackEventFilter(req dto.AttackEventRequset) b
 func (s *WAFLogServiceImpl) buildAttackLogFilter(req dto.AttackLogRequest) bson.D {
 	filter := bson.D{}
 
-	if req.ClientIPAddress != "" {
-		filter = append(filter, bson.E{Key: "clientIpAddress", Value: req.ClientIPAddress})
+	if req.SrcIP != "" {
+		filter = append(filter, bson.E{Key: "srcIp", Value: req.SrcIP})
+	}
+	if req.DstIP != "" {
+		filter = append(filter, bson.E{Key: "dstIp", Value: req.DstIP})
+	}
+	if req.SrcPort > 0 {
+		filter = append(filter, bson.E{Key: "srcPort", Value: req.SrcPort})
+	}
+	if req.DstPort > 0 {
+		filter = append(filter, bson.E{Key: "dstPort", Value: req.DstPort})
 	}
 	if req.Domain != "" {
 		filter = append(filter, bson.E{Key: "domain", Value: req.Domain})
-	}
-	if req.Port > 0 {
-		filter = append(filter, bson.E{Key: "port", Value: req.Port})
 	}
 	if req.RuleID > 0 {
 		filter = append(filter, bson.E{Key: "ruleId", Value: req.RuleID})

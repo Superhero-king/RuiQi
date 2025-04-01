@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
@@ -56,7 +57,8 @@ func (r *MongoWAFLogRepository) AggregateAttackEvents(
 
 	for dataCursor.Next(ctx) {
 		var result struct {
-			ClientIPAddress string      `bson:"clientIpAddress"`
+			SrcIP           string      `bson:"srcIp"`
+			DstPort         int         `bson:"dstPort"`
 			Domain          string      `bson:"domain"`
 			Count           int         `bson:"count"`
 			FirstAttackTime time.Time   `bson:"firstAttackTime"`
@@ -69,8 +71,10 @@ func (r *MongoWAFLogRepository) AggregateAttackEvents(
 		}
 
 		// Create result object
+
 		aggregateResult := dto.AttackEventAggregateResult{
-			ClientIPAddress: result.ClientIPAddress,
+			SrcIP:           result.SrcIP,
+			DstPort:         result.DstPort,
 			Domain:          result.Domain,
 			Count:           result.Count,
 			FirstAttackTime: result.FirstAttackTime,
@@ -177,13 +181,9 @@ func (r *MongoWAFLogRepository) calculateAttackDuration(attackTimes []time.Time)
 	copy(sortedTimes, attackTimes)
 
 	// Sort in reverse chronological order
-	for i := 0; i < len(sortedTimes)-1; i++ {
-		for j := i + 1; j < len(sortedTimes); j++ {
-			if sortedTimes[i].Before(sortedTimes[j]) {
-				sortedTimes[i], sortedTimes[j] = sortedTimes[j], sortedTimes[i]
-			}
-		}
-	}
+	sort.Slice(sortedTimes, func(i, j int) bool {
+		return sortedTimes[i].After(sortedTimes[j])
+	})
 
 	// Start from the most recent attack time
 	lastContinuousAttackTime := sortedTimes[0]

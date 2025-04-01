@@ -39,7 +39,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                         <span className="px-2 py-1 text-sm bg-destructive text-destructive-foreground rounded">
                             {data.message}
                         </span>
-                        <span className="text-sm font-normal">{data.target}</span>
+                        <span className="text-sm font-normal break-all">{data.target}</span>
                     </DialogTitle>
                 </DialogHeader>
 
@@ -48,7 +48,22 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                     <Card className="p-4 space-y-3">
                         <div className="grid grid-cols-[120px_1fr] gap-2">
                             <span className="text-muted-foreground">{t('attack.ip')}</span>
-                            <span>{data.clientIpAddress}</span>
+                            <span className="break-all">{data.srcIp}</span>
+                        </div>
+
+                        <div className="grid grid-cols-[120px_1fr] gap-2">
+                            <span className="text-muted-foreground">{t('attack.dst.ip')}</span>
+                            <span className="break-all">{data.dstIp}</span>
+                        </div>
+
+                        <div className="grid grid-cols-[120px_1fr] gap-2">
+                            <span className="text-muted-foreground">{t('attack.src.port')}</span>
+                            <span>{data.srcPort}</span>
+                        </div>
+
+                        <div className="grid grid-cols-[120px_1fr] gap-2">
+                            <span className="text-muted-foreground">{t('attack.dst.port')}</span>
+                            <span>{data.dstPort}</span>
                         </div>
 
                         <div className="grid grid-cols-[120px_1fr] gap-2">
@@ -56,7 +71,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                             <div className="flex items-center gap-2">
                                 <Card className="p-2 bg-muted flex-1">
                                     <div className="flex items-center justify-between">
-                                        <code className="text-sm">{data.payload}</code>
+                                        <code className="text-sm break-all">{data.payload}</code>
                                         <Button variant="ghost" size="icon" onClick={() => handleCopy(data.payload)}>
                                             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                                         </Button>
@@ -67,7 +82,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
 
                         <div className="grid grid-cols-[120px_1fr] gap-2">
                             <span className="text-muted-foreground">{t('attack.message')}</span>
-                            <span>{data.message}</span>
+                            <span className="break-all">{data.message}</span>
                         </div>
 
                         <div className="grid grid-cols-[120px_1fr] gap-2">
@@ -116,7 +131,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                         <div className="border rounded-md p-0 mt-2">
                             <TabsContent value="request" className="m-0">
                                 <Card className="border-0 rounded-none shadow-none">
-                                    <pre className="p-4 text-sm overflow-auto max-h-[400px]">
+                                    <pre className="p-4 text-sm overflow-auto max-h-[400px] whitespace-pre-wrap break-all">
                                         <code>{data.request}</code>
                                     </pre>
                                 </Card>
@@ -124,7 +139,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
 
                             <TabsContent value="response" className="m-0">
                                 <Card className="border-0 rounded-none shadow-none">
-                                    <pre className="p-4 text-sm overflow-auto max-h-[400px]">
+                                    <pre className="p-4 text-sm overflow-auto max-h-[400px] whitespace-pre-wrap break-all">
                                         <code>{data.response}</code>
                                     </pre>
                                 </Card>
@@ -132,7 +147,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
 
                             <TabsContent value="logs" className="m-0">
                                 <Card className="border-0 rounded-none shadow-none">
-                                    <pre className="p-4 text-sm overflow-auto max-h-[400px]">
+                                    <pre className="p-4 text-sm overflow-auto max-h-[400px] whitespace-pre-wrap break-all">
                                         <code>{data.logs}</code>
                                     </pre>
                                 </Card>

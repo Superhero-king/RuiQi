@@ -732,7 +732,7 @@
         },
         "/api/v1/waf/logs": {
             "get": {
-                "description": "Retrieve detailed attack logs with filtering and pagination",
+                "description": "查询详细的WAF攻击日志记录，提供多条件筛选和分页功能，支持按规则ID、IP、域名、端口和时间范围过滤",
                 "consumes": [
                     "application/json"
                 ],
@@ -740,62 +740,80 @@
                     "application/json"
                 ],
                 "tags": [
-                    "WAF Logs"
+                    "WAF安全日志"
                 ],
-                "summary": "Get individual attack logs",
+                "summary": "获取详细攻击日志",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Rule ID",
+                        "description": "规则ID，触发攻击检测的WAF规则标识",
                         "name": "ruleId",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Client IP Address",
-                        "name": "clientIpAddress",
+                        "description": "来源IP地址，攻击者地址",
+                        "name": "srcIp",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Domain name",
+                        "description": "目标IP地址，被攻击的服务器地址",
+                        "name": "dstIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "域名，被攻击的站点域名",
                         "name": "domain",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Port number",
-                        "name": "port",
+                        "description": "来源端口号，发起攻击的端口",
+                        "name": "srcPort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "目标端口号，被攻击的服务端口",
+                        "name": "dstPort",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Start time (RFC3339 format)",
+                        "description": "请求ID，唯一标识HTTP请求的ID",
+                        "name": "requestId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询起始时间 (ISO8601格式，如: 2024-03-17T00:00:00Z)",
                         "name": "startTime",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "End time (RFC3339 format)",
+                        "description": "查询结束时间 (ISO8601格式，如: 2024-03-18T23:59:59Z)",
                         "name": "endTime",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Page number (default: 1)",
+                        "description": "当前页码，从1开始计数 (默认: 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Page size (default: 10)",
+                        "description": "每页记录数，最大100条 (默认: 10)",
                         "name": "pageSize",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful response",
+                        "description": "成功",
                         "schema": {
                             "allOf": [
                                 {
@@ -813,13 +831,13 @@
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "请求参数错误",
                         "schema": {
                             "$ref": "#/definitions/model.ErrResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "服务器内部错误",
                         "schema": {
                             "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
@@ -829,7 +847,7 @@
         },
         "/api/v1/waf/logs/events": {
             "get": {
-                "description": "Retrieve attack events aggregated by client IP and domain",
+                "description": "按来源IP、目标端口和域名聚合的攻击事件统计，支持多维度筛选和分页",
                 "consumes": [
                     "application/json"
                 ],
@@ -837,56 +855,68 @@
                     "application/json"
                 ],
                 "tags": [
-                    "WAF Logs"
+                    "WAF安全日志"
                 ],
-                "summary": "Get aggregated attack events",
+                "summary": "获取聚合攻击事件",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Client IP Address",
-                        "name": "clientIpAddress",
+                        "description": "来源IP地址，攻击者地址",
+                        "name": "srcIp",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Domain name",
+                        "description": "目标IP地址，被攻击的服务器地址",
+                        "name": "dstIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "域名，被攻击的站点域名",
                         "name": "domain",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Port number",
-                        "name": "port",
+                        "description": "来源端口号，发起攻击的端口",
+                        "name": "srcPort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "目标端口号，被攻击的服务端口",
+                        "name": "dstPort",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Start time (RFC3339 format)",
+                        "description": "查询起始时间 (ISO8601格式，如: 2024-03-17T00:00:00Z)",
                         "name": "startTime",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "End time (RFC3339 format)",
+                        "description": "查询结束时间 (ISO8601格式，如: 2024-03-18T23:59:59Z)",
                         "name": "endTime",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Page number (default: 1)",
+                        "description": "当前页码，从1开始计数 (默认: 1)",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Page size (default: 10)",
+                        "description": "每页记录数，最大100条 (默认: 10)",
                         "name": "pageSize",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Successful response",
+                        "description": "成功",
                         "schema": {
                             "allOf": [
                                 {
@@ -904,13 +934,13 @@
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "请求参数错误",
                         "schema": {
                             "$ref": "#/definitions/model.ErrResponse"
                         }
                     },
                     "500": {
-                        "description": "Internal server error",
+                        "description": "服务器内部错误",
                         "schema": {
                             "$ref": "#/definitions/model.ErrResponseDontShowError"
                         }
@@ -1342,107 +1372,112 @@
     },
     "definitions": {
         "dto.AttackEventAggregateResult": {
-            "description": "攻击事件聚合结果，按客户端IP和域名分组统计",
+            "description": "攻击事件的聚合统计结果，提供IP、域名、端口维度的攻击信息汇总，包含攻击次数、首次和最近攻击时间、持续时间等关键指标",
             "type": "object",
             "properties": {
-                "clientIpAddress": {
-                    "description": "客户端IP地址",
-                    "type": "string",
-                    "example": "192.168.1.100"
-                },
                 "count": {
-                    "description": "攻击次数",
+                    "description": "攻击总次数，同一来源的攻击计数",
                     "type": "integer",
                     "example": 15
                 },
                 "domain": {
-                    "description": "域名",
+                    "description": "域名，被攻击的站点",
                     "type": "string",
                     "example": "example.com"
                 },
+                "dstPort": {
+                    "description": "目标端口号，被攻击的服务端口",
+                    "type": "integer",
+                    "example": 443
+                },
                 "durationInMinutes": {
-                    "description": "攻击持续时间(分钟)",
+                    "description": "攻击持续时间(分钟)，从首次到最近攻击的时间跨度",
                     "type": "number",
                     "example": 18.2
                 },
                 "firstAttackTime": {
-                    "description": "首次攻击时间",
+                    "description": "首次攻击时间，该IP首次发起攻击的时间点",
                     "type": "string",
                     "example": "2024-03-18T08:12:33Z"
                 },
                 "isOngoing": {
-                    "description": "是否正在进行中",
+                    "description": "是否正在进行中，标识攻击是否仍在持续",
                     "type": "boolean",
                     "example": true
                 },
                 "lastAttackTime": {
-                    "description": "最近攻击时间",
+                    "description": "最近攻击时间，该IP最后一次攻击的时间点",
                     "type": "string",
                     "example": "2024-03-18T08:30:45Z"
+                },
+                "srcIp": {
+                    "description": "来源IP地址，攻击者地址",
+                    "type": "string",
+                    "example": "192.168.1.100"
                 }
             }
         },
         "dto.AttackEventResponse": {
-            "description": "攻击事件分页查询结果",
+            "description": "攻击事件查询的分页响应结构体，包含聚合结果列表及分页元数据，用于前端展示和翻页控制",
             "type": "object",
             "properties": {
                 "currentPage": {
-                    "description": "当前页码",
+                    "description": "当前页码，从1开始计数",
                     "type": "integer",
                     "example": 1
                 },
                 "pageSize": {
-                    "description": "每页大小",
+                    "description": "每页大小，当前设置的每页记录数",
                     "type": "integer",
                     "example": 10
                 },
                 "results": {
-                    "description": "聚合结果列表",
+                    "description": "聚合结果列表，当前页的攻击事件记录",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.AttackEventAggregateResult"
                     }
                 },
                 "totalCount": {
-                    "description": "总记录数",
+                    "description": "总记录数，符合条件的攻击事件总数",
                     "type": "integer",
                     "example": 35
                 },
                 "totalPages": {
-                    "description": "总页数",
+                    "description": "总页数，根据总记录数和每页大小计算",
                     "type": "integer",
                     "example": 4
                 }
             }
         },
         "dto.AttackLogResponse": {
-            "description": "攻击日志分页查询结果",
+            "description": "攻击日志查询的分页响应结构体，返回详细的WAF日志记录及分页信息，便于安全分析和事件追踪",
             "type": "object",
             "properties": {
                 "currentPage": {
-                    "description": "当前页码",
+                    "description": "当前页码，从1开始计数",
                     "type": "integer",
                     "example": 1
                 },
                 "pageSize": {
-                    "description": "每页大小",
+                    "description": "每页大小，当前设置的每页记录数",
                     "type": "integer",
                     "example": 10
                 },
                 "results": {
-                    "description": "日志记录列表",
+                    "description": "日志记录列表，当前页的WAF攻击日志详情",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.WAFLog"
                     }
                 },
                 "totalCount": {
-                    "description": "总记录数",
+                    "description": "总记录数，符合查询条件的日志总数",
                     "type": "integer",
                     "example": 128
                 },
                 "totalPages": {
-                    "description": "总页数",
+                    "description": "总页数，根据总记录数和每页大小计算",
                     "type": "integer",
                     "example": 13
                 }
@@ -2200,51 +2235,51 @@
             }
         },
         "model.Log": {
-            "description": "WAF 日志条目，包含详细的规则匹配信息",
+            "description": "详细的WAF规则匹配记录，包含规则触发的详细信息和原始日志",
             "type": "object",
             "properties": {
                 "accuracy": {
-                    "description": "Accuracy level of the rule match (0-10)",
+                    "description": "规则匹配准确度(0-10)",
                     "type": "integer",
                     "example": 9
                 },
                 "logRaw": {
-                    "description": "Raw log data",
+                    "description": "原始日志数据",
                     "type": "string",
-                    "example": "[2024-03-18 08:12:33] [error] 12345#12345: *1234 ModSecurity: Access denied with code 403 (phase 1). Matched \\\"Operator 'Rx' with parameter '(?:acunetix|Morfeus|ZmEu)' against variable 'REQUEST_HEADERS:User-Agent'\\\" [file \\\"/etc/nginx/modsec/coreruleset/rules/REQUEST-913-SCANNER-DETECTION.conf\\\"] [line \\\"48\\\"] [id \\\"913100\\\"] [rev \\\"1\\\"] [msg \\\"Web Application Scanner detected\\\"] [data \\\"Matched Data: acunetix found within REQUEST_HEADERS:User-Agent: Acunetix/1.0\\\"] [severity \\\"CRITICAL\\\"] [ver \\\"OWASP_CRS/3.3.0\\\"] [maturity \\\"9\\\"] [accuracy \\\"9\\\"] [tag \\\"application-multi\\\"] [tag \\\"language-multi\\\"] [tag \\\"platform-multi\\\"] [tag \\\"attack-reputation-scanner\\\"], client: 192.168.1.100, server: example.com, request: \\\"GET /api/users HTTP/1.1\\\", host: \\\"example.com\\\""
+                    "example": "[2024-03-18 08:12:33] [error] ModSecurity: Access denied with code 403 (phase 1). Matched \"Operator 'Rx' with parameter '(?:scanner)' against variable 'REQUEST_HEADERS:User-Agent'\" [id \"10086\"] [msg \"恶意扫描器检测\"] [severity \"CRITICAL\"]"
                 },
                 "message": {
-                    "description": "Log message",
+                    "description": "日志消息",
                     "type": "string",
-                    "example": "Web Application Scanner detected"
+                    "example": "恶意扫描器检测"
                 },
                 "payload": {
-                    "description": "Attack payload",
+                    "description": "攻击载荷",
                     "type": "string",
-                    "example": "Acunetix/1.0"
+                    "example": "Scanner/1.0"
                 },
                 "phase": {
-                    "description": "Phase of the request processing",
+                    "description": "请求处理阶段",
                     "type": "integer",
                     "example": 1
                 },
                 "ruleId": {
-                    "description": "Rule identifier",
+                    "description": "规则ID",
                     "type": "integer",
-                    "example": 100012
+                    "example": 10086
                 },
                 "secLangRaw": {
-                    "description": "Raw security language",
+                    "description": "安全规则原始定义",
                     "type": "string",
-                    "example": "SecRule REQUEST_HEADERS:User-Agent \\\"@rx (?:acunetix|Morfeus|ZmEu)\\\" \\\"id:1008,phase:1,t:lowercase,t:none,pass,nolog,tag:'application-multi',tag:'language-multi',tag:'platform-multi',tag:'attack-reputation-scanner',severity:'CRITICAL',msg:'Web Application Scanner detected'\""
+                    "example": "SecRule REQUEST_HEADERS:User-Agent \"@rx (?:scanner)\" \"id:1008,phase:1,severity:'CRITICAL'\""
                 },
                 "secMark": {
-                    "description": "Security mark of the rule",
+                    "description": "安全标记",
                     "type": "string",
-                    "example": "web_attack_scanner"
+                    "example": "web_scanner"
                 },
                 "severity": {
-                    "description": "Severity level (0-5)",
+                    "description": "严重级别(0-5)",
                     "type": "integer",
                     "example": 2
                 }
@@ -2419,90 +2454,109 @@
             }
         },
         "model.WAFLog": {
-            "description": "WAF 安全事件日志记录，包含完整的攻击事件信息",
+            "description": "Web应用防火墙安全事件完整记录，包含详细的攻击检测和防护信息",
             "type": "object",
             "properties": {
                 "accuracy": {
-                    "description": "Accuracy level of the rule match (0-10)",
+                    "description": "规则匹配准确度(0-10)",
                     "type": "integer",
                     "example": 9
                 },
-                "clientIpAddress": {
-                    "description": "Source IP address",
-                    "type": "string",
-                    "example": "192.168.1.100"
-                },
                 "createdAt": {
-                    "description": "Timestamp of the event",
+                    "description": "事件发生时间戳",
                     "type": "string",
                     "example": "2024-03-18T08:12:33Z"
                 },
                 "domain": {
-                    "description": "Target domain",
+                    "description": "目标域名",
                     "type": "string",
-                    "example": "example.com"
+                    "example": "api.example.com"
+                },
+                "dstIp": {
+                    "description": "目标IP地址",
+                    "type": "string",
+                    "example": "10.0.0.1"
+                },
+                "dstPort": {
+                    "description": "目标端口",
+                    "type": "integer",
+                    "example": 443
+                },
+                "id": {
+                    "description": "日志唯一标识符",
+                    "type": "string"
                 },
                 "logs": {
-                    "description": "Associated log entries",
+                    "description": "关联的日志条目",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/model.Log"
                     }
                 },
                 "message": {
-                    "description": "Event message or description",
+                    "description": "事件描述消息",
                     "type": "string",
-                    "example": "Web Application Scanner detected"
+                    "example": "恶意扫描器检测"
                 },
                 "payload": {
-                    "description": "Attack payload",
+                    "description": "攻击载荷",
                     "type": "string",
-                    "example": "Acunetix/1.0"
+                    "example": "Scanner/1.0"
                 },
                 "phase": {
-                    "description": "Phase of the request processing",
+                    "description": "请求处理阶段",
                     "type": "integer",
                     "example": 1
                 },
                 "request": {
-                    "description": "Raw HTTP request",
+                    "description": "原始HTTP请求",
                     "type": "string",
-                    "example": "GET /api/users HTTP/1.1\nHost: example.com\nUser-Agent: Acunetix/1.0\nAccept: */*"
+                    "example": "GET /api/v1/users HTTP/1.1\nHost: api.example.com\nUser-Agent: Scanner/1.0"
+                },
+                "requestId": {
+                    "description": "请求唯一标识",
+                    "type": "string",
+                    "example": "a1b2c3d4e5f6"
                 },
                 "response": {
-                    "description": "Raw HTTP response",
+                    "description": "原始HTTP响应",
                     "type": "string",
-                    "example": "HTTP/1.1 403 Forbidden\nServer: nginx\nDate: Wed, 18 Mar 2024 08:12:33 GMT\nContent-Type: text/html\nContent-Length: 146"
+                    "example": "HTTP/1.1 403 Forbidden\nContent-Type: text/html\nContent-Length: 146"
                 },
                 "ruleId": {
-                    "description": "ID of the triggered rule",
+                    "description": "触发的规则ID",
                     "type": "integer",
-                    "example": 100012
+                    "example": 10086
                 },
                 "secLangRaw": {
-                    "description": "Raw security language definition",
+                    "description": "安全规则原始定义",
                     "type": "string",
-                    "example": "SecRule REQUEST_HEADERS:User-Agent \\\"@rx (?:acunetix|Morfeus|ZmEu)\\\" \\\"id:1008,phase:1,t:lowercase,t:none,pass,nolog,tag:'application-multi',tag:'language-multi',tag:'platform-multi',tag:'attack-reputation-scanner',severity:'CRITICAL',msg:'Web Application Scanner detected'\""
+                    "example": "SecRule REQUEST_HEADERS:User-Agent \"@rx (?:scanner)\" \"id:1008,phase:1,severity:'CRITICAL'\""
                 },
                 "secMark": {
-                    "description": "Security mark of the rule",
+                    "description": "安全标记",
                     "type": "string",
-                    "example": "web_attack_scanner"
-                },
-                "serverIpAddress": {
-                    "description": "Destination IP address",
-                    "type": "string",
-                    "example": "10.0.0.5"
+                    "example": "web_scanner"
                 },
                 "severity": {
-                    "description": "Severity level of the event (0-5)",
+                    "description": "事件严重级别(0-5)",
                     "type": "integer",
                     "example": 2
                 },
-                "uri": {
-                    "description": "Request URI",
+                "srcIp": {
+                    "description": "来源IP地址",
                     "type": "string",
-                    "example": "/api/users"
+                    "example": "192.168.1.1"
+                },
+                "srcPort": {
+                    "description": "来源端口",
+                    "type": "integer",
+                    "example": 52134
+                },
+                "uri": {
+                    "description": "请求URI路径",
+                    "type": "string",
+                    "example": "/api/v1/users"
                 }
             }
         },

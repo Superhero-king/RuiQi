@@ -26,14 +26,7 @@
       "certManager": "Certificate Management"
     }
   },
-  "action": "action",
-  "attack": {
-    "url": "Attack address",
-    "type": "Attack Type",
-    "ip": "Source IP"
-  },
-  "time": "time",
-  "protect": {
-    "status": "Protection status"
-  }
+  "filter": "filter",
+  "reset": "reset",
+  "search": "search"
 }

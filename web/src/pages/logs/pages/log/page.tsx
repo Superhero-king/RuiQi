@@ -35,13 +35,13 @@ export default function LogsPage() {
     useEffect(() => {
         const params = new URLSearchParams(location.search)
         const domain = params.get('domain')
-        const clientIpAddress = params.get('clientIpAddress')
+        const srcIp = params.get('srcIp')
 
-        if (domain || clientIpAddress) {
+        if (domain || srcIp) {
             setQueryParams(prev => ({
                 ...prev,
                 domain: domain || undefined,
-                clientIpAddress: clientIpAddress || undefined
+                srcIp: srcIp || undefined
             }))
         }
     }, [location.search])
@@ -62,8 +62,11 @@ export default function LogsPage() {
 
     const handleOpenDetail = (log: WAFLog) => {
         setSelectedLog({
-            target: `${log.domain}${log.uri}`,
-            clientIpAddress: log.clientIpAddress,
+            target: `${log.domain}:${log.dstPort}${log.uri}`,
+            srcIp: log.srcIp,
+            srcPort: log.srcPort,
+            dstIp: log.dstIp,
+            dstPort: log.dstPort,
             payload: log.payload,
             message: log.message,
             ruleId: log.ruleId,
@@ -79,29 +82,40 @@ export default function LogsPage() {
         {
             header: t('target'),
             cell: ({ row }) => (
-                <div className="max-w-[300px] truncate">
-                    {row.original.domain}{row.original.uri}
+                <div className="max-w-[300px] truncate break-all">
+                    {`${row.original.domain}:${row.original.dstPort}${row.original.uri}`}
                 </div>
             )
         },
         {
-            accessorKey: "clientIpAddress",
-            header: t('client.ip')
+            accessorKey: "srcIp",
+            header: t('src.ip'),
+            cell: ({ row }) => <span className="break-all">{row.getValue("srcIp")}</span>
         },
         {
-            accessorKey: "message",
-            header: t('attack.type'),
-            cell: ({ row }) => (
-                <div className="flex items-center gap-1">
-                    <Shield className="h-4 w-4 text-destructive" />
-                    <span>{row.original.message}</span>
-                </div>
-            )
+            accessorKey: "srcPort",
+            header: t('src.port'),
+            cell: ({ row }) => <span>{row.getValue("srcPort")}</span>
+        },
+        {
+            accessorKey: "dstPort",
+            header: t('dst.port'),
+            cell: ({ row }) => <span>{row.getValue("dstPort")}</span>
+        },
+        {
+            accessorKey: "dstIp",
+            header: t('dst.ip'),
+            cell: ({ row }) => <span className="break-all">{row.getValue("dstIp")}</span>
         },
         {
             accessorKey: "createdAt",
             header: t('time'),
-            cell: ({ row }) => format(new Date(row.getValue("createdAt")), "yyyy-MM-dd HH:mm:ss")
+            cell: ({ row }) => (
+                <div className="flex flex-col">
+                    <span>{format(new Date(row.getValue("createdAt")), "yyyy-MM-dd")}</span>
+                    <span className="text-sm text-muted-foreground">{format(new Date(row.getValue("createdAt")), "HH:mm:ss")}</span>
+                </div>
+            )
         },
         {
             id: "actions",

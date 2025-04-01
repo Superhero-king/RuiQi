@@ -21,9 +21,11 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
   const form = useForm<AttackEventQueryFormValues>({
     resolver: zodResolver(attackEventQuerySchema),
     defaultValues: {
-      clientIpAddress: defaultValues.clientIpAddress || "",
+      srcIp: defaultValues.srcIp || "",
+      dstIp: defaultValues.dstIp || "",
       domain: defaultValues.domain || "",
-      port: defaultValues.port || undefined,
+      srcPort: defaultValues.srcPort || undefined,
+      dstPort: defaultValues.dstPort || undefined,
       startTime: defaultValues.startTime || "",
       endTime: defaultValues.endTime || "",
       page: 1,
@@ -37,9 +39,11 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
 
   const handleReset = () => {
     form.reset({
-      clientIpAddress: "",
+      srcIp: "",
+      dstIp: "",
       domain: "",
-      port: undefined,
+      srcPort: undefined,
+      dstPort: undefined,
       startTime: "",
       endTime: "",
       page: 1,
@@ -60,7 +64,7 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
               onClick={() => setExpanded(!expanded)}
               className="flex items-center gap-1 font-medium"
             >
-              {t('filters')} {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {t('filter')} {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
             
             <div className="flex gap-2">
@@ -86,13 +90,13 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
           </div>
           
           {expanded && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-3">
+            <div className="flex flex-wrap gap-3 mt-3">
               <FormField
                 control={form.control}
                 name="domain"
                 render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs">{t('domain')}</FormLabel>
+                  <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                    <FormLabel className="text-xs">{t('attack.url')}</FormLabel>
                     <FormControl>
                       <Input placeholder={t('enter.domain')} {...field} className="h-8 text-sm" />
                     </FormControl>
@@ -102,9 +106,9 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
               
               <FormField
                 control={form.control}
-                name="clientIpAddress"
+                name="srcIp"
                 render={({ field }) => (
-                  <FormItem className="space-y-1">
+                  <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
                     <FormLabel className="text-xs">{t('client.ip')}</FormLabel>
                     <FormControl>
                       <Input placeholder={t('enter.ip')} {...field} className="h-8 text-sm" />
@@ -115,10 +119,42 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
               
               <FormField
                 control={form.control}
-                name="port"
+                name="dstIp"
                 render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs">{t('port')}</FormLabel>
+                  <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                    <FormLabel className="text-xs">{t('server.ip')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('enter.ip')} {...field} className="h-8 text-sm" />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="srcPort"
+                render={({ field }) => (
+                  <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                    <FormLabel className="text-xs">{t('source.port')}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder={t('enter.port')} 
+                        {...field} 
+                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                        className="h-8 text-sm"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="dstPort"
+                render={({ field }) => (
+                  <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                    <FormLabel className="text-xs">{t('dest.port')}</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -136,7 +172,7 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
                 control={form.control}
                 name="startTime"
                 render={({ field }) => (
-                  <FormItem className="space-y-1">
+                  <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
                     <FormLabel className="text-xs">{t('start.time')}</FormLabel>
                     <FormControl>
                       <Input type="datetime-local" {...field} className="h-8 text-sm" />
@@ -149,7 +185,7 @@ export function AttackEventFilter({ onFilter, defaultValues = {} }: AttackEventF
                 control={form.control}
                 name="endTime"
                 render={({ field }) => (
-                  <FormItem className="space-y-1">
+                  <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
                     <FormLabel className="text-xs">{t('end.time')}</FormLabel>
                     <FormControl>
                       <Input type="datetime-local" {...field} className="h-8 text-sm" />
