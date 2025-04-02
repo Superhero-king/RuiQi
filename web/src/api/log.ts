@@ -4,7 +4,7 @@ import {
   AttackLogResponse,
   AttackEventQuery,
   AttackLogQuery
-} from '@/types/waf'
+} from '@/types/log'
 
 // WAF基础路径
 const BASE_URL = '/log'

@@ -28,5 +28,20 @@
   },
   "filter": "筛选",
   "reset": "重置",
-  "search": "搜索"
+  "search": "搜索",
+  "domain": "域名",
+  "dstPort": "目的端口",
+  "srcIp": "源IP",
+  "attackCount": "攻击次数",
+  "firstAttackTime": "首次攻击时间",
+  "lastAttackTime": "最近攻击时间",
+  "status": "攻击状态",
+  "attackEnded": "攻击已结束",
+  "noOngoingAttack": "当前时刻未受到持续攻击",
+  "ongoing": "攻击进行中",
+  "attackDuration": "持续时长",
+  "autoRefresh": "轮询",
+  "interval": "间隔",
+  "seconds": "秒",
+  "refresh": "刷新"
 }

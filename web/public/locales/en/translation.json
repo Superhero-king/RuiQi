@@ -28,5 +28,20 @@
   },
   "filter": "filter",
   "reset": "reset",
-  "search": "search"
+  "search": "search",
+  "domain": "domain",
+  "dstPort": "Destination port",
+  "srcIp": "Source IP",
+  "attackCount": "Number of attacks",
+  "firstAttackTime": "First attack time",
+  "lastAttackTime": "Recent attack time",
+  "status": "Attack status",
+  "attackEnded": "The attack has ended",
+  "noOngoingAttack": "No continuous attacks are currently available",
+  "ongoing": "The attack is in progress",
+  "attackDuration": "Duration",
+  "autoRefresh": "polling",
+  "interval": "interval",
+  "seconds": "Second",
+  "refresh": "refresh"
 }

@@ -155,7 +155,7 @@ export function MonitorOverview<TData, TValue>({
     return (
         <Card className="border-none shadow-none p-0">
             <DataTableViewOptions table={table} />
-            <DataTable table={table} columns={columns} />
+            <DataTable table={table} columns={columns} style="simple" />
 
             <div className="flex items-center justify-end space-x-2 py-4">
                 <Button

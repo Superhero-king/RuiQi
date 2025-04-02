@@ -19,7 +19,7 @@ import { GlobalSetting } from "@/pages/setting/pages"
 import CertificatesPage from "@/pages/setting/pages/certificate/page"
 import EventsPage from "@/pages/logs/pages/event/page"
 import LogsPage from "@/pages/logs/pages/log/page"
-import SiteManagerPage from "@/pages/setting/pages/site/index"
+import SiteManagerPage from "@/pages/setting/pages/site/page"
 import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
 import { SysRules, UserRules, IpGroup } from "@/pages/rule/components"
 

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { wafApi } from '@/api/services'
-import { AttackLogQuery, AttackLogResponse } from '@/types/waf'
+import { AttackLogQuery, AttackLogResponse } from '@/types/log'
 
 export const useAttackLogs = (query: AttackLogQuery) => {
   return useQuery<AttackLogResponse, Error, AttackLogResponse, [string, AttackLogQuery]>({

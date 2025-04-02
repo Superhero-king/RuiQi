@@ -12,8 +12,8 @@ import { DataTablePagination } from "@/components/table/pagination"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "react-i18next"
 import { AttackLogFilter } from "@/feature/log/components/attack-log-filter"
-import { AttackLogQueryFormValues } from "@/validation/waf"
-import { WAFLog, AttackDetailData } from "@/types/waf"
+import { AttackLogQueryFormValues } from "@/validation/log"
+import { WAFLog, AttackDetailData } from "@/types/log"
 import { useAttackLogs } from "@/feature/log/hook/useAttackLogs"
 import { format } from "date-fns"
 import { AttackDetailDialog } from "@/feature/log/components/attack-detail-dialog"
@@ -161,37 +161,38 @@ export default function LogsPage() {
     })
 
     return (
-        <div className="space-y-4 p-8">
-            <h1 className="text-2xl font-bold">{t('attack.logs')}</h1>
+        <Card className="flex flex-col h-full p-0">
+            <div className="flex flex-col h-full">
+                {/* 头部筛选器 - 固定高度 */}
+                <div className="p-6 flex-shrink-0">
+                    <AttackLogFilter onFilter={handleFilter} defaultValues={queryParams} />
+                </div>
 
-            <AttackLogFilter onFilter={handleFilter} defaultValues={queryParams} />
-
-            <Card className="p-4">
-                {isError ? (
-                    <div className="text-center py-4 text-destructive">
-                        {t('error.loading.data')}
-                    </div>
-                ) : (
-                    <>
+                {/* 表格区域 - 弹性高度，可滚动 */}
+                <div className="px-6 flex-1 overflow-auto">
+                    {isError ? (
+                        <div className="text-center py-4 text-destructive">
+                            {t('error.loading.data')}
+                        </div>
+                    ) : (
                         <DataTable
                             table={table}
                             columns={columns}
                             isLoading={isLoading}
-                            style="border"
                         />
+                    )}
+                </div>
 
-                        <div className="mt-4">
-                            <DataTablePagination table={table} />
-                        </div>
-                    </>
-                )}
-            </Card>
-
+                {/* 底部分页 - 固定高度 */}
+                <div className="py-6 px-4 flex-shrink-0">
+                    <DataTablePagination table={table} />
+                </div>
+            </div>
             <AttackDetailDialog
                 open={detailDialogOpen}
                 onOpenChange={setDetailDialogOpen}
                 data={selectedLog}
             />
-        </div>
+        </Card>
     )
 }
