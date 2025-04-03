@@ -9,9 +9,9 @@ import { ProtectedRoute } from "@/feature/auth/components/ProtectedRoute"
 
 // 直接导入布局组件
 import { RootLayout } from "@/components/layout/root-layout"
-import { MonitorPage } from "@/pages/monitor/page"
-import { RulesPage } from "@/pages/rule/page"
-import { SettingPage } from "@/pages/setting/page"
+import { MonitorPage } from "@/pages/monitor/layout"
+import { RulesPage } from "@/pages/rule/layout"
+import { SettingPage } from "@/pages/setting/layout"
 import { LogAndEventPage } from "@/pages/logs/layout"
 
 // 直接导入子组件

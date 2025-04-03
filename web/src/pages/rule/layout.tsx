@@ -1,10 +1,10 @@
+import { AnimatedRoute } from "@/components/layout/animated-route"
 import { Card } from "@/components/ui/card"
 import { Outlet } from "react-router"
-import { AnimatedRoute } from "@/components/layout/animated-route"
 
-export function LogAndEventPage() {
+export function RulesPage() {
     return (
-        <Card className="flex-1 h-full border-none shadow-none p-0 overflow-hidden">
+        <Card className="flex-1  h-full border-none shadow-none p-0 overflow-hidden">
             <AnimatedRoute>
                 <Outlet />
             </AnimatedRoute>
