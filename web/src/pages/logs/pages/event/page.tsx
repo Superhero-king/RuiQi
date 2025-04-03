@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { ExternalLink, AlertTriangle, History } from "lucide-react"
 import { AdvancedErrorDisplay } from "@/components/common/error/errorDisplay"
+import { produce } from "immer"
 
 export default function EventsPage() {
     const { t } = useTranslation()
@@ -66,14 +67,6 @@ export default function EventsPage() {
     const handlePollingChange = (enabled: boolean, interval: number) => {
         setEnablePolling(enabled)
         setPollingInterval(interval)
-    }
-
-    const handlePageChange = (page: number) => {
-        setQueryParams(prev => ({ ...prev, page }))
-    }
-
-    const handlePageSizeChange = (pageSize: number) => {
-        setQueryParams(prev => ({ ...prev, page: 1, pageSize }))
     }
 
     const navigateToLogs = (domain: string, srcIp: string) => {
@@ -182,12 +175,25 @@ export default function EventsPage() {
         },
         onPaginationChange: (updater) => {
             if (typeof updater === 'function') {
-                const newPagination = updater({
+                const oldPagination = {
                     pageIndex: (queryParams.page || 1) - 1,
                     pageSize: queryParams.pageSize || 10
-                })
-                handlePageChange(newPagination.pageIndex + 1)
-                handlePageSizeChange(newPagination.pageSize)
+                }
+                const newPagination = updater(oldPagination)
+
+                // 使用 immer 统一处理分页变化
+                setQueryParams(produce(draft => {
+                    // 只有当页码改变时才更新页码
+                    if (newPagination.pageIndex !== oldPagination.pageIndex) {
+                        draft.page = newPagination.pageIndex + 1
+                    }
+
+                    // 只有当每页条数改变时才更新每页条数并重置页码
+                    if (newPagination.pageSize !== oldPagination.pageSize) {
+                        draft.pageSize = newPagination.pageSize
+                        draft.page = 1 // 重置到第一页
+                    }
+                }))
             }
         }
     })
@@ -222,9 +228,9 @@ export default function EventsPage() {
             </div>
 
             {/* 底部分页 - 固定高度 */}
-            <div className="py-6 px-4 flex-shrink-0">
-                {!isError && <DataTablePagination table={table} />}
-            </div>
+            {!isError && <div className="py-6 px-4 flex-shrink-0">
+                <DataTablePagination table={table} />
+            </div>}
         </Card>
     )
 } 

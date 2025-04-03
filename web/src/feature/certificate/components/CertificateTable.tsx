@@ -51,6 +51,9 @@ export function CertificateTable() {
         queryFn: ({ pageParam }) => certificatesApi.getCertificates(pageParam as number, 20),
         initialPageParam: 1,
         getNextPageParam: (lastPage, allPages) => {
+            if (!lastPage || typeof lastPage.total === 'undefined') {
+                return undefined
+            }
             return lastPage.total > allPages.length * 20 ? allPages.length + 1 : undefined
         },
     })
@@ -211,8 +214,8 @@ export function CertificateTable() {
 
     return (
         <>
-            <Card className="border-none shadow-none p-6">
-                {/* 标题和操作按钮 */}
+            <Card className="border-none shadow-none p-6 flex flex-col h-full">
+                {/* 标题和操作按钮 - 固定在顶部 */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold">证书管理</h2>
                     <div className="flex gap-2">
@@ -235,20 +238,25 @@ export function CertificateTable() {
                         </Button>
                     </div>
                 </div>
-
-                {/* 表格 */}
-                <DataTable table={table} columns={columns} isLoading={isLoading} style="border" />
-                {/* 无限滚动监测元素 */}
-                <div
-                    ref={sentinelRef}
-                    className="h-5 flex justify-center items-center mt-4"
-                >
-                    {isFetchingNextPage && (
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
+    
+                {/* 表格容器 - 设置固定高度和滚动 */}
+                <div className="flex-1 overflow-hidden flex flex-col">
+                    <div className="overflow-auto h-full">
+                        <DataTable table={table} columns={columns} isLoading={isLoading} />
+                        
+                        {/* 无限滚动监测元素 - 在滚动区域内 */}
+                        <div
+                            ref={sentinelRef}
+                            className="h-5 flex justify-center items-center mt-4"
+                        >
+                            {isFetchingNextPage && (
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            )}
+                        </div>
+                    </div>
                 </div>
             </Card>
-
+    
             {/* 统一的证书对话框 */}
             <CertificateDialog
                 open={certificateDialogOpen}
@@ -256,7 +264,7 @@ export function CertificateTable() {
                 mode={dialogMode}
                 certificate={selectedCertificate}
             />
-
+    
             {/* 删除确认对话框 */}
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
@@ -276,4 +284,71 @@ export function CertificateTable() {
             </AlertDialog>
         </>
     )
+    // return (
+    //     <>
+    //         <Card className="border-none shadow-none p-6">
+    //             {/* 标题和操作按钮 */}
+    //             <div className="flex items-center justify-between mb-6">
+    //                 <h2 className="text-xl font-semibold">证书管理</h2>
+    //                 <div className="flex gap-2">
+    //                     <Button
+    //                         variant="outline"
+    //                         size="sm"
+    //                         onClick={() => refetch()}
+    //                         className="flex items-center gap-1"
+    //                     >
+    //                         <RefreshCcw className="h-3.5 w-3.5" />
+    //                         刷新
+    //                     </Button>
+    //                     <Button
+    //                         size="sm"
+    //                         onClick={openCreateDialog}
+    //                         className="flex items-center gap-1"
+    //                     >
+    //                         <Plus className="h-3.5 w-3.5" />
+    //                         添加证书
+    //                     </Button>
+    //                 </div>
+    //             </div>
+
+    //             {/* 表格 */}
+    //             <DataTable table={table} columns={columns} isLoading={isLoading} />
+    //             {/* 无限滚动监测元素 */}
+    //             <div
+    //                 ref={sentinelRef}
+    //                 className="h-5 flex justify-center items-center mt-4"
+    //             >
+    //                 {isFetchingNextPage && (
+    //                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+    //                 )}
+    //             </div>
+    //         </Card>
+
+    //         {/* 统一的证书对话框 */}
+    //         <CertificateDialog
+    //             open={certificateDialogOpen}
+    //             onOpenChange={setCertificateDialogOpen}
+    //             mode={dialogMode}
+    //             certificate={selectedCertificate}
+    //         />
+
+    //         {/* 删除确认对话框 */}
+    //         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+    //             <AlertDialogContent>
+    //                 <AlertDialogHeader>
+    //                     <AlertDialogTitle>确认删除</AlertDialogTitle>
+    //                     <AlertDialogDescription>
+    //                         您确定要删除此证书吗？此操作无法撤销。
+    //                     </AlertDialogDescription>
+    //                 </AlertDialogHeader>
+    //                 <AlertDialogFooter>
+    //                     <AlertDialogCancel>取消</AlertDialogCancel>
+    //                     <AlertDialogAction onClick={handleDeleteCertificate} disabled={isDeleting}>
+    //                         {isDeleting ? '删除中...' : '删除'}
+    //                     </AlertDialogAction>
+    //                 </AlertDialogFooter>
+    //             </AlertDialogContent>
+    //         </AlertDialog>
+    //     </>
+    // )
 }

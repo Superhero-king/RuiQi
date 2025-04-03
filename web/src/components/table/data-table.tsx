@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/table"
 import { flexRender, Table as TableType, ColumnDef } from "@tanstack/react-table"
 import { Loader2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { cn } from "@/lib/utils" // 确保导入了工具函数，如果没有可以手动添加
 
 interface DataTableProps<TData, TValue> {
     table: TableType<TData>
@@ -16,6 +18,7 @@ interface DataTableProps<TData, TValue> {
     isLoading?: boolean
     loadingRows?: number
     loadingStyle?: 'centered' | 'skeleton'
+    fixedHeader?: boolean
 }
 
 // 加载状态骨架屏组件
@@ -60,13 +63,16 @@ const NoResults = <TData, TValue>({
     columns
 }: {
     columns: ColumnDef<TData, TValue>[]
-}) => (
-    <TableRow>
-        <TableCell colSpan={columns.length} className="h-24 text-center">
-            没有找到相关数据
-        </TableCell>
-    </TableRow>
-)
+}) => {
+    const { t } = useTranslation()
+    return (
+        <TableRow>
+            <TableCell colSpan={columns.length} className="h-24 text-center">
+                {t('noResult')}
+            </TableCell>
+        </TableRow>
+    )
+}
 
 export function DataTable<TData, TValue>({
     table,
@@ -75,6 +81,7 @@ export function DataTable<TData, TValue>({
     isLoading = false,
     loadingRows = 5,
     loadingStyle = 'centered',
+    fixedHeader = false,
 }: DataTableProps<TData, TValue>) {
     // 渲染表格主体内容
     const renderTableBody = () => {
@@ -105,7 +112,7 @@ export function DataTable<TData, TValue>({
 
     // 表头渲染函数
     const renderTableHeader = () => (
-        <TableHeader>
+        <TableHeader className={fixedHeader ? "sticky top-0 z-10 bg-background border-b" : ""}>
             {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
@@ -123,6 +130,27 @@ export function DataTable<TData, TValue>({
         </TableHeader>
     )
 
+    // 根据样式选择和固定表头选项构建表格
+    if (fixedHeader) {
+        // 使用固定表头的布局结构
+        return (
+            <div className={cn(
+                "w-full h-full relative",
+                style === 'border' && "rounded-md border"
+            )}>
+                <div className="overflow-auto h-full">
+                    <table className="w-full caption-bottom text-sm">
+                        {renderTableHeader()}
+                        <tbody className={isLoading && !table.getRowModel().rows?.length ? "" : "[&_tr:last-child]:!border-b"}>
+                            {renderTableBody()}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )
+    }
+
+    // 原始表格布局（无固定表头）
     switch (style) {
         case 'simple':
             return (
@@ -153,7 +181,7 @@ export function DataTable<TData, TValue>({
                 <div className="w-full h-full">
                     <Table>
                         {renderTableHeader()}
-                        <TableBody className={isLoading ? "" : "[&_tr:last-child]:!border-b"}>
+                        <TableBody className={isLoading && !table.getRowModel().rows?.length ? "" : "[&_tr:last-child]:!border-b"}>
                             {renderTableBody()}
                         </TableBody>
                     </Table>

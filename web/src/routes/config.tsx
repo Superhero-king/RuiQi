@@ -12,7 +12,7 @@ import { RootLayout } from "@/components/layout/root-layout"
 import { MonitorPage } from "@/pages/monitor/page"
 import { RulesPage } from "@/pages/rule/page"
 import { SettingPage } from "@/pages/setting/page"
-import { LogAndEventPage } from "@/pages/logs/page"
+import { LogAndEventPage } from "@/pages/logs/layout"
 
 // 直接导入子组件
 import { GlobalSetting } from "@/pages/setting/pages"

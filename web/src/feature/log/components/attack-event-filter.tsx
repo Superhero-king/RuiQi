@@ -7,9 +7,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { Card } from "@/components/ui/card"
 import { Search, RefreshCw, ChevronDown, ChevronUp, Clock, RotateCcw } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DateTimePicker24h } from "@/components/common/date"
 
 interface AttackEventFilterProps {
     onFilter: (values: AttackEventQueryFormValues) => void
@@ -72,6 +73,15 @@ export function AttackEventFilter({
     }
 
 
+
+    useEffect(() => {
+        const subscription = form.watch((value) => {
+            console.log('Form Values Changed:', value)
+        })
+        return () => subscription.unsubscribe()
+    }, [form])
+
+
     return (
         <Card className="p-4 bg-zinc-50 border-none shadow-none rounded-sm">
             <Form {...form}>
@@ -109,7 +119,7 @@ export function AttackEventFilter({
                                         <SelectContent>
                                             {pollingIntervals.map(interval => (
                                                 <SelectItem key={interval} value={interval.toString()}>
-                                                    {interval} {t('seconds')}
+                                                    {interval} {t('second')}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -156,10 +166,10 @@ export function AttackEventFilter({
                                 control={form.control}
                                 name="domain"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('attack.url')}</FormLabel>
+                                    <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                                        <FormLabel className="text-xs">{t('domain')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('enter.domain')} {...field} className="h-8 text-sm" />
+                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -169,10 +179,10 @@ export function AttackEventFilter({
                                 control={form.control}
                                 name="srcIp"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('client.ip')}</FormLabel>
+                                    <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                                        <FormLabel className="text-xs">{t('srcIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('enter.ip')} {...field} className="h-8 text-sm" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -182,10 +192,10 @@ export function AttackEventFilter({
                                 control={form.control}
                                 name="dstIp"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('server.ip')}</FormLabel>
+                                    <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                                        <FormLabel className="text-xs">{t('dstIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('enter.ip')} {...field} className="h-8 text-sm" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -195,15 +205,15 @@ export function AttackEventFilter({
                                 control={form.control}
                                 name="srcPort"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('source.port')}</FormLabel>
+                                    <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                                        <FormLabel className="text-xs">{t('srcPort')}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
-                                                placeholder={t('enter.port')}
+                                                placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm"
+                                                className="h-8 text-sm bg-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -214,15 +224,15 @@ export function AttackEventFilter({
                                 control={form.control}
                                 name="dstPort"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('dest.port')}</FormLabel>
+                                    <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                                        <FormLabel className="text-xs">{t('dstPort')}</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
-                                                placeholder={t('enter.port')}
+                                                placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm"
+                                                className="h-8 text-sm bg-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -233,10 +243,29 @@ export function AttackEventFilter({
                                 control={form.control}
                                 name="startTime"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('start.time')}</FormLabel>
+                                    <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                                        <FormLabel className="text-xs">{t('startTime')}</FormLabel>
                                         <FormControl>
-                                            <Input type="datetime-local" {...field} className="h-8 text-sm" />
+                                            <DateTimePicker24h
+                                                type="dateHourMinuteSecond"
+                                                value={field.value ? new Date(field.value) : undefined}
+                                                onChange={(date) => {
+                                                    if (!date) {
+                                                        // 用户清除了日期
+                                                        field.onChange("")
+                                                        return
+                                                    }
+
+                                                    try {
+                                                        const isoString = date.toISOString()
+                                                        const formattedDate = isoString.substring(0, 19) + 'Z' // 取YYYY-MM-DDTHH:MM:SS并添加Z
+                                                        field.onChange(formattedDate)
+                                                    } catch (error) {
+                                                        console.error("Invalid date format:", error)
+                                                        field.onChange("")
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -246,10 +275,29 @@ export function AttackEventFilter({
                                 control={form.control}
                                 name="endTime"
                                 render={({ field }) => (
-                                    <FormItem className="space-y-1 w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('end.time')}</FormLabel>
+                                    <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
+                                        <FormLabel className="text-xs">{t('endTime')}</FormLabel>
                                         <FormControl>
-                                            <Input type="datetime-local" {...field} className="h-8 text-sm" />
+                                            <DateTimePicker24h
+                                                type="dateHourMinuteSecond"
+                                                value={field.value ? new Date(field.value) : undefined}
+                                                onChange={(date) => {
+                                                    if (!date) {
+                                                        // 用户清除了日期
+                                                        field.onChange("")
+                                                        return
+                                                    }
+
+                                                    try {
+                                                        const isoString = date.toISOString()
+                                                        const formattedDate = isoString.substring(0, 19) + 'Z' // 取YYYY-MM-DDTHH:MM:SS并添加Z
+                                                        field.onChange(formattedDate)
+                                                    } catch (error) {
+                                                        console.error("Invalid date format:", error)
+                                                        field.onChange("")
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                     </FormItem>
                                 )}

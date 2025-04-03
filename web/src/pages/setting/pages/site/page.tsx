@@ -48,9 +48,9 @@ export default function SiteManagerPage() {
     }
 
     return (
-        <Card className="p-6 w-full h-full">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">站点管理</h1>
+        <Card className="p-6 w-full h-full border-none shadow-none">
+            <div className="flex justify-between items-center mb-6  bg-zinc-50 rounded-md p-4">
+                <h2 className="text-xl font-semibold">站点管理</h2>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"

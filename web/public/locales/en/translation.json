@@ -42,6 +42,21 @@
   "attackDuration": "Duration",
   "autoRefresh": "polling",
   "interval": "interval",
-  "seconds": "Second",
-  "refresh": "refresh"
+  "second": "Second",
+  "refresh": "refresh",
+  "domainPlaceholder": "Enter the domain name",
+  "dstIp": "Target IP",
+  "srcPort": "Source port",
+  "portPlaceholder": "Input port",
+  "ipPlaceholder": "Enter IP",
+  "startTime": "Start time",
+  "endTime": "End time",
+  "ruleId": "Rule ID",
+  "ruleIdPlaceholder": "Enter the rule ID",
+  "requestId": "Request ID",
+  "requestIdPlaceholder": "Enter the request ID",
+  "attackTarget": "Target",
+  "createdAt": "Creation time",
+  "detail": "Details",
+  "noResult": "No data"
 }

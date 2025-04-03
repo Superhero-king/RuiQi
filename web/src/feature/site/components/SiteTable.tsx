@@ -280,7 +280,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
     return (
         <div>
             {/* 表格 */}
-            <DataTable table={table} columns={columns} isLoading={isLoading} style="border" />
+            <DataTable loadingStyle='skeleton' table={table} columns={columns} isLoading={isLoading} style="border" />
 
             {/* 无限滚动监测元素，只在有更多数据时显示 */}
             {hasNextPage && (

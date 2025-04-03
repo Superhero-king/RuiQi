@@ -100,7 +100,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
         const isInactive = !site.activeStatus
 
         return (
-            <Card className={`p-5 ${isInactive ? 'bg-gray-50' : ''}`}>
+            <Card className={`p-5 ${isInactive ? 'bg-gray-50' : ''} rounded-md shadow-none`}>
                 <div className="flex justify-between items-start mb-4">
                     <div className={`flex flex-col ${isInactive ? 'text-gray-400' : ''}`}>
                         <h3 className="font-medium text-lg">{site.name}</h3>
@@ -211,7 +211,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
 
     // 卡片加载骨架屏
     const SiteCardSkeleton = () => (
-        <Card className="p-5">
+        <Card className="p-5 rounded-md">
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <Skeleton className="h-6 w-32 mb-2" />
