@@ -1,3 +1,4 @@
+// src/feature/site/components/SiteGrid.tsx
 import { useRef, useEffect, useMemo } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { siteApi } from '@/api/site'
@@ -25,6 +26,13 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
+import { motion } from "motion/react"
+import Tilt from 'react-parallax-tilt'
+import {
+    gridContainerAnimation,
+    gridItemAnimation,
+    scrollFadeInAnimation
+} from '@/components/ui/animation/grid-animation'
 
 interface SiteGridProps {
     onEdit: (site: Site) => void
@@ -100,112 +108,127 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
         const isInactive = !site.activeStatus
 
         return (
-            <Card className={`p-5 ${isInactive ? 'bg-gray-50' : ''} rounded-md shadow-none`}>
-                <div className="flex justify-between items-start mb-4">
-                    <div className={`flex flex-col ${isInactive ? 'text-gray-400' : ''}`}>
-                        <h3 className="font-medium text-lg">{site.name}</h3>
-                        <div className="flex items-center text-sm mt-1">
-                            <Globe className="h-3.5 w-3.5 mr-1" />
-                            <span>{site.domain}:{site.listenPort}</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onClick={() => onEdit(site)}
-                                >
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    编辑
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={() => onDelete(site.id)}
-                                    className="text-red-600"
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    删除
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    {/* 状态信息 */}
-                    <div className="flex flex-wrap gap-2">
-                        {/* 站点状态 */}
-                        {site.activeStatus ? (
-                            <Badge variant="outline" className="flex items-center gap-1 border-green-200 text-green-700">
-                                <CheckCircle className="h-3 w-3" />
-                                <span>激活</span>
-                            </Badge>
-                        ) : (
-                            <Badge variant="outline" className="flex items-center gap-1 border-gray-200 text-gray-400">
-                                <XCircle className="h-3 w-3" />
-                                <span>未激活</span>
-                            </Badge>
-                        )}
-
-                        {/* HTTPS状态 */}
-                        {site.enableHTTPS ? (
-                            <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-blue-200 text-blue-700'}`}>
-                                <LinkIcon className="h-3 w-3" />
-                                <span>HTTPS</span>
-                            </Badge>
-                        ) : null}
-
-                        {/* WAF状态 */}
-                        {site.wafEnabled && (
-                            site.wafMode === WAFMode.Protection ? (
-                                <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-green-200 text-green-700'}`}>
-                                    <Shield className="h-3 w-3" />
-                                    <span>防护模式</span>
-                                </Badge>
-                            ) : (
-                                <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-blue-200 text-blue-700'}`}>
-                                    <ShieldAlert className="h-3 w-3" />
-                                    <span>观察模式</span>
-                                </Badge>
-                            )
-                        )}
-                    </div>
-
-                    {/* 上游服务器信息 */}
-                    <div className={`space-y-1 ${isInactive ? 'text-gray-400' : ''}`}>
-                        <div className="text-sm font-medium">上游服务器:</div>
-                        <div className="space-y-1">
-                            {site.backend.servers.map((server, index) => (
-                                <div key={index} className="flex items-center gap-1 text-xs pl-2">
-                                    <Server className="h-3 w-3" />
-                                    <span>
-                                        {server.isSSL ? 'https://' : 'http://'}
-                                        {server.host}:{server.port}
-                                    </span>
+            <motion.div {...gridItemAnimation}>
+                <Tilt
+                    className="h-full"
+                    tiltMaxAngleX={5}
+                    tiltMaxAngleY={5}
+                    perspective={1200}
+                    transitionSpeed={400}
+                    glareEnable={true}
+                    glareMaxOpacity={0.1}
+                    glareColor="#ffffff"
+                    glarePosition="all"
+                    scale={1.02}
+                >
+                    <Card className={`p-5 ${isInactive ? 'bg-gray-50' : ''} rounded-md shadow-none h-full`}>
+                        <div className="flex justify-between items-start mb-4">
+                            <div className={`flex flex-col ${isInactive ? 'text-gray-400' : ''}`}>
+                                <h3 className="font-medium text-lg">{site.name}</h3>
+                                <div className="flex items-center text-sm mt-1">
+                                    <Globe className="h-3.5 w-3.5 mr-1" />
+                                    <span>{site.domain}:{site.listenPort}</span>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                            </div>
 
-                    {/* 如果有证书，显示证书信息 */}
-                    {site.enableHTTPS && site.certificate && (
-                        <div className={`space-y-1 ${isInactive ? 'text-gray-400' : ''}`}>
-                            <div className="text-sm font-medium">证书信息:</div>
-                            <div className="text-xs pl-2">
-                                <span>{site.certificate.certName}</span>
-                                <span className="text-muted-foreground ml-2">
-                                    ({site.certificate.issuerName})
-                                </span>
+                            <div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                            onClick={() => onEdit(site)}
+                                        >
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            编辑
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => onDelete(site.id)}
+                                            className="text-red-600"
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            删除
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
-                    )}
-                </div>
-            </Card>
+
+                        <div className="space-y-4">
+                            {/* 状态信息 */}
+                            <div className="flex flex-wrap gap-2">
+                                {/* 站点状态 */}
+                                {site.activeStatus ? (
+                                    <Badge variant="outline" className="flex items-center gap-1 border-green-200 text-green-700">
+                                        <CheckCircle className="h-3 w-3" />
+                                        <span>激活</span>
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="flex items-center gap-1 border-gray-200 text-gray-400">
+                                        <XCircle className="h-3 w-3" />
+                                        <span>未激活</span>
+                                    </Badge>
+                                )}
+
+                                {/* HTTPS状态 */}
+                                {site.enableHTTPS ? (
+                                    <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-blue-200 text-blue-700'}`}>
+                                        <LinkIcon className="h-3 w-3" />
+                                        <span>HTTPS</span>
+                                    </Badge>
+                                ) : null}
+
+                                {/* WAF状态 */}
+                                {site.wafEnabled && (
+                                    site.wafMode === WAFMode.Protection ? (
+                                        <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-green-200 text-green-700'}`}>
+                                            <Shield className="h-3 w-3" />
+                                            <span>防护模式</span>
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-blue-200 text-blue-700'}`}>
+                                            <ShieldAlert className="h-3 w-3" />
+                                            <span>观察模式</span>
+                                        </Badge>
+                                    )
+                                )}
+                            </div>
+
+                            {/* 上游服务器信息 */}
+                            <div className={`space-y-1 ${isInactive ? 'text-gray-400' : ''}`}>
+                                <div className="text-sm font-medium">上游服务器:</div>
+                                <div className="space-y-1">
+                                    {site.backend.servers.map((server, index) => (
+                                        <div key={index} className="flex items-center gap-1 text-xs pl-2">
+                                            <Server className="h-3 w-3" />
+                                            <span>
+                                                {server.isSSL ? 'https://' : 'http://'}
+                                                {server.host}:{server.port}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 如果有证书，显示证书信息 */}
+                            {site.enableHTTPS && site.certificate && (
+                                <div className={`space-y-1 ${isInactive ? 'text-gray-400' : ''}`}>
+                                    <div className="text-sm font-medium">证书信息:</div>
+                                    <div className="text-xs pl-2">
+                                        <span>{site.certificate.certName}</span>
+                                        <span className="text-muted-foreground ml-2">
+                                            ({site.certificate.issuerName})
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                </Tilt>
+            </motion.div>
         )
     }
 
@@ -254,11 +277,19 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                     暂无站点数据
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <motion.div
+                    {...gridContainerAnimation}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                >
                     {sites.map(site => (
-                        <SiteCard key={site.id} site={site} />
+                        <motion.div
+                            key={site.id}
+                            {...scrollFadeInAnimation}
+                        >
+                            <SiteCard site={site} />
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             )}
 
             {/* 无限滚动监测元素，只在有更多数据时显示 */}

@@ -8,7 +8,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useDeleteSite } from "../hooks/useSites"
+import { useDeleteCertificate } from '../hooks/useCertificate'
 import { AnimatePresence, motion } from "motion/react"
 import { 
     dialogEnterExitAnimation, 
@@ -17,25 +17,30 @@ import {
     dialogContentItemAnimation
 } from '@/components/ui/animation/dialog-animation'
 
-interface DeleteSiteDialogProps {
+interface DeleteCertificateDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    siteId: string | null
+    certificateId: string | null
+    onDeleted?: () => void
 }
 
-export function DeleteSiteDialog({
+export function DeleteCertificateDialog({
     open,
     onOpenChange,
-    siteId
-}: DeleteSiteDialogProps) {
-    const { deleteSite, isLoading } = useDeleteSite()
+    certificateId,
+    onDeleted
+}: DeleteCertificateDialogProps) {
+    // 删除证书钩子
+    const { deleteCertificate, isLoading } = useDeleteCertificate()
 
-    const handleDelete = () => {
-        if (!siteId) return
+    // 处理删除证书
+    const handleDeleteCertificate = () => {
+        if (!certificateId) return
 
-        deleteSite(siteId, {
+        deleteCertificate(certificateId, {
             onSettled: () => {
                 onOpenChange(false)
+                onDeleted?.()
             }
         })
     }
@@ -51,7 +56,7 @@ export function DeleteSiteDialog({
                                     <AlertDialogHeader className="p-6 pb-3">
                                         <AlertDialogTitle className="text-xl">确认删除</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            您确定要删除此站点吗？此操作无法撤销，可能会影响当前正在使用此站点的服务。
+                                            您确定要删除此证书吗？此操作无法撤销。
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                 </motion.div>
@@ -62,10 +67,10 @@ export function DeleteSiteDialog({
                                 >
                                     <AlertDialogFooter className="mt-2 flex justify-end space-x-2">
                                         <AlertDialogCancel>取消</AlertDialogCancel>
-                                        <AlertDialogAction
-                                            onClick={handleDelete}
+                                        <AlertDialogAction 
+                                            onClick={handleDeleteCertificate} 
                                             disabled={isLoading}
-                                            className="bg-red-500 hover:bg-red-600"
+                                            className="bg-red-600 hover:bg-red-700"
                                         >
                                             {isLoading ? '删除中...' : '删除'}
                                         </AlertDialogAction>
@@ -78,4 +83,4 @@ export function DeleteSiteDialog({
             </AnimatePresence>
         </AlertDialog>
     )
-} 
+}

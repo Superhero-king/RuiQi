@@ -14,6 +14,7 @@ import { SiteTable } from "@/feature/site/components/SiteTable"
 import { SiteDialog } from "@/feature/site/components/SiteDialog"
 import { DeleteSiteDialog } from "@/feature/site/components/DeleteSiteDialog"
 import { Site } from "@/types/site"
+import { TabsAnimationProvider } from "@/components/ui/animation/components/tab-animation"
 
 export default function SiteManagerPage() {
     const [view, setView] = useState<'grid' | 'table'>('grid')
@@ -84,18 +85,23 @@ export default function SiteManagerPage() {
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="grid">
-                    <SiteGrid
-                        onEdit={handleEditSite}
-                        onDelete={handleDeleteSite}
-                    />
-                </TabsContent>
-                <TabsContent value="table">
-                    <SiteTable
-                        onEdit={handleEditSite}
-                        onDelete={handleDeleteSite}
-                    />
-                </TabsContent>
+                <TabsAnimationProvider currentView={view} animationVariant="slide">
+                    {view === "grid" ? (
+                        <TabsContent value="grid" forceMount>
+                            <SiteGrid
+                                onEdit={handleEditSite}
+                                onDelete={handleDeleteSite}
+                            />
+                        </TabsContent>
+                    ) : (
+                        <TabsContent value="table" forceMount>
+                            <SiteTable
+                                onEdit={handleEditSite}
+                                onDelete={handleDeleteSite}
+                            />
+                        </TabsContent>
+                    )}
+                </TabsAnimationProvider>
             </Tabs>
 
             {/* 添加站点对话框 */}

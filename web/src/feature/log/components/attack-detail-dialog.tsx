@@ -14,7 +14,7 @@ import {
   dialogEnterExitAnimation,
   dialogContentAnimation,
   dialogContentItemAnimation
-} from "@/components/ui/animations/dialog-animations"
+} from "@/components/ui/animation/dialog-animation"
 
 interface AttackDetailDialogProps {
     open: boolean

@@ -7,7 +7,7 @@ import {
     getPaginationRowModel,
     useReactTable
 } from "@tanstack/react-table"
-import { DataTable } from "@/components/table/data-table"
+import { DataTable } from "@/components/table/motion-data-table"
 import { DataTablePagination } from "@/components/table/pagination"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "react-i18next"
@@ -190,6 +190,8 @@ export default function LogsPage() {
                         columns={columns}
                         isLoading={isLoading}
                         fixedHeader={true}
+                        animatedRows={true}
+                        showScrollShadows={true}
                     />
                 )}
             </div>

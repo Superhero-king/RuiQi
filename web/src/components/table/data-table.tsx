@@ -141,7 +141,10 @@ export function DataTable<TData, TValue>({
                 <div className="overflow-auto h-full">
                     <table className="w-full caption-bottom text-sm">
                         {renderTableHeader()}
-                        <tbody className={isLoading && !table.getRowModel().rows?.length ? "" : "[&_tr:last-child]:!border-b"}>
+                        <tbody className={cn(
+                            // 只有当isLoading为true且没有行数据时才移除最后一行的边框
+                            (isLoading || !table.getRowModel().rows?.length) ? "[&_tr:last-child]:border-0" : ""
+                        )}>
                             {renderTableBody()}
                         </tbody>
                     </table>
@@ -181,7 +184,7 @@ export function DataTable<TData, TValue>({
                 <div className="w-full h-full">
                     <Table>
                         {renderTableHeader()}
-                        <TableBody className={isLoading && !table.getRowModel().rows?.length ? "" : "[&_tr:last-child]:!border-b"}>
+                        <TableBody className={isLoading || !table.getRowModel().rows?.length ? "[&_tr:last-child]:!border-b-0" : ""}>
                             {renderTableBody()}
                         </TableBody>
                     </Table>

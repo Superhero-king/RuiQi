@@ -11,6 +11,8 @@ import { useEffect, useState } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DateTimePicker24h } from "@/components/common/date"
+import { Collapse } from "@/components/ui/animation/components/collapse"
+import { Display } from "@/components/ui/animation/components/display"
 
 interface AttackEventFilterProps {
     onFilter: (values: AttackEventQueryFormValues) => void
@@ -72,15 +74,12 @@ export function AttackEventFilter({
         if (onRefresh) onRefresh()
     }
 
-
-
     useEffect(() => {
         const subscription = form.watch((value) => {
             console.log('Form Values Changed:', value)
         })
         return () => subscription.unsubscribe()
     }, [form])
-
 
     return (
         <Card className="p-4 bg-zinc-50 border-none shadow-none rounded-sm">
@@ -108,7 +107,7 @@ export function AttackEventFilter({
                                     <span className="text-sm font-medium">{t('autoRefresh')}</span>
                                 </div>
 
-                                {enablePolling && (
+                                <Display visible={enablePolling}>
                                     <Select
                                         value={pollingInterval.toString()}
                                         onValueChange={(value) => onPollingChange(enablePolling, parseInt(value))}
@@ -124,7 +123,7 @@ export function AttackEventFilter({
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                )}
+                                </Display>
                             </div>
                         </div>
 
@@ -160,7 +159,7 @@ export function AttackEventFilter({
                         </div>
                     </div>
 
-                    {expanded && (
+                    <Collapse isOpen={expanded} animationType="default">
                         <div className="flex flex-wrap gap-3 mt-3">
                             <FormField
                                 control={form.control}
@@ -303,7 +302,7 @@ export function AttackEventFilter({
                                 )}
                             />
                         </div>
-                    )}
+                    </Collapse>
                 </form>
             </Form>
         </Card>

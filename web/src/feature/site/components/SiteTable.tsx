@@ -27,7 +27,7 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Loader2 } from 'lucide-react'
-import { DataTable } from '@/components/table/data-table'
+import { DataTable } from '@/components/table/motion-data-table'
 
 interface SiteTableProps {
     onEdit: (site: Site) => void
@@ -278,21 +278,30 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
     })
 
     return (
-        <div>
+        <div className="flex-1 overflow-hidden flex flex-col">
             {/* 表格 */}
-            <DataTable loadingStyle='skeleton' table={table} columns={columns} isLoading={isLoading} style="border" />
+            <div className="overflow-auto h-full">
+                <DataTable loadingStyle='skeleton'
+                    table={table}
+                    columns={columns}
+                    isLoading={isLoading}
+                    fixedHeader={true}
+                    animatedRows={true}
+                />
 
-            {/* 无限滚动监测元素，只在有更多数据时显示 */}
-            {hasNextPage && (
-                <div
-                    ref={sentinelRef}
-                    className="h-5 flex justify-center items-center mt-4"
-                >
-                    {isFetchingNextPage && (
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    )}
-                </div>
-            )}
+
+                {/* 无限滚动监测元素，只在有更多数据时显示 */}
+                {hasNextPage && (
+                    <div
+                        ref={sentinelRef}
+                        className="h-5 flex justify-center items-center mt-4"
+                    >
+                        {isFetchingNextPage && (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     )
 

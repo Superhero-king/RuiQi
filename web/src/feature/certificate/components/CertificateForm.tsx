@@ -18,6 +18,7 @@ import { parseCertificate, readFileAsText } from '@/utils/certificate-parser'
 import { CertificateCreateRequest, ParsedCertificate } from '@/types/certificates'
 import { useCreateCertificate, useUpdateCertificate } from '../hooks/useCertificate'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
 
 interface CertificateFormProps {
     mode?: 'create' | 'update'
@@ -235,144 +236,146 @@ export function CertificateForm({
     }, [parsedInfo])
 
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-                {/* API错误提示 */}
-                {error && (
-                    <Alert variant="destructive">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
-
-                {/* 证书解析错误提示 */}
-                {parseError && (
-                    <Alert variant="default" className="bg-yellow-50 border-yellow-200">
-                        <Info className="h-4 w-4 text-yellow-800" />
-                        <AlertDescription className="text-yellow-800">{parseError}</AlertDescription>
-                    </Alert>
-                )}
-
-                {/* 基本信息字段 */}
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>证书名称</FormLabel>
-                            <FormControl>
-                                <Input placeholder="输入证书名称" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
+        <AnimatedContainer>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+                    {/* API错误提示 */}
+                    {error && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
-                />
 
-                <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>描述 (可选)</FormLabel>
-                            <FormControl>
-                                <Textarea
-                                    placeholder="输入证书描述"
-                                    className="resize-none"
-                                    {...field}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
+                    {/* 证书解析错误提示 */}
+                    {parseError && (
+                        <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+                            <Info className="h-4 w-4 text-yellow-800" />
+                            <AlertDescription className="text-yellow-800">{parseError}</AlertDescription>
+                        </Alert>
                     )}
-                />
 
-                {/* 公钥文件上传 */}
-                <div className="space-y-2">
-                    <FormLabel>公钥文件</FormLabel>
-                    {publicKeyFile ? (
-                        <FilePreview
-                            filename={publicKeyFile}
-                            onClear={clearPublicKeyFile}
-                        />
-                    ) : (
-                        <FileUpload
-                            label="上传公钥文件"
-                            accept=".pem,.crt,.cert,.key"
-                            onChange={handlePublicKeyFileChange}
-                        />
-                    )}
-                </div>
+                    {/* 基本信息字段 */}
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>证书名称</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="输入证书名称" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                {/* 公钥内容 */}
-                <FormField
-                    control={form.control}
-                    name="publicKey"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>公钥内容</FormLabel>
-                            <FormControl>
-                                <Textarea
-                                    placeholder="输入PEM格式的公钥内容"
-                                    className="font-mono text-xs h-32"
-                                    {...field}
-                                    onChange={(e) => {
-                                        field.onChange(e)
-                                        handlePublicKeyTextChange(e)
-                                    }}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                    <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>描述 (可选)</FormLabel>
+                                <FormControl>
+                                    <Textarea
+                                        placeholder="输入证书描述"
+                                        className="resize-none"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                {/* 私钥文件上传 */}
-                <div className="space-y-2">
-                    <FormLabel>私钥文件</FormLabel>
-                    {privateKeyFile ? (
-                        <FilePreview
-                            filename={privateKeyFile}
-                            onClear={clearPrivateKeyFile}
-                        />
-                    ) : (
-                        <FileUpload
-                            label="上传私钥文件"
-                            accept=".pem,.key"
-                            onChange={handlePrivateKeyFileChange}
-                        />
-                    )}
-                </div>
+                    {/* 公钥文件上传 */}
+                    <div className="space-y-2">
+                        <FormLabel>公钥文件</FormLabel>
+                        {publicKeyFile ? (
+                            <FilePreview
+                                filename={publicKeyFile}
+                                onClear={clearPublicKeyFile}
+                            />
+                        ) : (
+                            <FileUpload
+                                label="上传公钥文件"
+                                accept=".pem,.crt,.cert,.key"
+                                onChange={handlePublicKeyFileChange}
+                            />
+                        )}
+                    </div>
 
-                {/* 私钥内容 */}
-                <FormField
-                    control={form.control}
-                    name="privateKey"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>私钥内容</FormLabel>
-                            <FormControl>
-                                <Textarea
-                                    placeholder="输入PEM格式的私钥内容"
-                                    className="font-mono text-xs h-32"
-                                    {...field}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                    {/* 公钥内容 */}
+                    <FormField
+                        control={form.control}
+                        name="publicKey"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>公钥内容</FormLabel>
+                                <FormControl>
+                                    <Textarea
+                                        placeholder="输入PEM格式的公钥内容"
+                                        className="font-mono text-xs h-32"
+                                        {...field}
+                                        onChange={(e) => {
+                                            field.onChange(e)
+                                            handlePublicKeyTextChange(e)
+                                        }}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
 
-                {/* 证书解析信息 */}
-                {renderParsedInfo()}
+                    {/* 私钥文件上传 */}
+                    <div className="space-y-2">
+                        <FormLabel>私钥文件</FormLabel>
+                        {privateKeyFile ? (
+                            <FilePreview
+                                filename={privateKeyFile}
+                                onClear={clearPrivateKeyFile}
+                            />
+                        ) : (
+                            <FileUpload
+                                label="上传私钥文件"
+                                accept=".pem,.key"
+                                onChange={handlePrivateKeyFileChange}
+                            />
+                        )}
+                    </div>
 
-                {/* 提交按钮 */}
-                <div className="flex justify-end">
-                    <Button type="submit" disabled={isLoading}>
-                        {isLoading ? '提交中...' : mode === 'create' ? '创建' : '更新'}
-                    </Button>
-                </div>
-            </form>
-        </Form>
+                    {/* 私钥内容 */}
+                    <FormField
+                        control={form.control}
+                        name="privateKey"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>私钥内容</FormLabel>
+                                <FormControl>
+                                    <Textarea
+                                        placeholder="输入PEM格式的私钥内容"
+                                        className="font-mono text-xs h-32"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* 证书解析信息 */}
+                    {renderParsedInfo()}
+
+                    {/* 提交按钮 */}
+                    <div className="flex justify-end">
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading ? '提交中...' : mode === 'create' ? '创建' : '更新'}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+        </AnimatedContainer >
     )
 }
 

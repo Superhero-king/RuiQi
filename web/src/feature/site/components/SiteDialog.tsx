@@ -7,6 +7,13 @@ import {
   } from '@/components/ui/dialog';
   import { SiteForm } from './SiteForm';
   import { Site } from '@/types/site';
+  import { AnimatePresence, motion } from "motion/react"
+  import { 
+    dialogEnterExitAnimation, 
+    dialogContentAnimation, 
+    dialogHeaderAnimation,
+    dialogContentItemAnimation
+  } from '@/components/ui/animation/dialog-animation'
   
   interface SiteDialogProps {
     open: boolean;
@@ -44,19 +51,34 @@ import {
   
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto hide-scrollbar animate-in fade-in-50 duration-300">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-  
-          <SiteForm 
-            mode={mode}
-            siteId={site?.id}
-            defaultValues={defaultValues}
-            onSuccess={() => onOpenChange(false)} 
-          />
-        </DialogContent>
+        <AnimatePresence mode="wait">
+          {open && (
+            <motion.div {...dialogEnterExitAnimation}>
+              <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto hide-scrollbar p-0">
+                <motion.div {...dialogContentAnimation}>
+                  <motion.div {...dialogHeaderAnimation}>
+                    <DialogHeader className="p-6 pb-3">
+                      <DialogTitle className="text-xl">{title}</DialogTitle>
+                      <DialogDescription>{description}</DialogDescription>
+                    </DialogHeader>
+                  </motion.div>
+                  
+                  <motion.div 
+                    {...dialogContentItemAnimation}
+                    className="px-6 pb-6"
+                  >
+                    <SiteForm 
+                      mode={mode}
+                      siteId={site?.id}
+                      defaultValues={defaultValues}
+                      onSuccess={() => onOpenChange(false)} 
+                    />
+                  </motion.div>
+                </motion.div>
+              </DialogContent>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Dialog>
     );
   } 

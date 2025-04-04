@@ -9,6 +9,7 @@ import { Search, RefreshCw, ChevronDown, ChevronUp, RotateCcw } from "lucide-rea
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
 import { DateTimePicker24h } from "@/components/common/date"
+import { Collapse } from "@/components/ui/animation/components/collapse"
 
 interface AttackLogFilterProps {
     onFilter: (values: AttackLogQueryFormValues) => void
@@ -110,7 +111,7 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                         </div>
                     </div>
 
-                    {expanded && (
+                    <Collapse isOpen={expanded} animationType="scale">
                         <div className="flex flex-wrap gap-3 mt-3">
                             <FormField
                                 control={form.control}
@@ -285,7 +286,8 @@ export function AttackLogFilter({ onFilter, onRefresh, defaultValues = {} }: Att
                                 )}
                             />
                         </div>
-                    )}
+                    </Collapse>
+
                 </form>
             </Form>
         </Card>

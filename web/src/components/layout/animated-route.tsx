@@ -1,7 +1,7 @@
 import { ReactNode } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useLocation } from "react-router"
-import { pageSlideTransition } from "@/components/ui/animations/route-animations"
+import { pageSlideTransition } from "@/components/ui/animation/route-animation"
 
 interface AnimatedRouteProps {
     children: ReactNode
