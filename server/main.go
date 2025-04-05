@@ -65,7 +65,11 @@ func main() {
 	}
 
 	// Create service runner and start background services
-	serviceRunner := daemon.NewServiceRunner()
+	serviceRunner, err := daemon.NewServiceRunner()
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to create service runner")
+		return
+	}
 	serviceRunner.StartServices()
 
 	// Set Gin mode based on configuration

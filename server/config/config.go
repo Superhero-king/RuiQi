@@ -7,11 +7,13 @@ import (
 	"strconv"
 	"time"
 
+	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // Global 全局配置实例
@@ -178,9 +180,43 @@ SecRuleEngine On`,
 			BackupsNumber: 5,
 			SpoeAgentAddr: "127.0.0.1",
 			SpoeAgentPort: 2342,
+			Thread:        0,
 		},
 		CreatedAt:       now,
 		UpdatedAt:       now,
 		IsResponseCheck: false,
+		IsDebug:         !Global.IsProduction,
 	}
+}
+
+func GetAppConfig() (*model.Config, error) {
+	// 连接数据库
+	client, err := mongodb.Connect(Global.DBConfig.URI)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg model.Config
+	// 获取配置集合
+	db := client.Database(Global.DBConfig.Database)
+	collection := db.Collection(cfg.GetCollectionName())
+
+	// 创建带超时的上下文
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel() // 确保资源被释放
+
+	// 查询最新配置
+	err = collection.FindOne(
+		ctx,
+		bson.D{},
+		options.FindOne().SetSort(bson.D{{Key: "updatedAt", Value: -1}}),
+	).Decode(&cfg)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("未找到配置记录")
+		}
+		return nil, fmt.Errorf("获取配置失败: %w", err)
+	}
+	return &cfg, nil
 }

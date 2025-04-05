@@ -4,17 +4,24 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	cfg "github.com/HUAHUAI23/simple-waf/coraza-spoa/config"
 	"github.com/HUAHUAI23/simple-waf/coraza-spoa/internal"
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	"github.com/HUAHUAI23/simple-waf/pkg/utils/network"
+	"github.com/HUAHUAI23/simple-waf/server/config"
 )
 
 var globalLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
@@ -28,8 +35,20 @@ const (
 	ServerError                      // 服务出错
 )
 
+type AgentServer interface {
+	Start() error
+	Stop() error
+	Restart() error
+	UpdateApplications() error
+	UpdateNetworkAddress(network, address string)
+	UpdateLogger(logger zerolog.Logger)
+	GetState() ServerState
+	GetLastError() error
+	GetLatestConfig() (*model.Config, error)
+}
+
 // AgentServer 管理Agent服务的生命周期
-type AgentServer struct {
+type AgentServerImpl struct {
 	mu           sync.Mutex
 	ctx          context.Context
 	cancelFunc   context.CancelFunc
@@ -44,14 +63,43 @@ type AgentServer struct {
 	mongoURI     string
 }
 
-func NewAgentServer(logger zerolog.Logger, mongoURI string, bind string, config model.Config) *AgentServer {
-	mongoClient, err := mongodb.Connect(mongoURI)
-	if err != nil {
-		globalLogger.Fatal().Err(err).Msg("Failed creating MongoDB client")
+func NewAgentServer(logger zerolog.Logger, mongoURI string) (AgentServer, error) {
+	if mongoURI == "" {
+		return nil, errors.New("mongoURI is required")
 	}
 
-	// 创建上下文
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	return &AgentServerImpl{
+		logger:   logger,
+		state:    ServerStopped,
+		mongoURI: mongoURI,
+	}, nil
+}
+
+// Start 启动服务
+func (s *AgentServerImpl) Start() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.state == ServerRunning {
+		return errors.New("服务已经在运行中")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	s.ctx = ctx
+	s.cancelFunc = cancel
+
+	globalConfig, err := s.GetLatestConfig()
+	if err != nil {
+		s.logger.Fatal().Err(err).Msg("Failed getting latest config")
+		return err
+	}
+
+	mongoClient, err := mongodb.Connect(s.mongoURI)
+	if err != nil {
+		s.logger.Fatal().Err(err).Msg("Failed creating MongoDB client")
+		return err
+	}
+
 	var wafLog model.WAFLog
 	mongoConfig := &internal.MongoConfig{
 		Client:     mongoClient,
@@ -59,64 +107,46 @@ func NewAgentServer(logger zerolog.Logger, mongoURI string, bind string, config 
 		Collection: wafLog.GetCollectionName(),
 	}
 
-	// 从 Config 中提取 AppConfig 列表
-	appConfigs := config.Engine.AppConfig
+	appConfigs := globalConfig.Engine.AppConfig
 
 	// Convert model.AppConfig to internal.AppConfig and create applications
 	allApps := make(map[string]*internal.Application)
-	for _, modelAppConfig := range appConfigs {
+	for _, appConfig := range appConfigs {
 		// 创建日志配置
 		logConfig := cfg.LogConfig{
-			Level:  modelAppConfig.LogLevel,
-			File:   modelAppConfig.LogFile,
-			Format: modelAppConfig.LogFormat,
+			Level:  appConfig.LogLevel,
+			File:   appConfig.LogFile,
+			Format: appConfig.LogFormat,
 		}
 
 		// 创建日志记录器
 		appLogger, err := logConfig.NewLogger()
 		if err != nil {
-			globalLogger.Warn().Err(err).Str("app", modelAppConfig.Name).Msg("使用默认日志记录器")
+			s.logger.Warn().Err(err).Str("app", appConfig.Name).Msg("使用默认日志记录器")
 			appLogger = globalLogger
 		}
 
 		// 创建内部 AppConfig
 		internalAppConfig := internal.AppConfig{
-			Directives:     modelAppConfig.Directives,
-			ResponseCheck:  config.IsResponseCheck, // 使用全局响应检查设置
+			Directives:     appConfig.Directives,
+			ResponseCheck:  globalConfig.IsResponseCheck, // 使用全局响应检查设置
 			Logger:         appLogger,
-			TransactionTTL: modelAppConfig.TransactionTTL,
+			TransactionTTL: appConfig.TransactionTTL,
 		}
 
 		// 创建应用
-		application, err := internalAppConfig.NewApplicationWithContext(ctx, mongoConfig)
+		application, err := internalAppConfig.NewApplicationWithContext(ctx, mongoConfig, globalConfig.IsDebug)
 		if err != nil {
-			globalLogger.Fatal().Err(err).Msg("Failed creating application: " + modelAppConfig.Name)
+			s.logger.Fatal().Err(err).Msg("Failed creating application: " + appConfig.Name)
+
+			return err
 		}
 
-		allApps[modelAppConfig.Name] = application
+		allApps[appConfig.Name] = application
 	}
-	network, address := network.NetworkAddressFromBind(bind)
 
-	return &AgentServer{
-		network:      network,
-		address:      address,
-		applications: allApps,
-		logger:       logger,
-		state:        ServerStopped,
-		ctx:          ctx,
-		cancelFunc:   cancelFunc,
-		mongoURI:     mongoURI,
-	}
-}
-
-// Start 启动服务
-func (s *AgentServer) Start() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.state == ServerRunning {
-		return errors.New("服务已经在运行中")
-	}
+	s.applications = allApps
+	s.network, s.address = network.NetworkAddressFromBind(globalConfig.Engine.Bind)
 
 	// 创建监听器
 	l, err := (&net.ListenConfig{}).Listen(s.ctx, s.network, s.address)
@@ -138,12 +168,17 @@ func (s *AgentServer) Start() error {
 	// 在后台goroutine中启动服务
 	go func() {
 		s.logger.Info().Msg("启动 coraza-spoa 服务, 监听地址: " + s.address + " " + s.network)
-		if err := s.agent.Serve(l); err != nil {
+		err := s.agent.Serve(l)
+
+		// 只有当它不是正常关闭时才记录为错误
+		if err != nil && !errors.Is(err, net.ErrClosed) && !strings.Contains(err.Error(), "use of closed network connection") {
 			s.mu.Lock()
 			s.state = ServerError
 			s.lastError = err
 			s.mu.Unlock()
-			s.logger.Error().Err(err).Msg("监听器已关闭")
+			s.logger.Error().Err(err).Msg("监听器出错")
+		} else if err != nil {
+			s.logger.Info().Msg("监听器已正常关闭")
 		}
 	}()
 
@@ -152,7 +187,7 @@ func (s *AgentServer) Start() error {
 }
 
 // Stop 停止服务
-func (s *AgentServer) Stop() error {
+func (s *AgentServerImpl) Stop() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -163,6 +198,7 @@ func (s *AgentServer) Stop() error {
 	// 取消上下文
 	if s.cancelFunc != nil {
 		s.cancelFunc()
+		s.cancelFunc = nil
 	}
 
 	// 关闭监听器
@@ -171,7 +207,12 @@ func (s *AgentServer) Stop() error {
 			s.logger.Error().Err(err).Msg("关闭监听器失败")
 			return err
 		}
+		s.listener = nil
 	}
+
+	s.agent = nil
+	s.applications = nil
+	s.ctx = nil
 
 	s.state = ServerStopped
 	s.logger.Info().Msg("服务已停止")
@@ -179,7 +220,7 @@ func (s *AgentServer) Stop() error {
 }
 
 // Restart 重启服务
-func (s *AgentServer) Restart() error {
+func (s *AgentServerImpl) Restart() error {
 	if err := s.Stop(); err != nil && !errors.Is(err, errors.New("服务未运行")) {
 		return err
 	}
@@ -187,13 +228,21 @@ func (s *AgentServer) Restart() error {
 }
 
 // UpdateApplications 更新应用配置 support hot reload
-func (s *AgentServer) UpdateApplications(config model.Config) {
+func (s *AgentServerImpl) UpdateApplications() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	globalConfig, err := s.GetLatestConfig()
+	if err != nil {
+		s.logger.Fatal().Err(err).Msg("Failed getting latest config")
+		return err
+	}
+
 	mongoClient, err := mongodb.Connect(s.mongoURI)
+
 	if err != nil {
 		s.logger.Fatal().Err(err).Msg("Failed creating MongoDB client")
+		return err
 	}
 
 	var wafLog model.WAFLog
@@ -204,53 +253,56 @@ func (s *AgentServer) UpdateApplications(config model.Config) {
 	}
 
 	// 从 Config 中提取 AppConfig 列表
-	appConfigs := config.Engine.AppConfig
+	appConfigs := globalConfig.Engine.AppConfig
 
 	// Convert model.AppConfig to internal.AppConfig and create applications
 	allApps := make(map[string]*internal.Application)
-	for _, modelAppConfig := range appConfigs {
+	for _, appConfig := range appConfigs {
 		// 创建日志配置
 		logConfig := cfg.LogConfig{
-			Level:  modelAppConfig.LogLevel,
-			File:   modelAppConfig.LogFile,
-			Format: modelAppConfig.LogFormat,
+			Level:  appConfig.LogLevel,
+			File:   appConfig.LogFile,
+			Format: appConfig.LogFormat,
 		}
 
 		// 创建日志记录器
 		appLogger, err := logConfig.NewLogger()
 		if err != nil {
-			s.logger.Warn().Err(err).Str("app", modelAppConfig.Name).Msg("使用默认日志记录器")
+			s.logger.Warn().Err(err).Str("app", appConfig.Name).Msg("使用默认日志记录器")
 			appLogger = globalLogger
 		}
 
 		// 创建内部 AppConfig
 		internalAppConfig := internal.AppConfig{
-			Directives:     modelAppConfig.Directives,
-			ResponseCheck:  config.IsResponseCheck, // 使用全局响应检查设置
+			Directives:     appConfig.Directives,
+			ResponseCheck:  globalConfig.IsResponseCheck, // 使用全局响应检查设置
 			Logger:         appLogger,
-			TransactionTTL: modelAppConfig.TransactionTTL,
+			TransactionTTL: appConfig.TransactionTTL,
 		}
 
 		// 创建应用
-		application, err := internalAppConfig.NewApplicationWithContext(s.ctx, mongoConfig)
+		application, err := internalAppConfig.NewApplicationWithContext(s.ctx, mongoConfig, globalConfig.IsDebug)
 		if err != nil {
-			s.logger.Fatal().Err(err).Msg("Failed creating application: " + modelAppConfig.Name)
+			s.logger.Fatal().Err(err).Msg("Failed creating application: " + appConfig.Name)
+			return err
 		}
 
-		allApps[modelAppConfig.Name] = application
+		allApps[appConfig.Name] = application
 	}
 
 	s.applications = allApps
 
 	// 如果服务正在运行，热更新Agent的应用
-	if s.state == ServerRunning && s.agent != nil {
+	if s.state == ServerRunning && s.agent != nil && s.ctx != nil {
 		s.agent.ReplaceApplications(allApps)
 		s.logger.Info().Msg("应用配置已更新")
 	}
+
+	return nil
 }
 
 // UpdateNetworkAddress 更新网络地址 not support hot reload
-func (s *AgentServer) UpdateNetworkAddress(network, address string) {
+func (s *AgentServerImpl) UpdateNetworkAddress(network, address string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -259,7 +311,7 @@ func (s *AgentServer) UpdateNetworkAddress(network, address string) {
 }
 
 // UpdateLogger 更新日志记录器 support hot reload
-func (s *AgentServer) UpdateLogger(logger zerolog.Logger) {
+func (s *AgentServerImpl) UpdateLogger(logger zerolog.Logger) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -270,15 +322,49 @@ func (s *AgentServer) UpdateLogger(logger zerolog.Logger) {
 }
 
 // GetState 获取当前服务状态
-func (s *AgentServer) GetState() ServerState {
+func (s *AgentServerImpl) GetState() ServerState {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.state
 }
 
 // GetLastError 获取最后一次错误
-func (s *AgentServer) GetLastError() error {
+func (s *AgentServerImpl) GetLastError() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.lastError
+}
+
+func (s *AgentServerImpl) GetLatestConfig() (*model.Config, error) {
+	if s.mongoURI == "" {
+		return nil, errors.New("mongoURI is required")
+	}
+	// 连接数据库
+	client, err := mongodb.Connect(s.mongoURI)
+	if err != nil {
+		return nil, fmt.Errorf("连接数据库失败: %w", err)
+	}
+
+	var cfg model.Config
+	// 获取配置集合
+	db := client.Database(config.Global.DBConfig.Database)
+	collection := db.Collection(cfg.GetCollectionName())
+
+	// 创建带超时的上下文
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel() // 确保资源被释放
+
+	// 查询最新配置
+	err = collection.FindOne(
+		ctx,
+		bson.D{},
+		options.FindOne().SetSort(bson.D{{Key: "updatedAt", Value: -1}}),
+	).Decode(&cfg)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("未找到配置记录")
+		}
+		return nil, fmt.Errorf("获取配置失败: %w", err)
+	}
+	return &cfg, nil
 }

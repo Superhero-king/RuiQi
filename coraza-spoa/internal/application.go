@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/netip"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
 	"github.com/corazawaf/coraza/v3"
+	"github.com/corazawaf/coraza/v3/debuglog"
 	"github.com/corazawaf/coraza/v3/types"
 	"github.com/dropmorepackets/haproxy-go/pkg/encoding"
 	"github.com/jcchavezs/mergefs"
@@ -46,9 +48,11 @@ type Application struct {
 	AppConfig
 }
 
+// 扩展transaction结构体，添加请求信息
 type transaction struct {
-	tx types.Transaction
-	m  sync.Mutex
+	tx      types.Transaction
+	m       sync.Mutex
+	request *applicationRequest // 存储请求信息
 }
 
 type applicationRequest struct {
@@ -152,10 +156,16 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 	tx := a.waf.NewTransactionWithID(req.ID)
 	defer func() {
 		if err == nil && a.ResponseCheck {
-			a.cache.SetWithExpiration(tx.ID(), &transaction{tx: tx}, a.TransactionTTL)
+			// 存储transaction和请求信息到缓存
+			txCache := &transaction{
+				tx:      tx,
+				request: &req, // 存储请求信息
+			}
+			a.cache.SetWithExpiration(tx.ID(), txCache, a.TransactionTTL)
 			return
 		}
 
+		// 处理中断情况和日志记录
 		if tx.IsInterrupted() && a.logStore != nil {
 			interruption := tx.Interruption()
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
@@ -317,6 +327,17 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 	tx := t.tx
 
 	defer func() {
+		// 处理中断情况和日志记录
+		if tx.IsInterrupted() && a.logStore != nil {
+			interruption := tx.Interruption()
+			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 && t.request != nil {
+				err := a.saveFirewallLog(matchedRules, interruption, t.request, t.request.Headers)
+				if err != nil {
+					a.Logger.Error().Err(err).Msg("failed to save firewall log")
+				}
+			}
+		}
+
 		tx.ProcessLogging()
 		if err := tx.Close(); err != nil {
 			a.Logger.Error().Str("tx", tx.ID()).Err(err).Msg("failed to close transaction")
@@ -474,7 +495,7 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 }
 
 // NewApplication creates a new Application with a custom context
-func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *MongoConfig) (*Application, error) {
+func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *MongoConfig, isDebug bool) (*Application, error) {
 	// If no context is provided, use background context
 	var app *Application
 	var logStore LogStore
@@ -492,15 +513,22 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 		}
 	}
 
-	// debugLogger := debuglog.Default().
-	// 	WithLevel(debuglog.LevelDebug).
-	// 	WithOutput(os.Stdout)
+	debugLogger := debuglog.Default().
+		WithLevel(debuglog.LevelDebug).
+		WithOutput(os.Stdout)
 
-	config := coraza.NewWAFConfig().
-		WithDirectives(a.Directives).
-		WithErrorCallback(app.logCallback).
-		// WithDebugLogger(debugLogger).
-		WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	var config coraza.WAFConfig
+	if isDebug {
+		config = coraza.NewWAFConfig().
+			WithDirectives(a.Directives).
+			WithErrorCallback(app.logCallback).
+			WithDebugLogger(debugLogger).
+			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	} else {
+		config = coraza.NewWAFConfig().
+			WithDirectives(a.Directives).
+			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	}
 
 	waf, err := coraza.NewWAF(config)
 	if err != nil {
@@ -512,13 +540,16 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 	const defaultEvictionInterval = time.Second * 1
 
 	app.cache = cache.NewTTLWithCallback(defaultExpire, defaultEvictionInterval, func(key, value any) {
-		// everytime a transaction runs into a timeout it gets closed.
+		// 当transaction超时时关闭它
 		t := value.(*transaction)
 		if !t.m.TryLock() {
-			// We lost a race and the transaction is already somewhere in use.
+			// 我们在竞争中失败，事务已经在其他地方使用
 			a.Logger.Info().Str("tx", t.tx.ID()).Msg("eviction called on currently used transaction")
 			return
 		}
+
+		// 超时回调只负责清理资源，不再检查中断和记录日志
+		// 因为如果事务中断，应该在请求或响应处理阶段就已经记录了日志
 
 		// Process Logging won't do anything if TX was already logged.
 		t.tx.ProcessLogging()
@@ -532,7 +563,7 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 
 // NewDefaultApplication creates a new Application with background context
 func (a AppConfig) NewApplication(mongoConfig *MongoConfig) (*Application, error) {
-	return a.NewApplicationWithContext(context.Background(), mongoConfig)
+	return a.NewApplicationWithContext(context.Background(), mongoConfig, false)
 }
 
 func (a *Application) logCallback(mr types.MatchedRule) {
@@ -565,7 +596,17 @@ func (e ErrInterrupted) Is(target error) bool {
 	if !ok {
 		return false
 	}
-	return e.Interruption == t.Interruption
+
+	// 首先检查两个指针是否都为nil
+	if e.Interruption == nil || t.Interruption == nil {
+		return e.Interruption == t.Interruption
+	}
+
+	// 比较Interruption结构体的字段值
+	return e.Interruption.RuleID == t.Interruption.RuleID &&
+		e.Interruption.Action == t.Interruption.Action &&
+		e.Interruption.Status == t.Interruption.Status &&
+		e.Interruption.Data == t.Interruption.Data
 }
 
 // 添加新的辅助函数

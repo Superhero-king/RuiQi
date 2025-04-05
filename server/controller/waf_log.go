@@ -54,15 +54,14 @@ func (c *WAFLogControllerImpl) GetAttackEvents(ctx *gin.Context) {
 		return
 	}
 
-	// 设置默认值
+	// 设置默认值时使用UTC时区
 	if req.StartTime.IsZero() {
-		// 默认: 24小时前
-		req.StartTime = time.Now().Add(-24 * time.Hour)
+		// 默认: 24小时前，使用UTC时区
+		req.StartTime = time.Now().UTC().Add(-24 * time.Hour)
 	}
-
 	if req.EndTime.IsZero() {
-		// 默认: 当前时间
-		req.EndTime = time.Now()
+		// 默认: 当前时间，使用UTC时区
+		req.EndTime = time.Now().UTC()
 	}
 
 	// 设置默认分页参数
@@ -119,15 +118,14 @@ func (c *WAFLogControllerImpl) GetAttackLogs(ctx *gin.Context) {
 		return
 	}
 
-	// 设置默认值
+	// 设置默认值时使用UTC时区
 	if req.StartTime.IsZero() {
-		// 默认: 24小时前
-		req.StartTime = time.Now().Add(-24 * time.Hour)
+		// 默认: 24小时前，使用UTC时区
+		req.StartTime = time.Now().UTC().Add(-24 * time.Hour)
 	}
-
 	if req.EndTime.IsZero() {
-		// 默认: 当前时间
-		req.EndTime = time.Now()
+		// 默认: 当前时间，使用UTC时区
+		req.EndTime = time.Now().UTC()
 	}
 
 	// 设置默认分页参数

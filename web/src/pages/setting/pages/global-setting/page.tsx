@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { useState } from "react"
 
-export function GlobalSetting() {
+export default function GlobalSettingPage() {
   const [engineStatus, setEngineStatus] = useState(true)
   const [port, setPort] = useState("2342")
   const [certPath, setCertPath] = useState("/home/ubuntu/cert")

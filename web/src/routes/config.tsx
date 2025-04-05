@@ -15,7 +15,7 @@ import { SettingPage } from "@/pages/setting/layout"
 import { LogAndEventPage } from "@/pages/logs/layout"
 
 // 直接导入子组件
-import { GlobalSetting } from "@/pages/setting/pages"
+import GlobalSettingPage from "@/pages/setting/pages/global-setting/page"
 import CertificatesPage from "@/pages/setting/pages/certificate/page"
 import EventsPage from "@/pages/logs/pages/event/page"
 import LogsPage from "@/pages/logs/pages/log/page"
@@ -77,7 +77,7 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
         [ROUTES.SETTINGS]: {
             defaultPath: "settings",
             items: [
-                { title: t('breadcrumb.settings.settings'), path: "settings", component: <GlobalSetting /> },
+                { title: t('breadcrumb.settings.settings'), path: "settings", component: <GlobalSettingPage /> },
                 { title: t('breadcrumb.settings.siteManager'), path: "site", component: <SiteManagerPage /> },
                 { title: t('breadcrumb.settings.certManager'), path: "cert", component: <CertificatesPage /> }
             ]

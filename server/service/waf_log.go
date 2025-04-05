@@ -188,10 +188,10 @@ func (s *WAFLogServiceImpl) buildAttackEventFilter(req dto.AttackEventRequset) b
 	// Add time range filter if provided
 	timeFilter := bson.D{}
 	if !req.StartTime.IsZero() {
-		timeFilter = append(timeFilter, bson.E{Key: "$gte", Value: req.StartTime})
+		timeFilter = append(timeFilter, bson.E{Key: "$gte", Value: req.StartTime.UTC()})
 	}
 	if !req.EndTime.IsZero() {
-		timeFilter = append(timeFilter, bson.E{Key: "$lte", Value: req.EndTime})
+		timeFilter = append(timeFilter, bson.E{Key: "$lte", Value: req.EndTime.UTC()})
 	}
 	if len(timeFilter) > 0 {
 		filter = append(filter, bson.E{Key: "createdAt", Value: timeFilter})
@@ -226,10 +226,10 @@ func (s *WAFLogServiceImpl) buildAttackLogFilter(req dto.AttackLogRequest) bson.
 	// Add time range filter if provided
 	timeFilter := bson.D{}
 	if !req.StartTime.IsZero() {
-		timeFilter = append(timeFilter, bson.E{Key: "$gte", Value: req.StartTime})
+		timeFilter = append(timeFilter, bson.E{Key: "$gte", Value: req.StartTime.UTC()})
 	}
 	if !req.EndTime.IsZero() {
-		timeFilter = append(timeFilter, bson.E{Key: "$lte", Value: req.EndTime})
+		timeFilter = append(timeFilter, bson.E{Key: "$lte", Value: req.EndTime.UTC()})
 	}
 	if len(timeFilter) > 0 {
 		filter = append(filter, bson.E{Key: "createdAt", Value: timeFilter})
