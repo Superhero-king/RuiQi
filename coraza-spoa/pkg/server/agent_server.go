@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	cfg "github.com/HUAHUAI23/simple-waf/coraza-spoa/config"
 	"github.com/HUAHUAI23/simple-waf/coraza-spoa/internal"
@@ -354,11 +353,10 @@ func (s *AgentServerImpl) GetLatestConfig() (*model.Config, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel() // 确保资源被释放
 
-	// 查询最新配置
+	// 查询指定名称的配置
 	err = collection.FindOne(
 		ctx,
-		bson.D{},
-		options.FindOne().SetSort(bson.D{{Key: "updatedAt", Value: -1}}),
+		bson.D{{Key: "name", Value: "AppConfig"}},
 	).Decode(&cfg)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

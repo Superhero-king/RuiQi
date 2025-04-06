@@ -497,6 +497,7 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 // NewApplication creates a new Application with a custom context
 func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *MongoConfig, isDebug bool) (*Application, error) {
 	// If no context is provided, use background context
+	isDev := os.Getenv("IS_DEV") == "true"
 	var app *Application
 	var logStore LogStore
 	if mongoConfig == nil {
@@ -518,13 +519,19 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 		WithOutput(os.Stdout)
 
 	var config coraza.WAFConfig
-	if isDebug {
+	switch {
+	case isDev && isDebug:
 		config = coraza.NewWAFConfig().
 			WithDirectives(a.Directives).
 			WithErrorCallback(app.logCallback).
 			WithDebugLogger(debugLogger).
 			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
-	} else {
+	case isDebug:
+		config = coraza.NewWAFConfig().
+			WithDirectives(a.Directives).
+			WithErrorCallback(app.logCallback).
+			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	default:
 		config = coraza.NewWAFConfig().
 			WithDirectives(a.Directives).
 			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
