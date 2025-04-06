@@ -34,7 +34,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { siteFormSchema } from '@/validation/site'
 import { CreateSiteRequest, UpdateSiteRequest, WAFMode } from '@/types/site'
-import { Certificate } from '@/types/certificates'
+import { Certificate } from '@/types/certificate'
 import { CertificateDialog } from '@/feature/certificate/components/CertificateDialog'
 import { InfoRow } from '@/feature/certificate/components/CertificateForm'
 import { useCreateSite, useUpdateSite } from '../hooks/useSites'

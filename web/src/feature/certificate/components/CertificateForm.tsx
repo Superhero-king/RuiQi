@@ -15,7 +15,7 @@ import {
 import { Upload, FileText, X, AlertCircle, Info } from 'lucide-react'
 import { certificateFormSchema } from '@/validation/certificate'
 import { parseCertificate, readFileAsText } from '@/utils/certificate-parser'
-import { CertificateCreateRequest, ParsedCertificate } from '@/types/certificates'
+import { CertificateCreateRequest, ParsedCertificate } from '@/types/certificate'
 import { useCreateCertificate, useUpdateCertificate } from '../hooks/useCertificate'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'

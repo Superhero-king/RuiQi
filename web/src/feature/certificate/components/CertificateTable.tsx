@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-table'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { certificatesApi } from '@/api/certificate'
-import { Certificate } from '@/types/certificates'
+import { Certificate } from '@/types/certificate'
 import { Button } from '@/components/ui/button'
 import {
     MoreHorizontal, Plus, Trash2, RefreshCcw, Pencil

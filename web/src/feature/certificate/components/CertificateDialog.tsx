@@ -6,7 +6,7 @@ import {
     DialogTitle
 } from '@/components/ui/dialog'
 import { CertificateForm } from './CertificateForm'
-import { Certificate } from '@/types/certificates'
+import { Certificate } from '@/types/certificate'
 import { AnimatePresence, motion } from "motion/react"
 import { 
     dialogEnterExitAnimation, 

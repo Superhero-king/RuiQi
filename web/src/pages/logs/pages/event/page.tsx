@@ -200,7 +200,7 @@ export default function EventsPage() {
 
 
     return (
-        <Card className="flex flex-col h-full p-0">
+        <Card className="flex flex-col h-full p-0 border-none shadow-none">
             {/* 头部区域 - 固定高度 */}
             <div className="p-6 flex-shrink-0">
                 <AttackEventFilter

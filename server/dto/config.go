@@ -38,7 +38,7 @@ type HaproxyPatchDTO struct {
 	BackupsNumber *int    `json:"backupsNumber,omitempty" binding:"omitempty" example:"5"`           // 备份数量
 	SpoeAgentAddr *string `json:"spoeAgentAddr,omitempty" binding:"omitempty" example:"127.0.0.1"`   // SPOE代理地址
 	SpoeAgentPort *int    `json:"spoeAgentPort,omitempty" binding:"omitempty" example:"2342"`        // SPOE代理端口
-	Thread        *int    `json:"thread,omitempty" binding:"omitempty,min=1,max=256" example:"4"`    // 线程数
+	Thread        *int    `json:"thread,omitempty" binding:"omitempty,min=0,max=256" example:"4"`    // 线程数
 }
 
 // ConfigResponse 配置响应

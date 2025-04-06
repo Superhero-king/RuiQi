@@ -191,6 +191,20 @@ export const put = <T = ApiResponseData>(url: string, data?: unknown, config?: A
 }
 
 /**
+ * PATCH请求
+ * @param url 请求URL
+ * @param data 请求数据
+ * @param config 请求配置
+ * @returns 响应数据
+ */
+export const patch = <T = ApiResponseData>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    return apiClient.patch<APIResponse<T>>(url, data, config)
+        .then((response: AxiosResponse<APIResponse<T>>) => {
+            return response.data.data as T
+        })
+}
+
+/**
  * DELETE请求
  * @param url 请求URL
  * @param config 请求配置
@@ -247,6 +261,18 @@ export const putWithRetry = <T = ApiResponseData>(url: string, data?: unknown, c
  */
 export const delWithRetry = <T = ApiResponseData>(url: string, config?: AxiosRequestConfig, retries = 3): Promise<T> => {
     return withRetry(() => del<T>(url, config), retries)
+}
+
+/**
+ * 带重试功能的PATCH请求
+ * @param url 请求URL
+ * @param data 请求数据
+ * @param config 请求配置
+ * @param retries 重试次数
+ * @returns 响应数据
+ */
+export const patchWithRetry = <T = ApiResponseData>(url: string, data?: unknown, config?: AxiosRequestConfig, retries = 3): Promise<T> => {
+    return withRetry(() => patch<T>(url, data, config), retries)
 }
 
 

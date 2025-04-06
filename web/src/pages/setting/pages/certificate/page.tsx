@@ -2,7 +2,7 @@ import { CertificateTable } from '@/feature/certificate/components/CertificateTa
 
 export default function CertificatesPage() {
     return (
-        <div className="container mx-auto">
+        <div className="container p-0">
             <CertificateTable />
         </div>
     )

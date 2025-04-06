@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { certificatesApi } from '@/api/certificate'
-import { CertificateCreateRequest, CertificateUpdateRequest } from '@/types/certificates'
+import { CertificateCreateRequest, CertificateUpdateRequest } from '@/types/certificate'
 import { useToast } from '@/hooks/use-toast'
 
 export const useCreateCertificate = () => {

@@ -173,7 +173,7 @@ export default function LogsPage() {
 
 
     return (
-        <Card className="flex flex-col h-full p-0">
+        <Card className="flex flex-col h-full p-0 border-none shadow-none">
             {/* 头部筛选器 - 固定高度 */}
             <div className="p-6 flex-shrink-0">
                 <AttackLogFilter onFilter={handleFilter} defaultValues={queryParams} onRefresh={refetch} />

@@ -4,7 +4,7 @@ import {
     CertificateListResponse,
     CertificateCreateRequest,
     CertificateUpdateRequest,
-} from '@/types/certificates'
+} from '@/types/certificate'
 
 // 证书API接口基础路径
 const BASE_URL = '/certificate'

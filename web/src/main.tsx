@@ -7,12 +7,15 @@ import './i18n'
 import App from './App.tsx'
 import { ErrorBoundary } from './handler/error-boundary.tsx'
 import { ENV } from './utils/env.ts'
+import { Toaster } from './components/ui/toaster.tsx'
+import { ConstantCategory } from './constant/index.ts'
+import { getConstant } from './constant/index.ts'
 
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            staleTime: 5 * 60 * 1000, // 5分钟
-            retry: 1,
+            staleTime: getConstant(ConstantCategory.FEATURE, 'QUERY_STALE_TIME', 5 * 60 * 1000),
+            retry: getConstant(ConstantCategory.FEATURE, 'DEFAULT_QUERY_RETRY', 1),
             refetchOnWindowFocus: false
         }
     }
@@ -29,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
                     </div>
                 }>
                     <App />
+                    <Toaster />
                 </Suspense>
                 {ENV.isDevelopment && <ReactQueryDevtools />}
             </QueryClientProvider>
