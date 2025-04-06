@@ -554,6 +554,12 @@ defaults tcp
     timeout client 1m
     timeout server 1m
     timeout connect 10s
+frontend stats from http
+  mode http
+  bind :8404
+  stats enable
+  stats uri /stats
+  stats show-modules
 # The following part will be dynamically configured
 `
 	fmt.Println("s.thread", s.thread)
