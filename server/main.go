@@ -65,12 +65,18 @@ func main() {
 	}
 
 	// Create service runner and start background services
-	serviceRunner, err := daemon.NewServiceRunner()
+	runner, err := daemon.GetRunnerService()
+
 	if err != nil {
 		config.Logger.Error().Err(err).Msg("Failed to create service runner")
 		return
 	}
-	serviceRunner.StartServices()
+
+	err = runner.StartServices()
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to start daemon services")
+		return
+	}
 
 	// Set Gin mode based on configuration
 	if config.Global.IsProduction {
@@ -150,7 +156,10 @@ func main() {
 	}
 
 	// 停止后台服务
-	serviceRunner.StopServices()
+	err = runner.StopServices()
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to stop daemon services")
+	}
 	config.Logger.Info().Msg("Background services have been shut down, exiting...")
 
 	// 如果是因为服务器错误而退出，使用非零状态码

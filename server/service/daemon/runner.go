@@ -3,6 +3,7 @@ package daemon
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
@@ -45,8 +46,23 @@ type ServiceRunnerImpl struct {
 	state          ServiceState
 }
 
+// 单例模式实现
+var (
+	instance ServiceRunner
+	once     sync.Once
+	initErr  error
+)
+
+// GetRunnerService 获取ServiceRunner的单例实例
+func GetRunnerService() (ServiceRunner, error) {
+	once.Do(func() {
+		instance, initErr = newServiceRunner()
+	})
+	return instance, initErr
+}
+
 // NewServiceRunner 创建一个新的服务运行器
-func NewServiceRunner() (ServiceRunner, error) {
+func newServiceRunner() (ServiceRunner, error) {
 	logger := config.GetLogger().With().Str("component", "runner").Logger()
 
 	haproxyService, err := haproxy.NewHAProxyService("", "", nil)

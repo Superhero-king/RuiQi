@@ -25,16 +25,21 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	siteRepo := repository.NewSiteRepository(db)
 	wafLogRepo := repository.NewWAFLogRepository(db)
 	certRepo := repository.NewCertificateRepository(db)
+	configRepo := repository.NewConfigRepository(db)
 	// 创建服务
 	authService := service.NewAuthService(userRepo, roleRepo)
 	siteService := service.NewSiteService(siteRepo)
 	wafLogService := service.NewWAFLogService(wafLogRepo)
 	certService := service.NewCertificateService(certRepo)
+	runnerService, _ := service.NewRunnerService()
+	configService := service.NewConfigService(configRepo)
 	// 创建控制器
 	authController := controller.NewAuthController(authService)
 	siteController := controller.NewSiteController(siteService)
 	wafLogController := controller.NewWAFLogController(wafLogService)
 	certController := controller.NewCertificateController(certService)
+	runnerController := controller.NewRunnerController(runnerService)
+	configController := controller.NewConfigController(configService)
 	// 将仓库添加到上下文中，供中间件使用
 	route.Use(func(c *gin.Context) {
 		c.Set("userRepo", userRepo)
@@ -123,13 +128,21 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		// 获取攻击日志 - 需要logs:read权限
 		wafLogRoutes.GET("", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackLogs)
 	}
+
 	// 配置管理模块
+	runnerRoutes := authenticated.Group("/runner")
+	{
+		// 获取配置 - 需要config:read权限
+		runnerRoutes.GET("/status", middleware.HasPermission(model.PermConfigRead), runnerController.GetStatus)
+		// 更新配置 - 需要config:update权限
+		runnerRoutes.POST("/control", middleware.HasPermission(model.PermConfigUpdate), runnerController.Control)
+	}
 	configRoutes := authenticated.Group("/config")
 	{
 		// 获取配置 - 需要config:read权限
-		configRoutes.GET("", middleware.HasPermission(model.PermConfigRead), nil)
+		configRoutes.GET("", middleware.HasPermission(model.PermConfigRead), configController.GetConfig)
 		// 更新配置 - 需要config:update权限
-		configRoutes.PUT("", middleware.HasPermission(model.PermConfigUpdate), nil)
+		configRoutes.PATCH("", middleware.HasPermission(model.PermConfigUpdate), configController.PatchConfig)
 	}
 
 	// 审计日志模块

@@ -9,11 +9,11 @@ import (
 
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
+	"github.com/HUAHUAI23/simple-waf/server/constant"
 	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // Global 全局配置实例
@@ -155,13 +155,13 @@ func InitDB(db *mongo.Database) error {
 func createDefaultConfig() model.Config {
 	now := time.Now()
 	return model.Config{
-		Name: "default config",
+		Name: constant.GetString("APP_CONFIG_NAME", "AppConfig"),
 		Engine: model.EngineConfig{
 			Bind:            "127.0.0.1:2342",
 			UseBuiltinRules: true,
 			AppConfig: []model.AppConfig{
 				{
-					Name: "coraza",
+					Name: constant.GetString("Default_ENGINE_NAME", "coraza"),
 					Directives: `Include @coraza.conf-recommended
 Include @crs-setup.conf.example
 Include @owasp_crs/*.conf
@@ -205,11 +205,13 @@ func GetAppConfig() (*model.Config, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel() // 确保资源被释放
 
-	// 查询最新配置
+	// 使用常量获取配置名称，如果不存在则使用默认值"AppConfig"
+	configName := constant.GetString("APP_CONFIG_NAME", "AppConfig")
+
+	// 查询指定名称的配置
 	err = collection.FindOne(
 		ctx,
-		bson.D{},
-		options.FindOne().SetSort(bson.D{{Key: "updatedAt", Value: -1}}),
+		bson.D{{Key: "name", Value: configName}},
 	).Decode(&cfg)
 
 	if err != nil {
