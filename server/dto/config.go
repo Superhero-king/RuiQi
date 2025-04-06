@@ -7,38 +7,38 @@ import (
 // ConfigPatchRequest 配置补丁更新请求
 // @Description 用于部分更新配置的请求参数
 type ConfigPatchRequest struct {
-	Name            *string          `json:"name,omitempty" example:"AppConfig"`        // 配置名称
-	Engine          *EnginePatchDTO  `json:"engine,omitempty"`                          // 引擎配置
-	Haproxy         *HaproxyPatchDTO `json:"haproxy,omitempty"`                         // HAProxy配置
-	IsResponseCheck *bool            `json:"isResponseCheck,omitempty" example:"false"` // 是否检查响应
-	IsDebug         *bool            `json:"isDebug,omitempty" example:"false"`         // 是否开启调试模式
+	Name            *string          `json:"name,omitempty" binding:"omitempty" example:"AppConfig"`        // 配置名称
+	Engine          *EnginePatchDTO  `json:"engine,omitempty" binding:"omitempty"`                          // 引擎配置
+	Haproxy         *HaproxyPatchDTO `json:"haproxy,omitempty" binding:"omitempty"`                         // HAProxy配置
+	IsResponseCheck *bool            `json:"isResponseCheck,omitempty" binding:"omitempty" example:"false"` // 是否检查响应
+	IsDebug         *bool            `json:"isDebug,omitempty" binding:"omitempty" example:"false"`         // 是否开启调试模式
 }
 
 // EnginePatchDTO 引擎配置补丁DTO
 type EnginePatchDTO struct {
-	Bind            *string             `json:"bind,omitempty" example:"127.0.0.1:2342"`  // 引擎绑定地址
-	UseBuiltinRules *bool               `json:"useBuiltinRules,omitempty" example:"true"` // 是否使用内置规则
-	AppConfig       []AppConfigPatchDTO `json:"appConfig,omitempty"`                      // 应用配置列表
+	Bind            *string             `json:"bind,omitempty" binding:"omitempty" example:"127.0.0.1:2342"`  // 引擎绑定地址
+	UseBuiltinRules *bool               `json:"useBuiltinRules,omitempty" binding:"omitempty" example:"true"` // 是否使用内置规则
+	AppConfig       []AppConfigPatchDTO `json:"appConfig,omitempty" binding:"omitempty,dive"`                 // 应用配置列表
 }
 
 // AppConfigPatchDTO 应用配置补丁DTO
 type AppConfigPatchDTO struct {
-	Name           *string `json:"name,omitempty" example:"coraza"`          // 应用名称
-	Directives     *string `json:"directives,omitempty"`                     // 指令配置
-	TransactionTTL *int64  `json:"transactionTTL,omitempty" example:"60000"` // 事务超时时间(毫秒)
-	LogLevel       *string `json:"logLevel,omitempty" example:"info"`        // 日志级别
-	LogFile        *string `json:"logFile,omitempty" example:"/dev/stdout"`  // 日志文件
-	LogFormat      *string `json:"logFormat,omitempty" example:"console"`    // 日志格式
+	Name           *string `json:"name,omitempty" binding:"omitempty" example:"coraza"`          // 应用名称
+	Directives     *string `json:"directives,omitempty" binding:"omitempty"`                     // 指令配置
+	TransactionTTL *int64  `json:"transactionTTL,omitempty" binding:"omitempty" example:"60000"` // 事务超时时间(毫秒)
+	LogLevel       *string `json:"logLevel,omitempty" binding:"omitempty" example:"info"`        // 日志级别
+	LogFile        *string `json:"logFile,omitempty" binding:"omitempty" example:"/dev/stdout"`  // 日志文件
+	LogFormat      *string `json:"logFormat,omitempty" binding:"omitempty" example:"console"`    // 日志格式
 }
 
 // HaproxyPatchDTO HAProxy配置补丁DTO
 type HaproxyPatchDTO struct {
-	ConfigBaseDir *string `json:"configBaseDir,omitempty" example:"/simple-waf"` // 配置文件根目录
-	HaproxyBin    *string `json:"haproxyBin,omitempty" example:"haproxy"`        // HAProxy二进制文件路径
-	BackupsNumber *int    `json:"backupsNumber,omitempty" example:"5"`           // 备份数量
-	SpoeAgentAddr *string `json:"spoeAgentAddr,omitempty" example:"127.0.0.1"`   // SPOE代理地址
-	SpoeAgentPort *int    `json:"spoeAgentPort,omitempty" example:"2342"`        // SPOE代理端口
-	Thread        *int    `json:"thread,omitempty" example:"4"`                  // 线程数
+	ConfigBaseDir *string `json:"configBaseDir,omitempty" binding:"omitempty" example:"/simple-waf"` // 配置文件根目录
+	HaproxyBin    *string `json:"haproxyBin,omitempty" binding:"omitempty" example:"haproxy"`        // HAProxy二进制文件路径
+	BackupsNumber *int    `json:"backupsNumber,omitempty" binding:"omitempty" example:"5"`           // 备份数量
+	SpoeAgentAddr *string `json:"spoeAgentAddr,omitempty" binding:"omitempty" example:"127.0.0.1"`   // SPOE代理地址
+	SpoeAgentPort *int    `json:"spoeAgentPort,omitempty" binding:"omitempty" example:"2342"`        // SPOE代理端口
+	Thread        *int    `json:"thread,omitempty" binding:"omitempty,min=1,max=256" example:"4"`    // 线程数
 }
 
 // ConfigResponse 配置响应
