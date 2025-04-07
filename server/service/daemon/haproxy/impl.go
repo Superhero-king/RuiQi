@@ -770,9 +770,12 @@ func (s *HAProxyServiceImpl) AddCorazaBackend() error {
 
 	coraza_backend := &models.Backend{
 		BackendBase: models.BackendBase{
-			Name:    "coraza-spoa",
-			Mode:    "tcp",
-			From:    "tcp",
+			Name: "coraza-spoa",
+			Mode: "tcp",
+			From: "tcp",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 			Enabled: true,
 		},
 	}
@@ -1150,6 +1153,9 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			DefaultBackend: fmt.Sprintf("be_%d_https", port), // 设置默认后端
 			Enabled:        true,
 			From:           "tcp",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateFrontend(fe_combined, transaction.ID, 0)
@@ -1223,6 +1229,9 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			Mode:    "tcp",
 			Enabled: true,
 			From:    "tcp",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateBackend(be_http, transaction.ID, 0)
@@ -1250,6 +1259,9 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			Mode:    "tcp",
 			Enabled: true,
 			From:    "tcp",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateBackend(be_https, transaction.ID, 0)
@@ -1283,6 +1295,9 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			From:           "http",
 			// 日志格式使用反斜杠转义空格和特殊字符
 			LogFormat: "\"%ci:%cp\\ [%t]\\ %ft\\ %b/%s\\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\\ %ST\\ %B\\ %CC\\ %CS\\ %tsc\\ %ac/%fc/%bc/%sc/%rc\\ %sq/%bq\\ %hr\\ %hs\\ %{+Q}r\\ %[var(txn.coraza.id)]\\ spoa-error:\\ %[var(txn.coraza.error)]\\ waf-hit:\\ %[var(txn.coraza.fail)]\"",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateFrontend(fe_http, transaction.ID, 0)
@@ -1454,6 +1469,9 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			From:           "http",
 			// 日志格式使用反斜杠转义空格和特殊字符
 			LogFormat: "\"%ci:%cp\\ [%t]\\ %ft\\ %b/%s\\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\\ %ST\\ %B\\ %CC\\ %CS\\ %tsc\\ %ac/%fc/%bc/%sc/%rc\\ %sq/%bq\\ %hr\\ %hs\\ %{+Q}r\\ %[var(txn.coraza.id)]\\ spoa-error:\\ %[var(txn.coraza.error)]\\ waf-hit:\\ %[var(txn.coraza.fail)]\"",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateFrontend(fe_https, transaction.ID, 0)
