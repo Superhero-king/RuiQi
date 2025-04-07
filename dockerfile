@@ -41,8 +41,20 @@ COPY --from=frontend-builder /app/dist ./server/web/dist
 RUN go work use ./coraza-spoa ./pkg ./server
 RUN cd server && go build -o ../simple-waf-server main.go
 
-# 阶段3: 最终镜像
-FROM haproxy:3.0.8
+# 阶段3: 最终镜像 - 使用Ubuntu 24.04并安装HAProxy 3.0
+FROM ubuntu:24.04
+
+# 避免交互式前端
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 安装HAProxy 3.0
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common ca-certificates && \
+    add-apt-repository -y ppa:vbernat/haproxy-3.0 && \
+    apt-get update && \
+    apt-get install -y haproxy=3.0.* && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # 创建必要的目录
 WORKDIR /app
@@ -58,7 +70,7 @@ RUN chmod +x /app/simple-waf-server
 # 设置环境变量
 ENV GIN_MODE=release
 
-# 暴露端口(假设应用使用8080端口，根据实际情况调整)
+# 暴露端口
 EXPOSE 2333
 
 # 运行应用
