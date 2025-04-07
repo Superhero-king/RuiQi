@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mvrilo/go-redoc"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -18,8 +19,6 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/router"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
 	"github.com/HUAHUAI23/simple-waf/server/validator"
-	"github.com/mvrilo/go-redoc"
-	ginredoc "github.com/mvrilo/go-redoc/gin"
 )
 
 //	@title			Simple-WAF API
@@ -95,16 +94,6 @@ func main() {
 	validator.InitValidators()
 	// validators.InitStructValidators()
 
-	// 添加 Redoc 文档支持
-	doc := redoc.Redoc{
-		Title:       "Simple-WAF API",
-		Description: "简单的 Web 应用防火墙管理系统 API",
-		SpecFile:    "./docs/swagger.json",
-		SpecPath:    "/swagger.json",
-		DocsPath:    "/redoc",
-	}
-	route.Use(ginredoc.New(doc))
-
 	// 设置 Swagger 文档
 	route.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/swagger/doc.json"),
@@ -113,6 +102,24 @@ func main() {
 		ginSwagger.DeepLinking(true),
 		ginSwagger.PersistAuthorization(true),
 	))
+
+	// 获取Redoc处理器
+	doc := redoc.Redoc{
+		Title:       "Simple-WAF API",
+		Description: "简单的 Web 应用防火墙管理系统 API",
+		SpecFile:    "./docs/swagger.json",
+		SpecPath:    "/swagger.json",
+		DocsPath:    "/redoc",
+	}
+	redocHandler := doc.Handler()
+
+	// 明确定义Redoc路由
+	route.GET("/redoc", func(c *gin.Context) {
+		redocHandler(c.Writer, c.Request)
+	})
+	route.GET("/swagger.json", func(c *gin.Context) {
+		redocHandler(c.Writer, c.Request)
+	})
 
 	// 创建HTTP服务器
 	srv := &http.Server{
