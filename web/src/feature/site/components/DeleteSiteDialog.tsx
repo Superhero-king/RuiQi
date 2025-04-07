@@ -16,6 +16,7 @@ import {
     dialogHeaderAnimation,
     dialogContentItemAnimation
 } from '@/components/ui/animation/dialog-animation'
+import { useTranslation } from 'react-i18next'
 
 interface DeleteSiteDialogProps {
     open: boolean
@@ -28,6 +29,7 @@ export function DeleteSiteDialog({
     onOpenChange,
     siteId
 }: DeleteSiteDialogProps) {
+    const { t } = useTranslation()
     const { deleteSite, isLoading } = useDeleteSite()
 
     const handleDelete = () => {
@@ -49,9 +51,9 @@ export function DeleteSiteDialog({
                             <motion.div {...dialogContentAnimation}>
                                 <motion.div {...dialogHeaderAnimation}>
                                     <AlertDialogHeader className="p-6 pb-3">
-                                        <AlertDialogTitle className="text-xl">确认删除</AlertDialogTitle>
+                                        <AlertDialogTitle className="text-xl">{t('site.deleteDialog.confirmTitle')}</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            您确定要删除此站点吗？此操作无法撤销，可能会影响当前正在使用此站点的服务。
+                                            {t('site.deleteDialog.confirmDescription')}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                 </motion.div>
@@ -61,13 +63,13 @@ export function DeleteSiteDialog({
                                     className="px-6 pb-6"
                                 >
                                     <AlertDialogFooter className="mt-2 flex justify-end space-x-2">
-                                        <AlertDialogCancel>取消</AlertDialogCancel>
+                                        <AlertDialogCancel>{t('site.deleteDialog.cancel')}</AlertDialogCancel>
                                         <AlertDialogAction
                                             onClick={handleDelete}
                                             disabled={isLoading}
                                             className="bg-red-500 hover:bg-red-600"
                                         >
-                                            {isLoading ? '删除中...' : '删除'}
+                                            {isLoading ? t('site.deleteDialog.deleting') : t('site.deleteDialog.delete')}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </motion.div>

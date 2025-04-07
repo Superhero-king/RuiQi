@@ -10,8 +10,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useResetPassword } from '../hooks';
 import { passwordResetSchema, PasswordResetFormValues } from '@/validation/auth';
 import useAuthStore from '@/store/auth';
+import { useTranslation } from 'react-i18next';
 
 export function PasswordResetForm() {
+  const { t } = useTranslation();
   const { resetPassword, isLoading, error, clearError } = useResetPassword();
   const { user } = useAuthStore();
   const [showPassword, setShowPassword] = useState({
@@ -47,11 +49,11 @@ export function PasswordResetForm() {
   return (
     <Card className="w-full max-w-md mx-auto shadow-lg">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">重置密码</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">{t('auth.resetPassword')}</CardTitle>
         <CardDescription className="text-center">
           {user?.needReset 
-            ? '首次登录需要重置密码' 
-            : '请输入当前密码和新密码'}
+            ? t('auth.firstLoginReset') 
+            : t('auth.enterOldAndNewPassword')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -68,13 +70,13 @@ export function PasswordResetForm() {
               name="oldPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>当前密码</FormLabel>
+                  <FormLabel>{t('auth.currentPassword')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                       <Input
                         type={showPassword.old ? 'text' : 'password'}
-                        placeholder="输入当前密码"
+                        placeholder={t('auth.enterCurrentPassword')}
                         className="pl-10 pr-10"
                         {...field}
                         onChange={(e) => {
@@ -107,13 +109,13 @@ export function PasswordResetForm() {
               name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>新密码</FormLabel>
+                  <FormLabel>{t('auth.newPassword')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                       <Input
                         type={showPassword.new ? 'text' : 'password'}
-                        placeholder="输入新密码"
+                        placeholder={t('auth.enterNewPassword')}
                         className="pl-10 pr-10"
                         {...field}
                         onChange={(e) => {
@@ -146,13 +148,13 @@ export function PasswordResetForm() {
               name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>确认新密码</FormLabel>
+                  <FormLabel>{t('auth.confirmNewPassword')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                       <Input
                         type={showPassword.confirm ? 'text' : 'password'}
-                        placeholder="再次输入新密码"
+                        placeholder={t('auth.enterNewPasswordAgain')}
                         className="pl-10 pr-10"
                         {...field}
                         onChange={(e) => {
@@ -185,14 +187,14 @@ export function PasswordResetForm() {
               className="w-full mt-6" 
               disabled={isLoading}
             >
-              {isLoading ? '提交中...' : '重置密码'}
+              {isLoading ? t('auth.submitting') : t('auth.resetPassword')}
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          密码长度至少为6位字符
+          {t('auth.passwordRequirement')}
         </p>
       </CardFooter>
     </Card>

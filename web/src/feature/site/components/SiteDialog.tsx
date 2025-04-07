@@ -14,6 +14,7 @@ import {
     dialogHeaderAnimation,
     dialogContentItemAnimation
   } from '@/components/ui/animation/dialog-animation'
+  import { useTranslation } from 'react-i18next'
   
   interface SiteDialogProps {
     open: boolean;
@@ -28,11 +29,13 @@ import {
     mode = 'create',
     site = null
   }: SiteDialogProps) {
+    const { t } = useTranslation()
+    
     // 根据模式确定标题和描述
-    const title = mode === 'create' ? '创建新站点' : '更新站点';
+    const title = mode === 'create' ? t('site.dialog.createTitle') : t('site.dialog.updateTitle');
     const description = mode === 'create' 
-      ? '请填写站点信息，包括基本信息、HTTPS设置、后端服务器和WAF设置。'
-      : '编辑站点信息，修改后将自动保存。';
+      ? t('site.dialog.createDescription')
+      : t('site.dialog.updateDescription');
     
     // 根据模式准备表单默认值
     const defaultValues = mode === 'update' && site 

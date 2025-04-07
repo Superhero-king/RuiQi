@@ -10,12 +10,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useDeleteCertificate } from '../hooks/useCertificate'
 import { AnimatePresence, motion } from "motion/react"
-import { 
-    dialogEnterExitAnimation, 
-    dialogContentAnimation, 
+import {
+    dialogEnterExitAnimation,
+    dialogContentAnimation,
     dialogHeaderAnimation,
     dialogContentItemAnimation
 } from '@/components/ui/animation/dialog-animation'
+import { useTranslation } from 'react-i18next'
 
 interface DeleteCertificateDialogProps {
     open: boolean
@@ -30,6 +31,7 @@ export function DeleteCertificateDialog({
     certificateId,
     onDeleted
 }: DeleteCertificateDialogProps) {
+    const { t } = useTranslation()
     // 删除证书钩子
     const { deleteCertificate, isLoading } = useDeleteCertificate()
 
@@ -54,25 +56,25 @@ export function DeleteCertificateDialog({
                             <motion.div {...dialogContentAnimation}>
                                 <motion.div {...dialogHeaderAnimation}>
                                     <AlertDialogHeader className="p-6 pb-3">
-                                        <AlertDialogTitle className="text-xl">确认删除</AlertDialogTitle>
+                                        <AlertDialogTitle className="text-xl">{t("certificate.deleteDialog.confirmTitle")}</AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            您确定要删除此证书吗？此操作无法撤销。
+                                            {t("certificate.deleteDialog.confirmDescription")}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                 </motion.div>
-                                
-                                <motion.div 
+
+                                <motion.div
                                     {...dialogContentItemAnimation}
                                     className="px-6 pb-6"
                                 >
                                     <AlertDialogFooter className="mt-2 flex justify-end space-x-2">
-                                        <AlertDialogCancel>取消</AlertDialogCancel>
-                                        <AlertDialogAction 
-                                            onClick={handleDeleteCertificate} 
+                                        <AlertDialogCancel>{t("certificate.deleteDialog.cancel")}</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={handleDeleteCertificate}
                                             disabled={isLoading}
                                             className="bg-red-600 hover:bg-red-700"
                                         >
-                                            {isLoading ? '删除中...' : '删除'}
+                                            {isLoading ? t("certificate.deleteDialog.deleting") : t("certificate.deleteDialog.delete")}
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </motion.div>

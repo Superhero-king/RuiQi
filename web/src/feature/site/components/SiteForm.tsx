@@ -39,6 +39,7 @@ import { CertificateDialog } from '@/feature/certificate/components/CertificateD
 import { InfoRow } from '@/feature/certificate/components/CertificateForm'
 import { useCreateSite, useUpdateSite } from '../hooks/useSites'
 import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
+import { useTranslation } from 'react-i18next'
 
 interface SiteFormProps {
     mode?: 'create' | 'update'
@@ -64,6 +65,7 @@ export function SiteForm({
         },
     },
 }: SiteFormProps) {
+    const { t } = useTranslation()
     // 状态
     const [showCertificateDialog, setShowCertificateDialog] = useState(false)
     const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
@@ -195,7 +197,7 @@ export function SiteForm({
 
                         {/* 基本信息部分 */}
                         <div className="space-y-5">
-                            <h3 className="text-lg font-medium">基本信息</h3>
+                            <h3 className="text-lg font-medium">{t("site.dialog.basicInfo")}</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FormField
@@ -203,10 +205,10 @@ export function SiteForm({
                                     name="name"
                                     render={({ field }) => (
                                         <div className="flex flex-col gap-1.5">
-                                            <FormLabel className="text-sm font-medium">站点名称</FormLabel>
+                                            <FormLabel className="text-sm font-medium">{t('site.dialog.siteName')}</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="请输入站点名称"
+                                                    placeholder={t('site.dialog.siteNamePlaceholder')}
                                                     className="rounded-md p-3 h-12"
                                                     {...field}
                                                 />
@@ -221,10 +223,10 @@ export function SiteForm({
                                     name="domain"
                                     render={({ field }) => (
                                         <div className="flex flex-col gap-1.5">
-                                            <FormLabel className="text-sm font-medium">域名</FormLabel>
+                                            <FormLabel className="text-sm font-medium">{t('site.domain')}</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    placeholder="请输入域名"
+                                                    placeholder={t('site.dialog.domainPlaceholder')}
                                                     className="rounded-md p-3 h-12"
                                                     {...field}
                                                 />
@@ -239,7 +241,7 @@ export function SiteForm({
                                     name="listenPort"
                                     render={({ field }) => (
                                         <div className="flex flex-col gap-1.5">
-                                            <FormLabel className="text-sm font-medium">监听端口</FormLabel>
+                                            <FormLabel className="text-sm font-medium">{t('site.listenPort')}</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
@@ -261,7 +263,7 @@ export function SiteForm({
                                     name="activeStatus"
                                     render={({ field }) => (
                                         <div className="flex flex-col gap-1.5">
-                                            <div className="text-sm font-medium">站点状态</div>
+                                            <div className="text-sm font-medium">{t('site.status')}</div>
                                             <div className="w-full flex items-center justify-between rounded-md border p-3 h-12">
                                                 <FormControl>
                                                     <div className="flex items-center justify-between w-full">
@@ -269,7 +271,7 @@ export function SiteForm({
                                                             checked={field.value}
                                                             onCheckedChange={field.onChange}
                                                         />
-                                                        <label className="text-xs text-muted-foreground cursor-pointer">站点是否激活</label>
+                                                        <label className="text-xs text-muted-foreground cursor-pointer">{t('site.dialog.siteActive')}</label>
                                                     </div>
                                                 </FormControl>
                                             </div>
@@ -281,15 +283,15 @@ export function SiteForm({
 
                         {/* HTTPS设置 */}
                         <div className="space-y-5">
-                            <h3 className="text-lg font-medium">HTTPS设置</h3>
+                            <h3 className="text-lg font-medium">{t('site.dialog.httpsSettings')}</h3>
 
                             <FormField
                                 control={form.control}
                                 name="enableHTTPS"
                                 render={({ field }) => (
                                     <div className="w-full">
-                                        <div className="text-sm font-medium">启用HTTPS</div>
-                                        <div className="text-xs text-muted-foreground mb-1">开启后需要配置证书</div>
+                                        <div className="text-sm font-medium">{t('site.dialog.enableHttps')}</div>
+                                        <div className="text-xs text-muted-foreground mb-1">{t('site.dialog.httpsDescription')}</div>
                                         <div className="w-full rounded-md border p-3 flex justify-between items-center">
                                             <FormControl>
                                                 <Switch
@@ -305,14 +307,14 @@ export function SiteForm({
                             {form.watch('enableHTTPS') && (
                                 <div className="p-4 border rounded-md">
                                     <div>
-                                        <FormLabel className="text-sm font-medium">选择证书</FormLabel>
+                                        <FormLabel className="text-sm font-medium">{t('site.dialog.selectCertificate')}</FormLabel>
                                         <div className="flex gap-2 mt-1">
                                             <Select
                                                 value={selectedCertificateId}
                                                 onValueChange={handleCertificateChange}
                                             >
                                                 <SelectTrigger className="w-full">
-                                                    <SelectValue placeholder="选择证书" />
+                                                    <SelectValue placeholder={t('site.dialog.selectCertificate')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {certificates?.map((cert) => (
@@ -328,7 +330,7 @@ export function SiteForm({
                                                     <SelectItem value="upload-new">
                                                         <span className="flex items-center text-blue-600">
                                                             <Upload className="mr-2 h-4 w-4" />
-                                                            上传新证书
+                                                            {t('site.dialog.uploadNewCert')}
                                                         </span>
                                                     </SelectItem>
                                                 </SelectContent>
@@ -348,19 +350,19 @@ export function SiteForm({
 
                                     {selectedCertificate && (
                                         <div className="mt-4 p-4 border rounded-md bg-gray-50">
-                                            <h4 className="text-sm font-medium mb-2">已选证书信息</h4>
+                                            <h4 className="text-sm font-medium mb-2">{t('site.dialog.selectedCertInfo')}</h4>
                                             <div className="space-y-2 text-sm">
-                                                <InfoRow label="证书名称" value={selectedCertificate?.name || ''} />
+                                                <InfoRow label={t('certificate.name')} value={selectedCertificate?.name || ''} />
                                                 <InfoRow
-                                                    label="颁发机构"
+                                                    label={t('certificate.issuer')}
                                                     value={selectedCertificate?.issuerName || ''}
                                                 />
                                                 <InfoRow
-                                                    label="过期日期"
+                                                    label={t('certificate.dialog.expiryDate')}
                                                     value={new Date(selectedCertificate?.expireDate || '').toLocaleDateString()}
                                                 />
                                                 <div className="flex">
-                                                    <span className="w-24 text-muted-foreground">域名:</span>
+                                                    <span className="w-24 text-muted-foreground">{t('certificate.dialog.domains')}:</span>
                                                     <div className="flex flex-wrap gap-1">
                                                         {selectedCertificate?.domains.map((domain, index) => (
                                                             <span key={index} className="px-2 py-0.5 bg-gray-200 rounded text-xs">
@@ -383,7 +385,7 @@ export function SiteForm({
                         {/* 后端服务器 */}
                         <div className="space-y-5">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-medium">后端服务器</h3>
+                                <h3 className="text-lg font-medium">{t('site.dialog.backendServers')}</h3>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -392,7 +394,7 @@ export function SiteForm({
                                     className="flex items-center gap-1"
                                 >
                                     <PlusCircle className="h-4 w-4" />
-                                    添加服务器
+                                    {t('site.dialog.addServer')}
                                 </Button>
                             </div>
 
@@ -402,7 +404,7 @@ export function SiteForm({
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center">
                                                 <Server className="h-4 w-4 mr-2" />
-                                                <span className="font-medium">服务器 {index + 1}</span>
+                                                <span className="font-medium">{t('site.dialog.server')} {index + 1}</span>
                                             </div>
                                             {index > 0 && (
                                                 <Button
@@ -423,10 +425,10 @@ export function SiteForm({
                                                 name={`backend.servers.${index}.host`}
                                                 render={({ field }) => (
                                                     <div className="flex flex-col gap-1.5 justify-between">
-                                                        <FormLabel className="text-sm font-medium">主机地址</FormLabel>
+                                                        <FormLabel className="text-sm font-medium">{t('site.dialog.hostAddress')}</FormLabel>
                                                         <FormControl>
                                                             <Input
-                                                                placeholder="如: 192.168.1.1 或 backend.com"
+                                                                placeholder={t('site.dialog.hostPlaceholder')}
                                                                 className="rounded-md p-3"
                                                                 {...field}
                                                             />
@@ -442,7 +444,7 @@ export function SiteForm({
                                                 render={({ field }) => (
 
                                                     <div className="flex flex-col gap-1.5 justify-between">
-                                                        <FormLabel className="text-sm font-medium">端口</FormLabel>
+                                                        <FormLabel className="text-sm font-medium">{t('site.dialog.port')}</FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 type="number"
@@ -465,7 +467,7 @@ export function SiteForm({
                                                 render={({ field }) => (
 
                                                     <div className="flex flex-col gap-1.5">
-                                                        <div className="text-sm font-medium">启用SSL</div>
+                                                        <div className="text-sm font-medium">{t('site.dialog.enableSsl')}</div>
                                                         <FormControl>
                                                             <div className="w-full flex items-center justify-between rounded-md border p-3">
                                                                 <div className="flex items-center justify-between w-full">
@@ -473,7 +475,7 @@ export function SiteForm({
                                                                         checked={field.value}
                                                                         onCheckedChange={field.onChange}
                                                                     />
-                                                                    <label className="text-xs text-muted-foreground cursor-pointer">后端使用HTTPS</label>
+                                                                    <label className="text-xs text-muted-foreground cursor-pointer">{t('site.dialog.backendHttps')}</label>
                                                                 </div>
                                                             </div>
                                                         </FormControl>
@@ -489,15 +491,15 @@ export function SiteForm({
 
                         {/* WAF设置 */}
                         <div className="space-y-5">
-                            <h3 className="text-lg font-medium">WAF设置</h3>
+                            <h3 className="text-lg font-medium">{t('site.dialog.wafSettings')}</h3>
 
                             <FormField
                                 control={form.control}
                                 name="wafEnabled"
                                 render={({ field }) => (
                                     <div className="w-full">
-                                        <div className="text-sm font-medium">启用WAF</div>
-                                        <div className="text-xs text-muted-foreground mb-1">Web应用防火墙</div>
+                                        <div className="text-sm font-medium">{t('site.dialog.enableWaf')}</div>
+                                        <div className="text-xs text-muted-foreground mb-1">{t('site.dialog.wafDescription')}</div>
                                         <div className="w-full rounded-md border p-3 flex justify-between items-center">
                                             <FormControl>
                                                 <Switch
@@ -516,7 +518,7 @@ export function SiteForm({
                                     name="wafMode"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium">WAF模式</FormLabel>
+                                            <FormLabel className="text-sm font-medium">{t('site.dialog.wafMode')}</FormLabel>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <FormControl>
                                                     <Select
@@ -524,16 +526,16 @@ export function SiteForm({
                                                         onValueChange={field.onChange}
                                                     >
                                                         <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="选择WAF模式" />
+                                                            <SelectValue placeholder={t('site.dialog.selectWafMode')} />
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value={WAFMode.Observation}>
                                                                 <div className="flex items-center">
                                                                     <Info className="mr-2 h-4 w-4 text-blue-500" />
                                                                     <div className="flex flex-col">
-                                                                        <span>观察模式</span>
+                                                                        <span>{t('site.dialog.observationMode')}</span>
                                                                         <span className="text-xs text-muted-foreground">
-                                                                            只记录不拦截
+                                                                            {t('site.dialog.observationDescription')}
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -542,9 +544,9 @@ export function SiteForm({
                                                                 <div className="flex items-center">
                                                                     <Shield className="mr-2 h-4 w-4 text-green-500" />
                                                                     <div className="flex flex-col">
-                                                                        <span>防护模式</span>
+                                                                        <span>{t('site.dialog.protectionMode')}</span>
                                                                         <span className="text-xs text-muted-foreground">
-                                                                            记录并拦截攻击
+                                                                            {t('site.dialog.protectionDescription')}
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -563,7 +565,7 @@ export function SiteForm({
                         {/* 提交按钮 */}
                         <div className="flex justify-end gap-2">
                             <Button type="submit" disabled={isLoading}>
-                                {isLoading ? '提交中...' : mode === 'create' ? '创建站点' : '更新站点'}
+                                {isLoading ? t('site.dialog.submitting') : mode === 'create' ? t('site.dialog.createSite') : t('site.dialog.updateSite')}
                             </Button>
                         </div>
                     </form>

@@ -8,8 +8,11 @@ import { Settings } from 'lucide-react'
 import { AdvancedErrorDisplay } from '@/components/common/error/errorDisplay'
 import { Card } from '@/components/ui/card'
 import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
+import { useTranslation } from 'react-i18next'
 
 export default function GlobalSettingPage() {
+    const { t } = useTranslation()
+    
     // 获取配置数据
     const {
         config,
@@ -71,10 +74,10 @@ export default function GlobalSettingPage() {
                 <Card className="border-none shadow-none gap-4 flex flex-col bg-zinc-50 rounded-md p-4">
                     <div className="flex items-center gap-2">
                         <Settings className="h-5 w-5 text-primary" />
-                        <h2 className="text-xl font-semibold">通用设置</h2>
+                        <h2 className="text-xl font-semibold">{t("globalSetting.title")}</h2>
                     </div>
                     <p className="text-muted-foreground">
-                        部分设置需要重启引擎才会生效，例如站点的变更，引擎的配置
+                        {t("globalSetting.description")}
                     </p>
                 </Card>
 

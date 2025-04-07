@@ -14,6 +14,7 @@ import {
     dialogHeaderAnimation,
     dialogContentItemAnimation
 } from '@/components/ui/animation/dialog-animation'
+import { useTranslation } from 'react-i18next'
 
 interface CertificateDialogProps {
     open: boolean
@@ -28,11 +29,13 @@ export function CertificateDialog({
     mode = 'create',
     certificate = null
 }: CertificateDialogProps) {
+    const { t } = useTranslation()
+
     // 根据模式确定标题和描述
-    const title = mode === 'create' ? '创建新证书' : '更新证书'
+    const title = mode === 'create' ? t("certificate.dialog.createTitle") : t("certificate.dialog.updateTitle")
     const description = mode === 'create' 
-        ? '请填写证书信息并上传公钥和私钥文件，或直接粘贴内容。系统将自动解析证书信息。'
-        : '编辑证书信息，修改后将自动保存。'
+        ? t("certificate.dialog.createDescription")
+        : t("certificate.dialog.updateDescription")
     
     // 根据模式准备表单默认值
     const defaultValues = mode === 'update' && certificate 

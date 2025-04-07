@@ -15,8 +15,10 @@ import { SiteDialog } from "@/feature/site/components/SiteDialog"
 import { DeleteSiteDialog } from "@/feature/site/components/DeleteSiteDialog"
 import { Site } from "@/types/site"
 import { TabsAnimationProvider } from "@/components/ui/animation/components/tab-animation"
+import { useTranslation } from "react-i18next"
 
 export default function SiteManagerPage() {
+    const { t } = useTranslation()
     const [view, setView] = useState<'grid' | 'table'>('grid')
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -51,7 +53,7 @@ export default function SiteManagerPage() {
     return (
         <Card className="p-6 w-full h-full border-none shadow-none">
             <div className="flex justify-between items-center mb-6  bg-zinc-50 rounded-md p-4">
-                <h2 className="text-xl font-semibold">站点管理</h2>
+                <h2 className="text-xl font-semibold">{t('site.management')}</h2>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"
@@ -60,7 +62,7 @@ export default function SiteManagerPage() {
                         className="flex items-center gap-1"
                     >
                         <RefreshCw className="h-3.5 w-3.5" />
-                        刷新
+                        {t('site.refresh')}
                     </Button>
                     <Button
                         size="sm"
@@ -68,7 +70,7 @@ export default function SiteManagerPage() {
                         className="flex items-center gap-1"
                     >
                         <Plus className="h-3.5 w-3.5" />
-                        添加站点
+                        {t('site.add')}
                     </Button>
                 </div>
             </div>
@@ -77,11 +79,11 @@ export default function SiteManagerPage() {
                 <TabsList className="mb-4">
                     <TabsTrigger value="grid" className="flex items-center gap-1">
                         <LayoutGrid className="h-4 w-4" />
-                        <span>卡片视图</span>
+                        <span>{t('site.view.cardView')}</span>
                     </TabsTrigger>
                     <TabsTrigger value="table" className="flex items-center gap-1">
                         <TableIcon className="h-4 w-4" />
-                        <span>表格视图</span>
+                        <span>{t('site.view.tableView')}</span>
                     </TabsTrigger>
                 </TabsList>
 

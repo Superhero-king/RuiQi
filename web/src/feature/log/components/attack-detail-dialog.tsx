@@ -15,6 +15,7 @@ import {
   dialogContentAnimation,
   dialogContentItemAnimation
 } from "@/components/ui/animation/dialog-animation"
+import { useTranslation } from "react-i18next"
 
 interface AttackDetailDialogProps {
     open: boolean
@@ -25,6 +26,7 @@ interface AttackDetailDialogProps {
 export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDialogProps) {
     const [copyState, setCopyState] = useState<{ [key: string]: boolean }>({})
     const [encoding, setEncoding] = useState("UTF-8")
+    const { t } = useTranslation()
 
     const handleCopy = (text: string, key: string) => {
         navigator.clipboard.writeText(text).then(() => {
@@ -55,10 +57,10 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                 {isHighRisk && (
                                                     <AlertTriangle className="h-5 w-5 text-destructive" />
                                                 )}
-                                                攻击日志详情
+                                                {t("attackDetail.title")}
                                             </DialogTitle>
                                             {isHighRisk && (
-                                                <Badge variant="destructive" className="ml-2">高危攻击</Badge>
+                                                <Badge variant="destructive" className="ml-2">{t("attackDetail.highRiskAttack")}</Badge>
                                             )}
                                         </div>
                                     </motion.div>
@@ -71,20 +73,20 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                             <Card className={`p-6 ${isHighRisk ? 'border-destructive/20 bg-destructive/5' : ''}`}>
                                                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                                                     <Shield className="h-5 w-5" />
-                                                    攻击概述
+                                                    {t("attackDetail.overview")}
                                                 </h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div className="space-y-4">
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">攻击目标</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("attackDetail.target")}</span>
                                                             <div className="font-medium truncate">{data.target}</div>
                                                         </div>
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">攻击信息</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("attackDetail.message")}</span>
                                                             <div className="font-medium">{data.message}</div>
                                                         </div>
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">请求 ID</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("requestId")}</span>
                                                             <div className="font-mono text-sm flex items-center gap-1">
                                                                 {data.requestId}
                                                                 <Button
@@ -103,7 +105,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                     </div>
                                                     <div className="space-y-4">
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">规则 ID</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("ruleId")}</span>
                                                             <div className="font-medium flex items-center gap-2">
                                                                 {data.ruleId}
                                                                 <Button
@@ -111,13 +113,13 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                     size="sm"
                                                                     className="h-7 text-xs"
                                                                 >
-                                                                    查看规则详情
+                                                                    {t("attackDetail.viewRuleDetail")}
                                                                     <ArrowUpRight className="h-3 w-3 ml-1" />
                                                                 </Button>
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">攻击时间</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("attackDetail.attackTime")}</span>
                                                             <div className="font-medium">
                                                                 {format(new Date(data.createdAt), "yyyy-MM-dd HH:mm:ss")}
                                                             </div>
@@ -130,7 +132,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                         {/* 载荷信息 */}
                                         <motion.div {...dialogContentItemAnimation}>
                                             <Card className="p-6">
-                                                <h3 className="text-lg font-semibold mb-4">检测到的载荷</h3>
+                                                <h3 className="text-lg font-semibold mb-4">{t("attackDetail.detectedPayload")}</h3>
                                                 <div className="bg-primary/5 border border-primary/20 rounded-md p-4">
                                                     <div className="flex items-center justify-between">
                                                         <code className="text-sm break-all font-mono">{data.payload}</code>
@@ -154,10 +156,10 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 {/* 攻击来源 */}
                                                 <Card className="p-6">
-                                                    <h3 className="text-lg font-semibold mb-4">攻击来源</h3>
+                                                    <h3 className="text-lg font-semibold mb-4">{t("attackDetail.attackSource")}</h3>
                                                     <div className="space-y-4">
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">来源 IP</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("srcIp")}</span>
                                                             <div className="font-medium flex items-center justify-between">
                                                                 <span className="break-all font-mono">{data.srcIp}</span>
                                                                 <Button
@@ -165,12 +167,12 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                     size="sm"
                                                                     className="h-7 text-xs"
                                                                 >
-                                                                    拦截此 IP
+                                                                    {t("attackDetail.blockThisIp")}
                                                                 </Button>
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">来源端口</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("srcPort")}</span>
                                                             <div className="font-medium font-mono">{data.srcPort}</div>
                                                         </div>
                                                     </div>
@@ -178,14 +180,14 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
 
                                                 {/* 目标信息 */}
                                                 <Card className="p-6">
-                                                    <h3 className="text-lg font-semibold mb-4">目标信息</h3>
+                                                    <h3 className="text-lg font-semibold mb-4">{t("attackDetail.targetInfo")}</h3>
                                                     <div className="space-y-4">
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">目标 IP</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("dstIp")}</span>
                                                             <div className="font-medium font-mono break-all">{data.dstIp}</div>
                                                         </div>
                                                         <div>
-                                                            <span className="text-muted-foreground text-sm block mb-1">目标端口</span>
+                                                            <span className="text-muted-foreground text-sm block mb-1">{t("dstPort")}</span>
                                                             <div className="font-medium font-mono">{data.dstPort}</div>
                                                         </div>
                                                     </div>
@@ -198,7 +200,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                             <Card className="p-6">
                                                 <Tabs defaultValue="request" className="w-full">
                                                     <div className="flex justify-between items-center mb-4">
-                                                        <h3 className="text-lg font-semibold">技术详情</h3>
+                                                        <h3 className="text-lg font-semibold">{t("attackDetail.technicalDetails")}</h3>
                                                         <div className="flex items-center gap-2">
                                                             <Button
                                                                 variant="outline"
@@ -207,12 +209,12 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                 className="flex items-center gap-1 h-8"
                                                             >
                                                                 {copyState['curl'] ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                                                复制 cURL
+                                                                {t("attackDetail.copyCurl")}
                                                             </Button>
 
                                                             <Select value={encoding} onValueChange={setEncoding}>
                                                                 <SelectTrigger className="w-[110px] h-8">
-                                                                    <SelectValue placeholder="编码" />
+                                                                    <SelectValue placeholder={t("attackDetail.encoding")} />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
                                                                     <SelectItem value="UTF-8">UTF-8</SelectItem>
@@ -224,9 +226,9 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                     </div>
 
                                                     <TabsList className="mb-3 w-full">
-                                                        <TabsTrigger value="request" className="flex-1">请求</TabsTrigger>
-                                                        <TabsTrigger value="response" className="flex-1">响应</TabsTrigger>
-                                                        <TabsTrigger value="logs" className="flex-1">日志</TabsTrigger>
+                                                        <TabsTrigger value="request" className="flex-1">{t("attackDetail.request")}</TabsTrigger>
+                                                        <TabsTrigger value="response" className="flex-1">{t("attackDetail.response")}</TabsTrigger>
+                                                        <TabsTrigger value="logs" className="flex-1">{t("attackDetail.logs")}</TabsTrigger>
                                                     </TabsList>
 
                                                     <div className="border rounded-md overflow-hidden bg-muted/20">
@@ -239,7 +241,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                     onClick={() => handleCopy(data.request, 'requestCopy')}
                                                                 >
                                                                     {copyState['requestCopy'] ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                                                                    复制全部
+                                                                    {t("attackDetail.copyAll")}
                                                                 </Button>
                                                             </div>
                                                             <div className="relative">
@@ -258,7 +260,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                     onClick={() => handleCopy(data.response, 'responseCopy')}
                                                                 >
                                                                     {copyState['responseCopy'] ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                                                                    复制全部
+                                                                    {t("attackDetail.copyAll")}
                                                                 </Button>
                                                             </div>
                                                             <div className="relative">
@@ -277,7 +279,7 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                                     onClick={() => handleCopy(data.logs, 'logsCopy')}
                                                                 >
                                                                     {copyState['logsCopy'] ? <Check className="h-3 w-3 mr-1" /> : <Copy className="h-3 w-3 mr-1" />}
-                                                                    复制全部
+                                                                    {t("attackDetail.copyAll")}
                                                                 </Button>
                                                             </div>
                                                             <div className="relative">

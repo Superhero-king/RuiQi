@@ -9,8 +9,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLogin } from '../hooks';
 import { loginSchema, LoginFormValues } from '@/validation/auth';
+import { useTranslation } from 'react-i18next';
 
 export function LoginForm() {
+  const { t } = useTranslation();
   const { login, isLoading, error, clearError } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -34,9 +36,9 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md mx-auto shadow-lg">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">登录</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">{t('auth.login')}</CardTitle>
         <CardDescription className="text-center">
-          输入您的账号和密码登录系统
+          {t('auth.loginDescription')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -53,12 +55,12 @@ export function LoginForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>用户名</FormLabel>
+                  <FormLabel>{t('auth.username')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                       <Input 
-                        placeholder="输入用户名" 
+                        placeholder={t('auth.usernamePlaceholder')} 
                         className="pl-10" 
                         {...field} 
                         onChange={(e) => {
@@ -78,13 +80,13 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>密码</FormLabel>
+                  <FormLabel>{t('auth.password')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <LockKeyhole className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                       <Input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="输入密码"
+                        placeholder={t('auth.passwordPlaceholder')}
                         className="pl-10 pr-10"
                         {...field}
                         onChange={(e) => {
@@ -117,14 +119,14 @@ export function LoginForm() {
               className="w-full mt-6" 
               disabled={isLoading}
             >
-              {isLoading ? '登录中...' : '登录'}
+              {isLoading ? t('auth.loggingIn') : t('auth.login')}
             </Button>
           </form>
         </Form>
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">
-          Simple WAF 管理系统
+          {t('sidebar.title')}
         </p>
       </CardFooter>
     </Card>

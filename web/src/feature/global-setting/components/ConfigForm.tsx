@@ -27,6 +27,7 @@ import {
 import { useUpdateConfig, getEngineNameConstant } from '../hooks/useConfig'
 import { AdvancedErrorDisplay } from '@/components/common/error/errorDisplay'
 import { LanguageSelector } from '@/components/common/language-selector'
+import { useTranslation } from 'react-i18next'
 
 interface ConfigFormProps {
     config?: ConfigResponse
@@ -36,6 +37,7 @@ interface ConfigFormProps {
 export function ConfigForm({ config, isLoading }: ConfigFormProps) {
     const { updateConfig, isLoading: isUpdating, error, clearError } = useUpdateConfig()
     const [showThreadWarning, setShowThreadWarning] = useState(false)
+    const { t } = useTranslation()
 
     // 获取引擎名称
     const engineName = getEngineNameConstant()
@@ -128,7 +130,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
             <CardContent className="p-0 flex flex-col gap-8">
                 <div className="flex items-center gap-2">
                     <Shield className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-medium">通用配置</h3>
+                    <h3 className="text-lg font-medium">{t("globalSetting.config.generalConfig")}</h3>
                 </div>
 
                 <Form {...form}>
@@ -141,7 +143,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                 <FormItem>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Cpu className="h-4 w-4 text-muted-foreground" />
-                                        <FormLabel>引擎线程数</FormLabel>
+                                        <FormLabel>{t("globalSetting.config.engineThreads")}</FormLabel>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <FormControl className="flex-1">
@@ -158,13 +160,13 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                         </div>
                                     </div>
                                     <FormDescription>
-                                        设置HAProxy的线程数，范围0-256，需重启生效
+                                        {t("globalSetting.config.threadsDescription")}
                                     </FormDescription>
                                     {showThreadWarning && (
                                         <Alert variant="default" className="mt-2 bg-zinc-50 border-none shadow-none">
                                             <AlertCircle className="h-4 w-4" />
                                             <AlertDescription>
-                                                设置为0时，系统将根据CPU核心数自动分配线程数
+                                                {t("globalSetting.config.threadsWarning")}
                                             </AlertDescription>
                                         </Alert>
                                     )}
@@ -182,10 +184,10 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2">
                                             <Shield className="h-4 w-4 text-muted-foreground" />
-                                            <FormLabel className="text-base">响应检测</FormLabel>
+                                            <FormLabel className="text-base">{t("globalSetting.config.responseCheck")}</FormLabel>
                                         </div>
                                         <FormDescription>
-                                            启用WAF对响应内容的检测，需重启生效
+                                            {t("globalSetting.config.responseCheckDescription")}
                                         </FormDescription>
                                     </div>
                                     <FormControl>
@@ -207,10 +209,10 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                     <div className="space-y-0.5">
                                         <div className="flex items-center gap-2">
                                             <Bug className="h-4 w-4 text-muted-foreground" />
-                                            <FormLabel className="text-base">调试模式</FormLabel>
+                                            <FormLabel className="text-base">{t("globalSetting.config.debugMode")}</FormLabel>
                                         </div>
                                         <FormDescription>
-                                            启用系统调试模式，会产生更详细的日志，需重启生效
+                                            {t("globalSetting.config.debugModeDescription")}
                                         </FormDescription>
                                     </div>
                                     <FormControl>
@@ -231,17 +233,17 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                 <FormItem>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Code className="h-4 w-4 text-muted-foreground" />
-                                        <FormLabel>引擎指令设置</FormLabel>
+                                        <FormLabel>{t("globalSetting.config.engineDirectives")}</FormLabel>
                                     </div>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="输入引擎指令配置..."
+                                            placeholder={t("globalSetting.config.engineDirectivesPlaceholder")}
                                             className="min-h-[200px] font-mono text-sm"
                                             {...field}
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        配置WAF引擎的核心指令，使用指令语法，需重启生效
+                                        {t("globalSetting.config.engineDirectivesDescription")}
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -256,7 +258,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                 <FormItem>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Folder className="h-4 w-4 text-muted-foreground" />
-                                        <FormLabel>HAProxy配置根目录</FormLabel>
+                                        <FormLabel>{t("globalSetting.config.haproxyConfigDir")}</FormLabel>
                                     </div>
                                     <FormControl>
                                         <Input
@@ -265,7 +267,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        HAProxy配置文件存放的根目录，需重启生效
+                                        {t("globalSetting.config.haproxyConfigDirDescription")}
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -280,7 +282,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                 <FormItem>
                                     <div className="flex items-center gap-2 mb-2">
                                         <Terminal className="h-4 w-4 text-muted-foreground" />
-                                        <FormLabel>HAProxy可执行文件路径</FormLabel>
+                                        <FormLabel>{t("globalSetting.config.haproxyBinPath")}</FormLabel>
                                     </div>
                                     <FormControl>
                                         <Input
@@ -289,7 +291,7 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        HAProxy二进制执行文件的路径，需重启生效
+                                        {t("globalSetting.config.haproxyBinPathDescription")}
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -301,10 +303,10 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                             <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
                                     <Globe className="h-4 w-4 text-muted-foreground" />
-                                    <div className="text-base font-medium">国际化</div>
+                                    <div className="text-base font-medium">{t("globalSetting.config.internationalization")}</div>
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                    设置系统界面语言
+                                    {t("globalSetting.config.internationalizationDescription")}
                                 </div>
                             </div>
                             <LanguageSelector />
@@ -326,12 +328,12 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                     {isUpdating ? (
                         <>
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            保存中...
+                            {t("globalSetting.config.saving")}
                         </>
                     ) : (
                         <>
                             <Save className="h-4 w-4" />
-                            保存设置
+                            {t("globalSetting.config.saveSettings")}
                         </>
                     )}
                 </Button>

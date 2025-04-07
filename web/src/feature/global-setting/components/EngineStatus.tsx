@@ -14,6 +14,7 @@ import {
     Loader2,
     Activity
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface EngineStatusProps {
     status?: RunnerStatusResponse
@@ -37,31 +38,32 @@ export function EngineStatus({
     isControlLoading
 }: EngineStatusProps) {
     const isRunning = status?.isRunning || false
+    const { t } = useTranslation()
 
     return (
         <Card className="border-none shadow-none">
             <CardContent className="p-0">
                 <div className="flex items-center gap-2 mb-4">
                     <Activity className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-medium">引擎状态</h3>
+                    <h3 className="text-lg font-medium">{t("globalSetting.engine.status")}</h3>
                 </div>
 
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="text-sm font-medium">当前状态:</div>
+                    <div className="text-sm font-medium">{t("globalSetting.engine.currentStatus")}</div>
                     {isLoading ? (
                         <Badge variant="outline" className="gap-1">
                             <Loader2 className="h-3 w-3 animate-spin" />
-                            <span>加载中...</span>
+                            <span>{t("globalSetting.engine.loading")}</span>
                         </Badge>
                     ) : isRunning ? (
                         <Badge variant="outline" className="gap-1">
                             <CheckCircle className="h-3 w-3" />
-                            <span>运行中</span>
+                            <span>{t("globalSetting.engine.running")}</span>
                         </Badge>
                     ) : (
                         <Badge variant="destructive" className="gap-1">
                             <XCircle className="h-3 w-3" />
-                            <span>已停止</span>
+                            <span>{t("globalSetting.engine.stopped")}</span>
                         </Badge>
                     )}
                 </div>
@@ -79,7 +81,7 @@ export function EngineStatus({
                         ) : (
                             <Play className="h-4 w-4" />
                         )}
-                        {isControlLoading ? "处理中..." : "启动"}
+                        {isControlLoading ? t("globalSetting.engine.processing") : t("globalSetting.engine.start")}
                     </Button>
                     <Button
                         variant="outline"
@@ -93,7 +95,7 @@ export function EngineStatus({
                         ) : (
                             <Square className="h-4 w-4" />
                         )}
-                        {isControlLoading ? "处理中..." : "停止"}
+                        {isControlLoading ? t("globalSetting.engine.processing") : t("globalSetting.engine.stop")}
                     </Button>
                     <Button
                         variant="outline"
@@ -107,7 +109,7 @@ export function EngineStatus({
                         ) : (
                             <RefreshCw className="h-4 w-4" />
                         )}
-                        {isControlLoading ? "处理中..." : "重启"}
+                        {isControlLoading ? t("globalSetting.engine.processing") : t("globalSetting.engine.restart")}
                     </Button>
                     <Button
                         variant="destructive"
@@ -121,7 +123,7 @@ export function EngineStatus({
                         ) : (
                             <X className="h-4 w-4" />
                         )}
-                        {isControlLoading ? "处理中..." : "强制停止"}
+                        {isControlLoading ? t("globalSetting.engine.processing") : t("globalSetting.engine.forceStop")}
                     </Button>
                     <Button
                         variant="secondary"
@@ -135,7 +137,7 @@ export function EngineStatus({
                         ) : (
                             <RotateCw className="h-4 w-4" />
                         )}
-                        {isControlLoading ? "处理中..." : "热重载"}
+                        {isControlLoading ? t("globalSetting.engine.processing") : t("globalSetting.engine.reload")}
                     </Button>
                 </div>
             </CardContent>

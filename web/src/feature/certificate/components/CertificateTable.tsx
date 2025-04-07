@@ -20,8 +20,11 @@ import { CertificateDialog } from './CertificateDialog'
 import { Loader2 } from 'lucide-react'
 import { DataTable } from '@/components/table/motion-data-table'
 import { DeleteCertificateDialog } from './DeleteCertificateDialog'
+import { useTranslation } from 'react-i18next'
 
 export function CertificateTable() {
+    const { t } = useTranslation()
+    
     // 状态管理
     const [certificateDialogOpen, setCertificateDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -47,7 +50,19 @@ export function CertificateTable() {
             if (!lastPage || typeof lastPage.total === 'undefined') {
                 return undefined
             }
-            return lastPage.total > allPages.length * 20 ? allPages.length + 1 : undefined
+
+            // 检查allPages是否存在
+            if (!allPages) {
+                return undefined
+            }
+
+            // 计算已加载的项目总数（累加每页的实际items长度）
+            const loadedItemsCount = allPages.reduce((count, page) => {
+                return count + (page.items?.length || 0)
+            }, 0)
+
+            // 如果服务器返回的总数大于已加载的数量，则还有下一页
+            return lastPage.total > loadedItemsCount ? allPages.length + 1 : undefined
         },
         enabled: true,
     })
@@ -108,9 +123,9 @@ export function CertificateTable() {
 
     // 打开删除对话框
     const openDeleteDialog = (id: string) => {
-        setSelectedCertId(id);
-        setDeleteDialogOpen(true);
-    };
+        setSelectedCertId(id)
+        setDeleteDialogOpen(true)
+    }
 
     // 助手函数：检查证书是否即将过期（30天内）
     const isExpiringSoon = (expireDate: string): boolean => {
@@ -129,12 +144,12 @@ export function CertificateTable() {
     const columns: ColumnDef<Certificate>[] = [
         {
             accessorKey: 'name',
-            header: () => <div className="font-medium py-3.5">证书名称</div>,
+            header: () => <div className="font-medium py-3.5">{t("certificate.name")}</div>,
             cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
         },
         {
             accessorKey: 'domains',
-            header: () => <div className="font-medium py-3.5">域名</div>,
+            header: () => <div className="font-medium py-3.5">{t("certificate.domains")}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-1 max-w-xs">
                     {row.original.domains.map((domain, index) => (
@@ -147,20 +162,20 @@ export function CertificateTable() {
         },
         {
             accessorKey: 'issuerAndExpiry',
-            header: () => <div className="font-medium py-3.5">颁发机构与过期时间</div>,
+            header: () => <div className="font-medium py-3.5">{t("certificate.issuerAndExpiry")}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
                     <span className="text-sm">{row.original.issuerName}</span>
                     <span className="text-xs text-muted-foreground">
-                        过期时间: {new Date(row.original.expireDate).toLocaleDateString()}
+                        {t("certificate.expiryDate")}{new Date(row.original.expireDate).toLocaleDateString()}
                         {isExpiringSoon(row.original.expireDate) && (
                             <span className="ml-2 px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs">
-                                即将过期
+                                {t("certificate.expiringSoon")}
                             </span>
                         )}
                         {isExpired(row.original.expireDate) && (
                             <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-800 rounded text-xs">
-                                已过期
+                                {t("certificate.expired")}
                             </span>
                         )}
                     </span>
@@ -181,14 +196,14 @@ export function CertificateTable() {
                             onClick={() => openUpdateDialog(row.original)}
                         >
                             <Pencil className="mr-2 h-4 w-4" />
-                            编辑
+                            {t("certificate.edit")}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => openDeleteDialog(row.original.id)}
                             className="text-red-600"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            删除
+                            {t("certificate.delete")}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
@@ -208,7 +223,7 @@ export function CertificateTable() {
             <Card className="border-none shadow-none p-6 flex flex-col h-full">
                 {/* 标题和操作按钮 - 固定在顶部 */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold">证书管理</h2>
+                    <h2 className="text-xl font-semibold">{t("certificate.management")}</h2>
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
@@ -217,7 +232,7 @@ export function CertificateTable() {
                             className="flex items-center gap-1"
                         >
                             <RefreshCcw className="h-3.5 w-3.5" />
-                            刷新
+                            {t("certificate.refresh")}
                         </Button>
                         <Button
                             size="sm"
@@ -225,7 +240,7 @@ export function CertificateTable() {
                             className="flex items-center gap-1"
                         >
                             <Plus className="h-3.5 w-3.5" />
-                            添加证书
+                            {t("certificate.add")}
                         </Button>
                     </div>
                 </div>

@@ -33,6 +33,7 @@ import {
     gridItemAnimation,
     scrollFadeInAnimation
 } from '@/components/ui/animation/grid-animation'
+import { useTranslation } from 'react-i18next'
 
 interface SiteGridProps {
     onEdit: (site: Site) => void
@@ -40,6 +41,8 @@ interface SiteGridProps {
 }
 
 export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
+    const { t } = useTranslation()
+    
     // 引用用于无限滚动
     const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -143,14 +146,14 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                                             onClick={() => onEdit(site)}
                                         >
                                             <Pencil className="mr-2 h-4 w-4" />
-                                            编辑
+                                            {t("site.edit")}
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             onClick={() => onDelete(site.id)}
                                             className="text-red-600"
                                         >
                                             <Trash2 className="mr-2 h-4 w-4" />
-                                            删除
+                                            {t("site.delete")}
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -164,12 +167,12 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                                 {site.activeStatus ? (
                                     <Badge variant="outline" className="flex items-center gap-1 border-green-200 text-green-700">
                                         <CheckCircle className="h-3 w-3" />
-                                        <span>激活</span>
+                                        <span>{t("site.active")}</span>
                                     </Badge>
                                 ) : (
                                     <Badge variant="outline" className="flex items-center gap-1 border-gray-200 text-gray-400">
                                         <XCircle className="h-3 w-3" />
-                                        <span>未激活</span>
+                                        <span>{t("site.inactive")}</span>
                                     </Badge>
                                 )}
 
@@ -186,12 +189,12 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                                     site.wafMode === WAFMode.Protection ? (
                                         <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-green-200 text-green-700'}`}>
                                             <Shield className="h-3 w-3" />
-                                            <span>防护模式</span>
+                                            <span>{t("site.dialog.protectionMode")}</span>
                                         </Badge>
                                     ) : (
                                         <Badge variant="outline" className={`flex items-center gap-1 ${isInactive ? 'border-gray-200 text-gray-400' : 'border-blue-200 text-blue-700'}`}>
                                             <ShieldAlert className="h-3 w-3" />
-                                            <span>观察模式</span>
+                                            <span>{t("site.dialog.observationMode")}</span>
                                         </Badge>
                                     )
                                 )}
@@ -199,7 +202,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
 
                             {/* 上游服务器信息 */}
                             <div className={`space-y-1 ${isInactive ? 'text-gray-400' : ''}`}>
-                                <div className="text-sm font-medium">上游服务器:</div>
+                                <div className="text-sm font-medium">{t("site.card.upstreamServers")}</div>
                                 <div className="space-y-1">
                                     {site.backend.servers.map((server, index) => (
                                         <div key={index} className="flex items-center gap-1 text-xs pl-2">
@@ -216,7 +219,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
                             {/* 如果有证书，显示证书信息 */}
                             {site.enableHTTPS && site.certificate && (
                                 <div className={`space-y-1 ${isInactive ? 'text-gray-400' : ''}`}>
-                                    <div className="text-sm font-medium">证书信息:</div>
+                                    <div className="text-sm font-medium">{t("site.card.certInfo")}</div>
                                     <div className="text-xs pl-2">
                                         <span>{site.certificate.certName}</span>
                                         <span className="text-muted-foreground ml-2">
@@ -274,7 +277,7 @@ export function SiteGrid({ onEdit, onDelete }: SiteGridProps) {
         <div>
             {sites.length === 0 ? (
                 <div className="text-center py-10 text-muted-foreground">
-                    暂无站点数据
+                    {t("site.noData")}
                 </div>
             ) : (
                 <motion.div

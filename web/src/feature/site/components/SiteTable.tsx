@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Loader2 } from 'lucide-react'
 import { DataTable } from '@/components/table/motion-data-table'
+import { useTranslation } from 'react-i18next'
 
 interface SiteTableProps {
     onEdit: (site: Site) => void
@@ -35,6 +36,8 @@ interface SiteTableProps {
 }
 
 export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
+    const { t } = useTranslation()
+    
     // 引用用于无限滚动
     const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -106,7 +109,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
     const columns: ColumnDef<Site>[] = [
         {
             accessorKey: 'name',
-            header: () => <div className="font-medium py-3.5">站点名称</div>,
+            header: () => <div className="font-medium py-3.5">{t('site.name')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
@@ -118,7 +121,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'domain',
-            header: () => <div className="font-medium py-3.5">域名</div>,
+            header: () => <div className="font-medium py-3.5">{t('site.domain')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
@@ -131,7 +134,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'listenPort',
-            header: () => <div className="font-medium py-3.5">监听端口</div>,
+            header: () => <div className="font-medium py-3.5">{t('site.listenPort')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
@@ -143,7 +146,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'backend',
-            header: () => <div className="font-medium py-3.5">上游服务器</div>,
+            header: () => <div className="font-medium py-3.5">{t('site.backend')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 const servers = row.original.backend.servers
@@ -165,7 +168,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'enableHTTPS',
-            header: () => <div className="font-medium py-3.5">HTTPS</div>,
+            header: () => <div className="font-medium py-3.5">{t('site.https')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 const enabled = row.original.enableHTTPS
@@ -174,11 +177,11 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                     <div className={`${isInactive ? 'text-gray-400' : ''}`}>
                         {enabled ? (
                             <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
-                                已启用
+                                {t('site.enabled')}
                             </Badge>
                         ) : (
                             <Badge variant="outline" className={isInactive ? 'text-gray-400 border-gray-200' : ''}>
-                                未启用
+                                {t('site.disabled')}
                             </Badge>
                         )}
                     </div>
@@ -187,7 +190,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'activeStatus',
-            header: () => <div className="font-medium py-3.5">站点状态</div>,
+            header: () => <div className="font-medium py-3.5">{t('site.status')}</div>,
             cell: ({ row }) => {
                 const isActive = row.original.activeStatus
 
@@ -196,12 +199,12 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                         {isActive ? (
                             <>
                                 <CheckCircle className="h-4 w-4 text-green-500" />
-                                <span className="text-green-600">激活</span>
+                                <span className="text-green-600">{t('site.active')}</span>
                             </>
                         ) : (
                             <>
                                 <XCircle className="h-4 w-4 text-gray-400" />
-                                <span className="text-gray-400">未激活</span>
+                                <span className="text-gray-400">{t('site.inactive')}</span>
                             </>
                         )}
                     </div>
@@ -210,7 +213,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'wafStatus',
-            header: () => <div className="font-medium py-3.5">WAF状态</div>,
+            header: () => <div className="font-medium py-3.5">{t('site.wafStatus')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 const wafEnabled = row.original.wafEnabled
@@ -219,7 +222,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                 if (!wafEnabled) {
                     return (
                         <Badge variant="outline" className={isInactive ? 'text-gray-400 border-gray-200' : ''}>
-                            未启用
+                            {t('site.disabled')}
                         </Badge>
                     )
                 }
@@ -229,12 +232,12 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                         {wafMode === WAFMode.Protection ? (
                             <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1">
                                 <Shield className="h-3 w-3" />
-                                <span>防护模式</span>
+                                <span>{t('site.dialog.protectionMode')}</span>
                             </Badge>
                         ) : (
                             <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100 flex items-center gap-1">
                                 <ShieldAlert className="h-3 w-3" />
-                                <span>观察模式</span>
+                                <span>{t('site.dialog.observationMode')}</span>
                             </Badge>
                         )}
                     </div>
@@ -255,14 +258,14 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                             onClick={() => onEdit(row.original)}
                         >
                             <Pencil className="mr-2 h-4 w-4" />
-                            编辑
+                            {t('site.edit')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => onDelete(row.original.id)}
                             className="text-red-600"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            删除
+                            {t('site.delete')}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

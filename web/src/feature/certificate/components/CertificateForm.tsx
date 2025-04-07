@@ -19,6 +19,7 @@ import { CertificateCreateRequest, ParsedCertificate } from '@/types/certificate
 import { useCreateCertificate, useUpdateCertificate } from '../hooks/useCertificate'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
+import { useTranslation } from 'react-i18next'
 
 interface CertificateFormProps {
     mode?: 'create' | 'update'
@@ -38,6 +39,8 @@ export function CertificateForm({
         privateKey: '',
     },
 }: CertificateFormProps) {
+    const { t } = useTranslation()
+    
     // 状态管理
     const [parsedInfo, setParsedInfo] = useState<ParsedCertificate | null>(null)
     const [publicKeyFile, setPublicKeyFile] = useState<string | null>(null)
@@ -93,12 +96,12 @@ export function CertificateForm({
 
             // 设置错误信息，但不阻止表单提交
             if (error instanceof Error) {
-                setParseError(`证书解析失败: ${error.message}`)
+                setParseError(`${t("certificate.dialog.parseFailed")}${error.message}`)
             } else {
-                setParseError('证书解析失败: 未知错误')
+                setParseError(`${t("certificate.dialog.parseFailed")}${t("certificate.dialog.unknownError")}`)
             }
         }
-    }, [form])
+    }, [form, t])
 
     // 处理公钥文件上传
     const handlePublicKeyFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,14 +121,14 @@ export function CertificateForm({
                 console.error('文件读取错误:', error)
 
                 // 文件读取错误显示在表单上
-                const errorMessage = error instanceof Error ? error.message : '未知错误'
+                const errorMessage = error instanceof Error ? error.message : t("certificate.dialog.unknownError")
                 form.setError('publicKey', {
                     type: 'manual',
-                    message: `文件读取失败: ${errorMessage}`
+                    message: `${t("certificate.dialog.fileReadFailed")}${errorMessage}`
                 })
             }
         }
-    }, [form, tryParseCertificate])
+    }, [form, tryParseCertificate, t])
 
     // 处理私钥文件上传
     const handlePrivateKeyFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,14 +145,14 @@ export function CertificateForm({
                 console.error('文件读取错误:', error)
 
                 // 文件读取错误显示在表单上
-                const errorMessage = error instanceof Error ? error.message : '未知错误'
+                const errorMessage = error instanceof Error ? error.message : t("certificate.dialog.unknownError")
                 form.setError('privateKey', {
                     type: 'manual',
-                    message: `文件读取失败: ${errorMessage}`
+                    message: `${t("certificate.dialog.fileReadFailed")}${errorMessage}`
                 })
             }
         }
-    }, [form])
+    }, [form, t])
 
     // 清除公钥文件
     const clearPublicKeyFile = useCallback(() => {
@@ -212,16 +215,16 @@ export function CertificateForm({
 
         return (
             <div className="p-4 border rounded-md bg-zinc-50">
-                <h3 className="text-sm font-medium mb-2">证书解析信息</h3>
+                <h3 className="text-sm font-medium mb-2">{t("certificate.dialog.parsedInfo")}</h3>
                 <div className="space-y-2 text-sm">
-                    <InfoRow label="颁发机构" value={parsedInfo.issuerName} />
+                    <InfoRow label={t("certificate.dialog.issuer")} value={parsedInfo.issuerName} />
                     <InfoRow
-                        label="过期日期"
+                        label={t("certificate.dialog.expiryDate")}
                         value={new Date(parsedInfo.expireDate).toLocaleDateString()}
                     />
-                    <InfoRow label="指纹" value={parsedInfo.fingerPrint} className="font-mono text-xs" />
+                    <InfoRow label={t("certificate.dialog.fingerprint")} value={parsedInfo.fingerPrint} className="font-mono text-xs" />
                     <div className="flex">
-                        <span className="w-24 text-muted-foreground">域名:</span>
+                        <span className="w-24 text-muted-foreground">{t("certificate.dialog.domains")}:</span>
                         <div className="flex flex-wrap gap-1">
                             {parsedInfo.domains.map((domain, index) => (
                                 <span key={index} className="px-2 py-0.5 bg-gray-200 rounded text-xs">
@@ -233,7 +236,7 @@ export function CertificateForm({
                 </div>
             </div>
         )
-    }, [parsedInfo])
+    }, [parsedInfo, t])
 
     return (
         <AnimatedContainer>
@@ -261,9 +264,9 @@ export function CertificateForm({
                         name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>证书名称</FormLabel>
+                                <FormLabel>{t("certificate.dialog.certName")}</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="输入证书名称" {...field} />
+                                    <Input placeholder={t("certificate.dialog.certName")} {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -275,10 +278,10 @@ export function CertificateForm({
                         name="description"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>描述 (可选)</FormLabel>
+                                <FormLabel>{t("certificate.dialog.description")}</FormLabel>
                                 <FormControl>
                                     <Textarea
-                                        placeholder="输入证书描述"
+                                        placeholder={t("certificate.dialog.descriptionPlaceholder")}
                                         className="resize-none"
                                         {...field}
                                     />
@@ -290,7 +293,7 @@ export function CertificateForm({
 
                     {/* 公钥文件上传 */}
                     <div className="space-y-2">
-                        <FormLabel>公钥文件</FormLabel>
+                        <FormLabel>{t("certificate.dialog.publicKeyFile")}</FormLabel>
                         {publicKeyFile ? (
                             <FilePreview
                                 filename={publicKeyFile}
@@ -298,7 +301,7 @@ export function CertificateForm({
                             />
                         ) : (
                             <FileUpload
-                                label="上传公钥文件"
+                                label={t("certificate.dialog.uploadPublicKey")}
                                 accept=".pem,.crt,.cert,.key"
                                 onChange={handlePublicKeyFileChange}
                             />
@@ -311,10 +314,10 @@ export function CertificateForm({
                         name="publicKey"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>公钥内容</FormLabel>
+                                <FormLabel>{t("certificate.dialog.publicKeyContent")}</FormLabel>
                                 <FormControl>
                                     <Textarea
-                                        placeholder="输入PEM格式的公钥内容"
+                                        placeholder={t("certificate.dialog.publicKeyPlaceholder")}
                                         className="font-mono text-xs h-32"
                                         {...field}
                                         onChange={(e) => {
@@ -330,7 +333,7 @@ export function CertificateForm({
 
                     {/* 私钥文件上传 */}
                     <div className="space-y-2">
-                        <FormLabel>私钥文件</FormLabel>
+                        <FormLabel>{t("certificate.dialog.privateKeyFile")}</FormLabel>
                         {privateKeyFile ? (
                             <FilePreview
                                 filename={privateKeyFile}
@@ -338,7 +341,7 @@ export function CertificateForm({
                             />
                         ) : (
                             <FileUpload
-                                label="上传私钥文件"
+                                label={t("certificate.dialog.uploadPrivateKey")}
                                 accept=".pem,.key"
                                 onChange={handlePrivateKeyFileChange}
                             />
@@ -351,10 +354,10 @@ export function CertificateForm({
                         name="privateKey"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>私钥内容</FormLabel>
+                                <FormLabel>{t("certificate.dialog.privateKeyContent")}</FormLabel>
                                 <FormControl>
                                     <Textarea
-                                        placeholder="输入PEM格式的私钥内容"
+                                        placeholder={t("certificate.dialog.privateKeyPlaceholder")}
                                         className="font-mono text-xs h-32"
                                         {...field}
                                     />
@@ -370,7 +373,7 @@ export function CertificateForm({
                     {/* 提交按钮 */}
                     <div className="flex justify-end">
                         <Button type="submit" disabled={isLoading}>
-                            {isLoading ? '提交中...' : mode === 'create' ? '创建' : '更新'}
+                            {isLoading ? t("certificate.dialog.submitting") : mode === 'create' ? t("certificate.dialog.create") : t("certificate.dialog.update")}
                         </Button>
                     </div>
                 </form>
@@ -426,6 +429,8 @@ interface FileUploadProps {
 }
 
 function FileUpload({ label, accept, onChange }: FileUploadProps) {
+    const { t } = useTranslation()
+    
     return (
         <div className="flex items-center gap-2">
             <Button
@@ -445,7 +450,7 @@ function FileUpload({ label, accept, onChange }: FileUploadProps) {
                     />
                 </label>
             </Button>
-            <span className="text-sm text-muted-foreground">或直接输入内容</span>
+            <span className="text-sm text-muted-foreground">{t("certificate.dialog.orEnterContent")}</span>
         </div>
     )
 }

@@ -129,7 +129,6 @@ export default function EventsPage() {
             cell: ({ row }) => {
                 const isOngoing = row.getValue("isOngoing")
                 const minutes = row.original.durationInMinutes || 0
-                console.log(minutes)
                 const hours = Math.floor(minutes / 60)
                 const remainingMinutes = Math.round(minutes % 60)
                 const durationText = hours > 0
