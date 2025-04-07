@@ -556,7 +556,7 @@ defaults tcp
     timeout connect 10s
 frontend stats from http
   mode http
-  bind :8404
+  bind *:8404
   stats enable
   stats uri /stats
   stats show-modules

@@ -426,7 +426,7 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 		Request:   buildRequestString(req, headers),
 		Response:  "", // 暂时不处理响应
 		Domain:    getHostFromRequest(req),
-		SrcIP:     req.SrcIp.String(),
+		SrcIP:     getRealClientIP(req),
 		DstIP:     req.DstIp.String(),
 		SrcPort:   int(req.SrcPort),
 		DstPort:   int(req.DstPort),
@@ -652,4 +652,72 @@ func getHostFromRequest(req *applicationRequest) string {
 		return dstIpStr[:colonIndex]
 	}
 	return dstIpStr
+}
+
+// getRealClientIP 从多种HTTP头部获取客户端真实IP
+func getRealClientIP(req *applicationRequest) string {
+	if req == nil {
+		return ""
+	}
+
+	// 按优先级尝试不同的头部
+	headers := []string{
+		"x-forwarded-for",  // 最常用，链式格式
+		"x-real-ip",        // Nginx常用
+		"true-client-ip",   // Akamai
+		"cf-connecting-ip", // Cloudflare
+		"fastly-client-ip", // Fastly
+		"x-client-ip",      // 通用
+		"x-original-forwarded-for",
+		"forwarded", // 标准头部
+		"x-cluster-client-ip",
+	}
+
+	// 尝试从各个头部获取IP
+	for _, header := range headers {
+		if value, err := getHeaderValue(req.Headers, header); err == nil && value != "" {
+			// 对于X-Forwarded-For和类似的链式格式，提取第一个IP
+			if header == "x-forwarded-for" || header == "x-original-forwarded-for" {
+				ips := strings.Split(value, ",")
+				if len(ips) > 0 {
+					ip := strings.TrimSpace(ips[0])
+					if ip != "" {
+						return ip
+					}
+				}
+			} else if header == "forwarded" { // 对于Forwarded头部，需要特殊处理
+				// 解析Forwarded头部，格式如：for=client;proto=https;by=proxy
+				parts := strings.Split(value, ";")
+				for _, part := range parts {
+					kv := strings.SplitN(part, "=", 2)
+					if len(kv) == 2 && strings.TrimSpace(kv[0]) == "for" {
+						// 去除可能的引号和IPv6方括号
+						ip := strings.TrimSpace(kv[1])
+						ip = strings.Trim(ip, "\"")
+
+						// 处理IPv6地址特殊格式
+						if strings.HasPrefix(ip, "[") && strings.HasSuffix(ip, "]") {
+							ip = ip[1 : len(ip)-1]
+						}
+
+						if ip != "" {
+							return ip
+						}
+					}
+				}
+			} else { // 其他头部直接返回值
+				ip := strings.TrimSpace(value)
+				if ip != "" {
+					return ip
+				}
+			}
+		}
+	}
+
+	// 如果所有头部都没有，返回源IP
+	if req.SrcIp.IsValid() {
+		return req.SrcIp.String()
+	}
+
+	return ""
 }
