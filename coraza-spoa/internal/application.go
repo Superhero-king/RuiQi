@@ -479,10 +479,10 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 				firewallLog.URI = uri
 			}
 			if clientIP := matchedRule.ClientIPAddress(); clientIP != "" {
-				firewallLog.SrcIP = clientIP
+				firewallLog.ClientIP = clientIP
 			}
 			if serverIP := matchedRule.ServerIPAddress(); serverIP != "" {
-				firewallLog.DstIP = serverIP
+				firewallLog.ServerIP = serverIP
 			}
 		}
 	}

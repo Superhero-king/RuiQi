@@ -201,7 +201,7 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		acl_http := &models.ACL{
 			ACLName:   fmt.Sprintf("host_%s", getDashDomain(site.Domain)), // 使用ACLName字段
 			Criterion: "hdr(host) -i -m end",
-			Value:     "." + site.Domain, // 使用Value字段
+			Value:     site.Domain, // 使用Value字段
 			// Criterion: "hdr(host) -i",                                     // 使用Criterion字段
 			// Value:     site.Domain,                                        // 使用Value字段
 		}
@@ -298,7 +298,7 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		acl_https := &models.ACL{
 			ACLName:   fmt.Sprintf("host_%s", getDashDomain(site.Domain)), // 使用ACLName字段
 			Criterion: "hdr(host) -i -m end",                              // 修改Criterion字段使用-m end
-			Value:     "." + site.Domain,                                  // 在域名前加上点号
+			Value:     site.Domain,                                        // 在域名前加上点号
 			// Criterion: "hdr(host) -i",                                     // 使用Criterion字段
 			// Value:     site.Domain,                                        // 使用Value字段
 		}
@@ -770,12 +770,9 @@ func (s *HAProxyServiceImpl) AddCorazaBackend() error {
 
 	coraza_backend := &models.Backend{
 		BackendBase: models.BackendBase{
-			Name: "coraza-spoa",
-			Mode: "tcp",
-			From: "tcp",
-			Forwardfor: &models.Forwardfor{
-				Enabled: StringP("enabled"),
-			},
+			Name:    "coraza-spoa",
+			Mode:    "tcp",
+			From:    "tcp",
 			Enabled: true,
 		},
 	}
@@ -1153,9 +1150,6 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			DefaultBackend: fmt.Sprintf("be_%d_https", port), // 设置默认后端
 			Enabled:        true,
 			From:           "tcp",
-			Forwardfor: &models.Forwardfor{
-				Enabled: StringP("enabled"),
-			},
 		},
 	}
 	err = s.confClient.CreateFrontend(fe_combined, transaction.ID, 0)
@@ -1229,9 +1223,6 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			Mode:    "tcp",
 			Enabled: true,
 			From:    "tcp",
-			Forwardfor: &models.Forwardfor{
-				Enabled: StringP("enabled"),
-			},
 		},
 	}
 	err = s.confClient.CreateBackend(be_http, transaction.ID, 0)
@@ -1259,9 +1250,6 @@ func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) er
 			Mode:    "tcp",
 			Enabled: true,
 			From:    "tcp",
-			Forwardfor: &models.Forwardfor{
-				Enabled: StringP("enabled"),
-			},
 		},
 	}
 	err = s.confClient.CreateBackend(be_https, transaction.ID, 0)

@@ -21,6 +21,8 @@ type WAFLog struct {
 	URI        string        `json:"uri" bson:"uri" example:"/api/v1/users"`                                                                                                // 请求URI路径
 	SrcIP      string        `json:"srcIp" bson:"srcIp" example:"192.168.1.1"`                                                                                              // 来源IP地址
 	DstIP      string        `json:"dstIp" bson:"dstIp" example:"10.0.0.1"`                                                                                                 // 目标IP地址
+	ClientIP   string        `json:"clientIp" bson:"clientIp" example:"192.168.1.1"`                                                                                        // 来源IP地址
+	ServerIP   string        `json:"serverIp" bson:"serverIp" example:"10.0.0.1"`                                                                                           // 目标IP地址
 	SrcPort    int           `json:"srcPort" bson:"srcPort" example:"52134"`                                                                                                // 来源端口
 	DstPort    int           `json:"dstPort" bson:"dstPort" example:"443"`                                                                                                  // 目标端口
 	Domain     string        `json:"domain" bson:"domain" example:"api.example.com"`                                                                                        // 目标域名
