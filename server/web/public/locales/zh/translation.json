@@ -27,7 +27,8 @@
         }
     },
     "common": {
-        "loading": "加载中..."
+        "loading": "加载中...",
+        "language": "选择语言"
     },
     "auth": {
         "login": "登录",
@@ -94,13 +95,14 @@
         "attackSource": "攻击来源",
         "blockThisIp": "拦截此 IP",
         "targetInfo": "目标信息",
-        "technicalDetails": "技术详情",
+        "technicalDetails": "详情",
         "copyCurl": "复制 cURL",
         "encoding": "编码",
         "request": "请求",
         "response": "响应",
         "logs": "日志",
-        "copyAll": "复制全部"
+        "copyAll": "复制全部",
+        "noResponse": "无数据"
     },
     "globalSetting": {
         "title": "通用设置",

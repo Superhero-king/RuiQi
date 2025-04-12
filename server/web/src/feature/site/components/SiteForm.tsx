@@ -40,7 +40,7 @@ import { InfoRow } from '@/feature/certificate/components/CertificateForm'
 import { useCreateSite, useUpdateSite } from '../hooks/useSites'
 import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
 import { useTranslation } from 'react-i18next'
-
+import { AnimatedButton } from '@/components/ui/animation/components/animated-button'
 interface SiteFormProps {
     mode?: 'create' | 'update'
     siteId?: string
@@ -564,9 +564,11 @@ export function SiteForm({
 
                         {/* 提交按钮 */}
                         <div className="flex justify-end gap-2">
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading ? t('site.dialog.submitting') : mode === 'create' ? t('site.dialog.createSite') : t('site.dialog.updateSite')}
-                            </Button>
+                            <AnimatedButton>
+                                <Button type="submit" disabled={isLoading}>
+                                    {isLoading ? t('site.dialog.submitting') : mode === 'create' ? t('site.dialog.createSite') : t('site.dialog.updateSite')}
+                                </Button>
+                            </AnimatedButton>
                         </div>
                     </form>
                 </Form>

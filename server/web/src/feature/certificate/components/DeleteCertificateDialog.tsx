@@ -17,6 +17,7 @@ import {
     dialogContentItemAnimation
 } from '@/components/ui/animation/dialog-animation'
 import { useTranslation } from 'react-i18next'
+import { AnimatedButton } from "@/components/ui/animation/components/animated-button"
 
 interface DeleteCertificateDialogProps {
     open: boolean
@@ -68,14 +69,18 @@ export function DeleteCertificateDialog({
                                     className="px-6 pb-6"
                                 >
                                     <AlertDialogFooter className="mt-2 flex justify-end space-x-2">
-                                        <AlertDialogCancel>{t("certificate.deleteDialog.cancel")}</AlertDialogCancel>
-                                        <AlertDialogAction
-                                            onClick={handleDeleteCertificate}
-                                            disabled={isLoading}
-                                            className="bg-red-600 hover:bg-red-700"
-                                        >
-                                            {isLoading ? t("certificate.deleteDialog.deleting") : t("certificate.deleteDialog.delete")}
-                                        </AlertDialogAction>
+                                        <AnimatedButton>
+                                            <AlertDialogCancel>{t("certificate.deleteDialog.cancel")}</AlertDialogCancel>
+                                        </AnimatedButton>
+                                        <AnimatedButton>
+                                            <AlertDialogAction
+                                                onClick={handleDeleteCertificate}
+                                                disabled={isLoading}
+                                                className="bg-red-600 hover:bg-red-700"
+                                            >
+                                                {isLoading ? t("certificate.deleteDialog.deleting") : t("certificate.deleteDialog.delete")}
+                                            </AlertDialogAction>
+                                        </AnimatedButton>
                                     </AlertDialogFooter>
                                 </motion.div>
                             </motion.div>

@@ -79,36 +79,37 @@ export default function LogsPage() {
 
     const columns: ColumnDef<WAFLog>[] = [
         {
-            header: t('attackTarget'),
+            accessorKey: "target",
+            header: () => <div className="whitespace-nowrap">{t('attackTarget')}</div>,
             cell: ({ row }) => (
-                <div className="max-w-[300px] truncate break-all">
+                <div className="max-w-[100px] truncate break-all">
                     {`${row.original.domain}:${row.original.dstPort}${row.original.uri}`}
                 </div>
             )
         },
         {
             accessorKey: "srcIp",
-            header: t('srcIp'),
+            header: () => <div className="whitespace-nowrap">{t('srcIp')}</div>,
             cell: ({ row }) => <span className="break-all">{row.getValue("srcIp")}</span>
         },
         {
             accessorKey: "srcPort",
-            header: t('srcPort'),
+            header: () => <div className="whitespace-nowrap">{t('srcPort')}</div>,
             cell: ({ row }) => <span>{row.getValue("srcPort")}</span>
         },
         {
             accessorKey: "dstPort",
-            header: t('dstPort'),
+            header: () => <div className="whitespace-nowrap">{t('dstPort')}</div>,
             cell: ({ row }) => <span>{row.getValue("dstPort")}</span>
         },
         {
             accessorKey: "dstIp",
-            header: t('dstIp'),
+            header: () => <div className="whitespace-nowrap">{t('dstIp')}</div>,
             cell: ({ row }) => <span className="break-all">{row.getValue("dstIp")}</span>
         },
         {
             accessorKey: "createdAt",
-            header: t('createdAt'),
+            header: () => <div className="whitespace-nowrap">{t('createdAt')}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
                     <span>{format(new Date(row.getValue("createdAt")), "yyyy-MM-dd")}</span>
@@ -118,7 +119,7 @@ export default function LogsPage() {
         },
         {
             id: "actions",
-            header: t('detail'),
+            header: () => <div className="whitespace-nowrap">{t('detail')}</div>,
             cell: ({ row }) => (
                 <Button
                     variant="ghost"
@@ -126,8 +127,7 @@ export default function LogsPage() {
                     onClick={() => handleOpenDetail(row.original)}
                     className="flex items-center gap-1"
                 >
-                    <Eye className="h-4 w-4" />
-                    {t('detail')}
+                    <Eye className="h-4 w-4 text-gray-600" />
                 </Button>
             )
         }

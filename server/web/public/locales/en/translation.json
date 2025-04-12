@@ -27,7 +27,8 @@
         }
     },
     "common": {
-        "loading": "Loading..."
+        "loading": "Loading...",
+        "language": "Select a language"
     },
     "auth": {
         "login": "Login",
@@ -94,13 +95,14 @@
         "attackSource": "Attack Source",
         "blockThisIp": "Block This IP",
         "targetInfo": "Target Information",
-        "technicalDetails": "Technical Details",
+        "technicalDetails": "Details",
         "copyCurl": "Copy cURL",
         "encoding": "Encoding",
         "request": "Request",
         "response": "Response",
         "logs": "Logs",
-        "copyAll": "Copy All"
+        "copyAll": "Copy All",
+        "noResponse": "No data"
     },
     "globalSetting": {
         "title": "General Settings",

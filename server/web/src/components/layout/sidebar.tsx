@@ -39,14 +39,14 @@ function createSidebarConfig(t: TFunction) {
 
 // 添加一个配置接口，允许传入对象来控制各导航项显示状态
 interface SidebarDisplayConfig {
-    monitor?: boolean;
-    logs?: boolean;
-    rules?: boolean;
-    settings?: boolean;
+    monitor?: boolean
+    logs?: boolean
+    rules?: boolean
+    settings?: boolean
 }
 
 interface SidebarProps {
-    displayConfig?: SidebarDisplayConfig;
+    displayConfig?: SidebarDisplayConfig
 }
 
 export function Sidebar({ displayConfig = {} }: SidebarProps) {
@@ -61,21 +61,21 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
     // 使用 t 函数生成 sidebarItems，并应用 display 配置
     const sidebarItems = createSidebarConfig(t).map(item => {
         // 根据路径名确定哪个配置属性
-        let configKey: keyof SidebarDisplayConfig = 'monitor';
-        if (item.href === ROUTES.LOGS) configKey = 'logs';
-        if (item.href === ROUTES.RULES) configKey = 'rules';
-        if (item.href === ROUTES.SETTINGS) configKey = 'settings';
-        
+        let configKey: keyof SidebarDisplayConfig = 'monitor'
+        if (item.href === ROUTES.LOGS) configKey = 'logs'
+        if (item.href === ROUTES.RULES) configKey = 'rules'
+        if (item.href === ROUTES.SETTINGS) configKey = 'settings'
+
         // 如果配置中指定了该项的显示状态，则使用配置的值
         // 否则使用默认值 true
-        const shouldDisplay = displayConfig[configKey] !== undefined ? 
-            displayConfig[configKey] : item.display;
-            
+        const shouldDisplay = displayConfig[configKey] !== undefined ?
+            displayConfig[configKey] : item.display
+
         return {
             ...item,
             display: shouldDisplay
-        };
-    });
+        }
+    })
 
     const handleLogout = () => {
         logout()
@@ -83,14 +83,14 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
     }
 
     return (
-        <Card className="w-[17.69rem] flex flex-col rounded-none  gap-1 border-0 shadow-none overflow-auto">
+        <Card className="w-[17.69rem] min-w-[17.69rem] flex flex-col rounded-none gap-1 border-0 shadow-none overflow-auto">
             <CardHeader className="pt-[0.0625rem] pb-0 gap-5 w-full items-center justify-center space-y-0 ">
                 <CardTitle
-                    className="bg-surface-300 font-medium w-[5rem] h-[5rem] rounded-full text-[2.25rem] leading-[1.2] tracking-[0.01em] flex justify-center items-center text-content-200"
+                    className="bg-gray-300 font-medium w-[5rem] h-[5rem] rounded-full text-[2.25rem] leading-[1.2] tracking-[0.01em] flex justify-center items-center text-gray-600"
                 >
                     Xray
                 </CardTitle>
-                <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case text-content-200">
+                <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case text-gray-600">
                     {t('sidebar.title')}
                 </CardDescription>
             </CardHeader>
@@ -111,20 +111,20 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                                         "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
                                         "transform transition-all duration-500 ease-out",
                                         isActive
-                                            ? "bg-primary-100 scale-110"
-                                            : "bg-surface-200 group-hover:scale-105 group-hover:bg-primary-100/20"
+                                            ? "bg-zinc-600 scale-110"
+                                            : "bg-gray-100 group-hover:scale-105 group-hover:bg-gray-900/20"
                                     )}>
                                         <item.icon
                                             strokeWidth={1}
                                             className={cn(
                                                 "w-full h-full shrink-0",
                                                 "transform transition-all duration-500 ease-out",
-                                                isActive ? "stroke-white animate-icon-shake" : "stroke-primary-200 group-hover:stroke-primary-100"
+                                                isActive ? "stroke-white animate-icon-shake" : "stroke-gray-500 group-hover:stroke-gray-900"
                                             )}
                                         />
                                     </div>
                                     <span className={cn(
-                                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-content-200",
+                                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-gray-600",
                                         "transform transition-all duration-500 ease-out",
                                         isActive
                                             ? "font-bold translate-x-2"
@@ -143,19 +143,19 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                     <div className={cn(
                         "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
                         "transform transition-all duration-500 ease-out",
-                        "bg-surface-200 group-hover:bg-primary-100/20 group-hover:scale-105",
-                        "group-active:bg-primary-100"
+                        "bg-gray-100 group-hover:bg-gray-900/20 group-hover:scale-105",
+                        "group-active:bg-gray-900"
                     )}>
                         <LogOut strokeWidth={1}
                             className={cn(
                                 "w-full h-full shrink-0",
                                 "transform transition-all duration-500 ease-out",
-                                "stroke-primary-200 group-hover:stroke-primary-100",
+                                "stroke-gray-500 group-hover:stroke-gray-900",
                                 "group-active:stroke-white"
                             )} />
                     </div>
                     <span className={cn(
-                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-content-200",
+                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-gray-600",
                         "transform transition-all duration-500 ease-out",
                         "font-normal group-hover:translate-x-1",
                         "group-active:font-bold group-active:translate-x-2"

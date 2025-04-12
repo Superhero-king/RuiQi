@@ -13,7 +13,7 @@ export function RootLayout() {
                     settings: true
                 }}
             />
-            <div className="w-[0.125rem] bg-surface-300" />
+            <div className="w-[0.125rem] min-w-[0.125rem] bg-gray-300" />
             <main className="flex-1 flex flex-col px-6 h-full">
                 <Breadcrumb />
                 <div className="flex-1 overflow-auto h-full">

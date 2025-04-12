@@ -23,9 +23,6 @@ export default {
                 primary: {
                     DEFAULT: 'hsl(var(--primary))',
                     foreground: 'hsl(var(--primary-foreground))',
-                    100: '#2d2d2d',
-                    200: '#565656',
-                    300: '#b2b2b2'
                 },
                 secondary: {
                     DEFAULT: 'hsl(var(--secondary))',
@@ -38,8 +35,6 @@ export default {
                 accent: {
                     DEFAULT: 'hsl(var(--accent))',
                     foreground: 'hsl(var(--accent-foreground))',
-                    100: '#fbecec',
-                    200: '#978a8a',
                 },
                 destructive: {
                     DEFAULT: 'hsl(var(--destructive))',
@@ -55,55 +50,6 @@ export default {
                     '4': 'hsl(var(--chart-4))',
                     '5': 'hsl(var(--chart-5))'
                 },
-                surface: {
-                    100: '#ffffff',
-                    200: '#f5f5f5',
-                    300: '#cccccc',
-                },
-                black: {
-                    DEFAULT: '#000000',
-                    100: '#f4f4f5',
-                    200: '#e4e4e7',
-                    300: '#d4d4d8',
-                    400: '#a1a1aa',
-                    500: '#71717a',
-                    550: '#79747e',
-                    600: '#27272a',
-                    700: '#18181b',
-                    800: '#09090b',
-                },
-                green: {
-                    DEFAULT: '#16A34A',
-                    600: '#16A34A',
-                    700: '#15803d',
-                    800: '#166534',
-                },
-                orange: {
-                    DEFAULT: '#ea580c',
-                    600: '#ea580c',
-                    700: '#c2410c'
-                },
-                red: {
-                    DEFAULT: '#dc2626',
-                    600: '#dc2626',
-                    700: '#b91c1c'
-                },
-                slate: {
-                    DEFAULT: '#94A3bb',
-                    400: '#94A3bb',
-                    500: '#64748b',
-                    600: '#475569'
-                },
-                content: {
-                    DEFAULT: '#333333',
-                    100: '#333333',
-                    200: '#5c5c5c'
-                },
-                white: {
-                    DEFAULT: '#ffffff',
-                    100: '#f8fafc',
-                    200: '#f1f5f9',
-                }
             },
             keyframes: {
                 'icon-shake': {

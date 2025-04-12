@@ -1,20 +1,28 @@
 import { HTMLMotionProps } from "motion/react"
 
-// 网格容器的动画配置
-export const gridContainerAnimation: HTMLMotionProps<"div"> = {
-    initial: "initial",
-    animate: "animate",
-    variants: {
-        initial: {},
-        animate: {
-            transition: {
-                staggerChildren: 0.08 // 创建错落有致的动画效果
-            }
+// 布局动画配置 - 用于处理元素添加、删除和重排序的动画效果
+export const layoutAnimationProps = {
+    layout: true,
+    initial: { opacity: 0, scale: 0.8 },
+    animate: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.8 },
+    transition: {
+        layout: { 
+            type: "spring", 
+            damping: 25, 
+            stiffness: 300,
+            mass: 0.8
+        },
+        opacity: { duration: 0.3 },
+        scale: { 
+            type: "spring", 
+            damping: 15, 
+            stiffness: 200 
         }
     }
 }
 
-// 网格项目的动画配置
+// 保留网格项目的动画配置，因为它在SiteCard中使用
 export const gridItemAnimation: HTMLMotionProps<"div"> = {
     variants: {
         initial: {
@@ -32,25 +40,5 @@ export const gridItemAnimation: HTMLMotionProps<"div"> = {
                 stiffness: 200
             }
         }
-    }
-}
-
-// 滚动时渐入的动画配置
-export const scrollFadeInAnimation: HTMLMotionProps<"div"> = {
-    initial: {
-        opacity: 0,
-        y: 20
-    },
-    whileInView: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.5,
-            ease: [0.25, 1, 0.5, 1]
-        }
-    },
-    viewport: {
-        once: false, // 设置为true时只触发一次动画
-        margin: "-10% 0px" // 视口的偏移量，提前开始动画
     }
 }

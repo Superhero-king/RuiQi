@@ -75,9 +75,9 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
             ]
         },
         [ROUTES.SETTINGS]: {
-            defaultPath: "settings",
+            defaultPath: "global",
             items: [
-                { title: t('breadcrumb.settings.settings'), path: "settings", component: <GlobalSettingPage /> },
+                { title: t('breadcrumb.settings.settings'), path: "global", component: <GlobalSettingPage /> },
                 { title: t('breadcrumb.settings.siteManager'), path: "site", component: <SiteManagerPage /> },
                 { title: t('breadcrumb.settings.certManager'), path: "cert", component: <CertificatesPage /> }
             ]

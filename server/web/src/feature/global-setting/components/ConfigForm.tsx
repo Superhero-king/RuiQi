@@ -28,6 +28,7 @@ import { useUpdateConfig, getEngineNameConstant } from '../hooks/useConfig'
 import { AdvancedErrorDisplay } from '@/components/common/error/errorDisplay'
 import { LanguageSelector } from '@/components/common/language-selector'
 import { useTranslation } from 'react-i18next'
+import { AnimatedButton } from '@/components/ui/animation/components/animated-button'
 
 interface ConfigFormProps {
     config?: ConfigResponse
@@ -86,6 +87,9 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                     ]
                 }
             })
+
+            // 初始加载时检查线程是否为0
+            setShowThreadWarning(config.haproxy.thread === 0)
         }
     }, [config, engineName, form])
 
@@ -319,24 +323,26 @@ export function ConfigForm({ config, isLoading }: ConfigFormProps) {
                 </Form>
             </CardContent>
             <CardFooter className="flex justify-end  px-0 py-4">
-                <Button
-                    type="submit"
-                    form="config-form"
-                    disabled={isLoading || isUpdating}
-                    className="gap-1"
-                >
-                    {isUpdating ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            {t("globalSetting.config.saving")}
-                        </>
-                    ) : (
-                        <>
-                            <Save className="h-4 w-4" />
-                            {t("globalSetting.config.saveSettings")}
-                        </>
-                    )}
-                </Button>
+                <AnimatedButton >
+                    <Button
+                        type="submit"
+                        form="config-form"
+                        disabled={isLoading || isUpdating}
+                        className="gap-1"
+                    >
+                        {isUpdating ? (
+                            <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                {t("globalSetting.config.saving")}
+                            </>
+                        ) : (
+                            <>
+                                <Save className="h-4 w-4" />
+                                {t("globalSetting.config.saveSettings")}
+                            </>
+                        )}
+                    </Button>
+                </AnimatedButton>
             </CardFooter>
         </Card>
     )

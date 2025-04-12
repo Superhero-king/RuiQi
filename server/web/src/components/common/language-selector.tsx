@@ -4,9 +4,10 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue,
 } from "@/components/ui/select"
 import { useTranslation } from "react-i18next"
+import { Languages } from "lucide-react"
+import { AnimatedIcon } from "../ui/animation/components/animated-icon"
 
 export function LanguageSelector() {
     const { i18n } = useTranslation()
@@ -15,7 +16,6 @@ export function LanguageSelector() {
     const handleLanguageChange = (value: string) => {
         setLanguage(value)
         i18n.changeLanguage(value)
-        // 保存用户语言选择到本地存储
         localStorage.setItem('i18nextLng', value)
     }
 
@@ -30,8 +30,10 @@ export function LanguageSelector() {
 
     return (
         <Select value={language} onValueChange={handleLanguageChange}>
-            <SelectTrigger className="w-[120px] h-9">
-                <SelectValue placeholder="选择语言" />
+            <SelectTrigger className="w-11 h-9 p-1 border-0 bg-transparent shadow-none hover:bg-muted focus:ring-0  transition-colors">
+                <AnimatedIcon animationVariant="pulse" className="h-5 w-5">
+                    <Languages className="h-5 w-5" />
+                </AnimatedIcon>
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="zh">简体中文</SelectItem>

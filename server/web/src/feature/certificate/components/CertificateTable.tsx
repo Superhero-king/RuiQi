@@ -21,10 +21,12 @@ import { Loader2 } from 'lucide-react'
 import { DataTable } from '@/components/table/motion-data-table'
 import { DeleteCertificateDialog } from './DeleteCertificateDialog'
 import { useTranslation } from 'react-i18next'
+import { AnimatedIcon } from '@/components/ui/animation/components/animated-icon'
+import { AnimatedButton } from '@/components/ui/animation/components/animated-button'
 
 export function CertificateTable() {
     const { t } = useTranslation()
-    
+
     // 状态管理
     const [certificateDialogOpen, setCertificateDialogOpen] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -33,6 +35,7 @@ export function CertificateTable() {
     const [dialogMode, setDialogMode] = useState<'create' | 'update'>('create')
     const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null)
 
+    const [isRefreshAnimating, setIsRefreshAnimating] = useState(false)
 
     // 获取证书列表
     const {
@@ -140,16 +143,26 @@ export function CertificateTable() {
         return new Date(expireDate) < new Date()
     }
 
+    const refreshSites = () => {
+        setIsRefreshAnimating(true)
+        refetch()
+
+        // 停止动画，延迟1秒以匹配动画效果
+        setTimeout(() => {
+            setIsRefreshAnimating(false)
+        }, 1000)
+    }
+
     // 表格列定义
     const columns: ColumnDef<Certificate>[] = [
         {
             accessorKey: 'name',
-            header: () => <div className="font-medium py-3.5">{t("certificate.name")}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t("certificate.name")}</div>,
             cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
         },
         {
             accessorKey: 'domains',
-            header: () => <div className="font-medium py-3.5">{t("certificate.domains")}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t("certificate.domains")}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-wrap gap-1 max-w-xs">
                     {row.original.domains.map((domain, index) => (
@@ -162,7 +175,7 @@ export function CertificateTable() {
         },
         {
             accessorKey: 'issuerAndExpiry',
-            header: () => <div className="font-medium py-3.5">{t("certificate.issuerAndExpiry")}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t("certificate.issuerAndExpiry")}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
                     <span className="text-sm">{row.original.issuerName}</span>
@@ -225,23 +238,29 @@ export function CertificateTable() {
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold">{t("certificate.management")}</h2>
                     <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => refetch()}
-                            className="flex items-center gap-1"
-                        >
-                            <RefreshCcw className="h-3.5 w-3.5" />
-                            {t("certificate.refresh")}
-                        </Button>
-                        <Button
-                            size="sm"
-                            onClick={openCreateDialog}
-                            className="flex items-center gap-1"
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            {t("certificate.add")}
-                        </Button>
+                        <AnimatedButton >
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={refreshSites}
+                                className="flex items-center gap-2 justify-center"
+                            >
+                                <AnimatedIcon animationVariant="continuous-spin" isAnimating={isRefreshAnimating} className="h-4 w-4">
+                                    <RefreshCcw className="h-4 w-4" />
+                                </AnimatedIcon>
+                                {t("certificate.refresh")}
+                            </Button>
+                        </AnimatedButton>
+                        <AnimatedButton>
+                            <Button
+                                size="sm"
+                                onClick={openCreateDialog}
+                                className="flex items-center gap-1"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                {t("certificate.add")}
+                            </Button>
+                        </AnimatedButton>
                     </div>
                 </div>
 

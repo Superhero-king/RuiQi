@@ -37,7 +37,7 @@ interface SiteTableProps {
 
 export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
     const { t } = useTranslation()
-    
+
     // 引用用于无限滚动
     const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -109,7 +109,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
     const columns: ColumnDef<Site>[] = [
         {
             accessorKey: 'name',
-            header: () => <div className="font-medium py-3.5">{t('site.name')}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t('site.name')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
@@ -121,7 +121,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'domain',
-            header: () => <div className="font-medium py-3.5">{t('site.domain')}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t('site.domain')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
@@ -134,7 +134,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'listenPort',
-            header: () => <div className="font-medium py-3.5">{t('site.listenPort')}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t('site.listenPort')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 return (
@@ -146,7 +146,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'backend',
-            header: () => <div className="font-medium py-3.5">{t('site.backend')}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t('site.backend')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 const servers = row.original.backend.servers
@@ -168,7 +168,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'enableHTTPS',
-            header: () => <div className="font-medium py-3.5">{t('site.https')}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t('site.https')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 const enabled = row.original.enableHTTPS
@@ -176,12 +176,12 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                 return (
                     <div className={`${isInactive ? 'text-gray-400' : ''}`}>
                         {enabled ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
-                                {t('site.enabled')}
+                            <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 rounded-full px-3 py-1 flex items-center gap-1">
+                                <span className="font-medium whitespace-nowrap">{t('site.enabled')}</span>
                             </Badge>
                         ) : (
-                            <Badge variant="outline" className={isInactive ? 'text-gray-400 border-gray-200' : ''}>
-                                {t('site.disabled')}
+                            <Badge variant="outline" className={`rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                                <span className="font-medium whitespace-nowrap">{t('site.disabled')}</span>
                             </Badge>
                         )}
                     </div>
@@ -190,22 +190,22 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'activeStatus',
-            header: () => <div className="font-medium py-3.5">{t('site.status')}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t('site.status')}</div>,
             cell: ({ row }) => {
                 const isActive = row.original.activeStatus
 
                 return (
                     <div className="flex items-center gap-1">
                         {isActive ? (
-                            <>
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                                <span className="text-green-600">{t('site.active')}</span>
-                            </>
+                            <Badge variant="outline" className="bg-green-300 border-green-300 text-green-700 rounded-full px-3 py-1 flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3 text-green-600" />
+                                <span className="font-medium whitespace-nowrap">{t('site.active')}</span>
+                            </Badge>
                         ) : (
-                            <>
-                                <XCircle className="h-4 w-4 text-gray-400" />
-                                <span className="text-gray-400">{t('site.inactive')}</span>
-                            </>
+                            <Badge variant="outline" className="bg-gray-200 border-gray-200 text-gray-700 rounded-full px-3 py-1 flex items-center gap-1">
+                                <XCircle className="h-3 w-3 text-gray-600" />
+                                <span className="font-medium whitespace-nowrap">{t('site.inactive')}</span>
+                            </Badge>
                         )}
                     </div>
                 )
@@ -213,7 +213,7 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
         },
         {
             accessorKey: 'wafStatus',
-            header: () => <div className="font-medium py-3.5">{t('site.wafStatus')}</div>,
+            header: () => <div className="font-medium py-3.5 whitespace-nowrap">{t('site.wafStatus')}</div>,
             cell: ({ row }) => {
                 const isInactive = !row.original.activeStatus
                 const wafEnabled = row.original.wafEnabled
@@ -221,8 +221,8 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
 
                 if (!wafEnabled) {
                     return (
-                        <Badge variant="outline" className={isInactive ? 'text-gray-400 border-gray-200' : ''}>
-                            {t('site.disabled')}
+                        <Badge variant="outline" className={`rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                            <span className="font-medium whitespace-nowrap">{t('site.disabled')}</span>
                         </Badge>
                     )
                 }
@@ -230,14 +230,14 @@ export function SiteTable({ onEdit, onDelete }: SiteTableProps) {
                 return (
                     <div className={`flex items-center gap-1 ${isInactive ? 'text-gray-400' : ''}`}>
                         {wafMode === WAFMode.Protection ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1">
-                                <Shield className="h-3 w-3" />
-                                <span>{t('site.dialog.protectionMode')}</span>
+                            <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-sky-300 border-sky-300 text-sky-700'}`}>
+                                <Shield className="h-3 w-3 text-sky-700" />
+                                <span className="font-medium whitespace-nowrap">{t('site.dialog.protectionMode')}</span>
                             </Badge>
                         ) : (
-                            <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100 flex items-center gap-1">
-                                <ShieldAlert className="h-3 w-3" />
-                                <span>{t('site.dialog.observationMode')}</span>
+                            <Badge variant="outline" className={`flex items-center gap-1 rounded-full px-3 py-1 ${isInactive ? 'bg-gray-200 border-gray-200 text-gray-700' : 'bg-yellow-300 border-yellow-300 text-yellow-700'}`}>
+                                <ShieldAlert className="h-3 w-3 text-yellow-700" />
+                                <span className="font-medium whitespace-nowrap">{t('site.dialog.observationMode')}</span>
                             </Badge>
                         )}
                     </div>

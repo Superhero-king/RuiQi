@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DateTimePicker24h } from "@/components/common/date"
 import { Collapse } from "@/components/ui/animation/components/collapse"
 import { Display } from "@/components/ui/animation/components/display"
+import { AnimatedIcon } from "@/components/ui/animation/components/animated-icon"
+import { AnimatedButton } from "@/components/ui/animation/components/animated-button"
 
 interface AttackEventFilterProps {
     onFilter: (values: AttackEventQueryFormValues) => void
@@ -32,6 +34,8 @@ export function AttackEventFilter({
     defaultValues = {}
 }: AttackEventFilterProps) {
     const { t } = useTranslation()
+    const [isRefreshAnimating, setIsRefreshAnimating] = useState(false)
+    const [isResetAnimating, setIsResetAnimating] = useState(false)
     const pollingIntervals = [5, 10, 30, 60]
 
     const [expanded, setExpanded] = useState(false)
@@ -56,6 +60,7 @@ export function AttackEventFilter({
     }
 
     const handleReset = () => {
+        setIsResetAnimating(true)
         form.reset({
             srcIp: "",
             dstIp: "",
@@ -68,10 +73,17 @@ export function AttackEventFilter({
             pageSize: 10
         })
         onFilter(form.getValues())
+        setTimeout(() => {
+            setIsResetAnimating(false)
+        }, 1000)
     }
 
     const handleRefresh = () => {
+        setIsRefreshAnimating(true)
         if (onRefresh) onRefresh()
+        setTimeout(() => {
+            setIsRefreshAnimating(false)
+        }, 1000)
     }
 
     useEffect(() => {
@@ -128,34 +140,44 @@ export function AttackEventFilter({
                         </div>
 
                         <div className="flex gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={handleReset}
-                                className="flex items-center gap-1"
-                            >
-                                <RotateCcw className="h-3 w-3" />
-                                {t('reset')}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={handleRefresh}
-                                className="flex items-center gap-1"
-                            >
-                                <RefreshCw className="h-3 w-3" />
-                                {t('refresh')}
-                            </Button>
-                            <Button
-                                type="submit"
-                                size="sm"
-                                className="flex items-center gap-1"
-                            >
-                                <Search className="h-3 w-3" />
-                                {t('search')}
-                            </Button>
+                            <AnimatedButton>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleReset}
+                                    className="flex items-center gap-1"
+                                >
+                                    <AnimatedIcon animationVariant="continuous-spin" isAnimating={isResetAnimating} className="h-4 w-4">
+                                        <RotateCcw className="h-4 w-4" />
+                                    </AnimatedIcon>
+                                    {t('reset')}
+                                </Button>
+                            </AnimatedButton>
+                            <AnimatedButton>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleRefresh}
+                                    className="flex items-center gap-1"
+                                >
+                                    <AnimatedIcon animationVariant="continuous-spin" isAnimating={isRefreshAnimating} className="h-4 w-4">
+                                        <RefreshCw className="h-4 w-4" />
+                                    </AnimatedIcon>
+                                    {t('refresh')}
+                                </Button>
+                            </AnimatedButton>
+                            <AnimatedButton>
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    className="flex items-center gap-1"
+                                >
+                                    <Search className="h-3 w-3" />
+                                    {t('search')}
+                                </Button>
+                            </AnimatedButton>
                         </div>
                     </div>
 

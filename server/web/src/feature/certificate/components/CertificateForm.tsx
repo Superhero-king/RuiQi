@@ -20,7 +20,7 @@ import { useCreateCertificate, useUpdateCertificate } from '../hooks/useCertific
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AnimatedContainer } from '@/components/ui/animation/components/animated-container'
 import { useTranslation } from 'react-i18next'
-
+import { AnimatedButton } from '@/components/ui/animation/components/animated-button'
 interface CertificateFormProps {
     mode?: 'create' | 'update'
     certificateId?: string
@@ -40,7 +40,7 @@ export function CertificateForm({
     },
 }: CertificateFormProps) {
     const { t } = useTranslation()
-    
+
     // 状态管理
     const [parsedInfo, setParsedInfo] = useState<ParsedCertificate | null>(null)
     const [publicKeyFile, setPublicKeyFile] = useState<string | null>(null)
@@ -372,9 +372,11 @@ export function CertificateForm({
 
                     {/* 提交按钮 */}
                     <div className="flex justify-end">
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading ? t("certificate.dialog.submitting") : mode === 'create' ? t("certificate.dialog.create") : t("certificate.dialog.update")}
-                        </Button>
+                        <AnimatedButton>
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading ? t("certificate.dialog.submitting") : mode === 'create' ? t("certificate.dialog.create") : t("certificate.dialog.update")}
+                            </Button>
+                        </AnimatedButton>
                     </div>
                 </form>
             </Form>
@@ -430,7 +432,7 @@ interface FileUploadProps {
 
 function FileUpload({ label, accept, onChange }: FileUploadProps) {
     const { t } = useTranslation()
-    
+
     return (
         <div className="flex items-center gap-2">
             <Button

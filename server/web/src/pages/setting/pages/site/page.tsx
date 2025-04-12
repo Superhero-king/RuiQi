@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Plus,
     LayoutGrid,
-    Table as TableIcon,
+    AlignJustify,
     RefreshCw
 } from "lucide-react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -16,6 +16,8 @@ import { DeleteSiteDialog } from "@/feature/site/components/DeleteSiteDialog"
 import { Site } from "@/types/site"
 import { TabsAnimationProvider } from "@/components/ui/animation/components/tab-animation"
 import { useTranslation } from "react-i18next"
+import { AnimatedButton } from "@/components/ui/animation/components/animated-button"
+import { AnimatedIcon } from "@/components/ui/animation/components/animated-icon"
 
 export default function SiteManagerPage() {
     const { t } = useTranslation()
@@ -25,8 +27,10 @@ export default function SiteManagerPage() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [selectedSite, setSelectedSite] = useState<Site | null>(null)
     const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null)
+    const [isRefreshAnimating, setIsRefreshAnimating] = useState(false)
 
     const queryClient = useQueryClient()
+
 
     // 处理添加站点
     const handleAddSite = () => {
@@ -47,43 +51,54 @@ export default function SiteManagerPage() {
 
     // 刷新站点列表
     const refreshSites = () => {
+        setIsRefreshAnimating(true)
         queryClient.invalidateQueries({ queryKey: ['sites'] })
+
+        // 停止动画，延迟1秒以匹配动画效果
+        setTimeout(() => {
+            setIsRefreshAnimating(false)
+        }, 1000)
     }
+
 
     return (
         <Card className="p-6 w-full h-full border-none shadow-none">
             <div className="flex justify-between items-center mb-6  bg-zinc-50 rounded-md p-4">
                 <h2 className="text-xl font-semibold">{t('site.management')}</h2>
                 <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={refreshSites}
-                        className="flex items-center gap-1"
-                    >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        {t('site.refresh')}
-                    </Button>
-                    <Button
-                        size="sm"
-                        onClick={handleAddSite}
-                        className="flex items-center gap-1"
-                    >
-                        <Plus className="h-3.5 w-3.5" />
-                        {t('site.add')}
-                    </Button>
+                    <AnimatedButton >
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={refreshSites}
+                            className="flex items-center gap-2"
+                        >
+                            <AnimatedIcon animationVariant="continuous-spin" isAnimating={isRefreshAnimating} className="h-4 w-4">
+                                <RefreshCw className="h-4 w-4" />
+                            </AnimatedIcon>
+                            {t('site.refresh')}
+                        </Button>
+                    </AnimatedButton>
+                    <AnimatedButton>
+                        <Button
+                            size="sm"
+                            onClick={handleAddSite}
+                            className="flex items-center gap-1"
+                        >
+                            <Plus className="h-4 w-4" />
+                            {t('site.add')}
+                        </Button>
+                    </AnimatedButton>
                 </div>
             </div>
 
             <Tabs value={view} onValueChange={(v) => setView(v as 'grid' | 'table')}>
                 <TabsList className="mb-4">
                     <TabsTrigger value="grid" className="flex items-center gap-1">
-                        <LayoutGrid className="h-4 w-4" />
-                        <span>{t('site.view.cardView')}</span>
+                        <LayoutGrid className="h-4 w-4 text-primary fill-primary" />
                     </TabsTrigger>
                     <TabsTrigger value="table" className="flex items-center gap-1">
-                        <TableIcon className="h-4 w-4" />
-                        <span>{t('site.view.tableView')}</span>
+                        <AlignJustify className="h-4 w-4" />
                     </TabsTrigger>
                 </TabsList>
 
@@ -127,6 +142,6 @@ export default function SiteManagerPage() {
                 onOpenChange={setIsDeleteDialogOpen}
                 siteId={selectedSiteId}
             />
-        </Card>
+        </Card >
     )
 } 

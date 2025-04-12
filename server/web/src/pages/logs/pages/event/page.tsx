@@ -76,22 +76,22 @@ export default function EventsPage() {
     const columns: ColumnDef<AttackEventAggregateResult>[] = [
         {
             accessorKey: "domain",
-            header: t('domain'),
+            header: () => <div className="whitespace-nowrap">{t('domain')}</div>,
             cell: ({ row }) => <span className="font-medium break-all">{row.getValue("domain")}</span>
         },
         {
             accessorKey: "dstPort",
-            header: t('dstPort'),
+            header: () => <div className="whitespace-nowrap">{t('dstPort')}</div>,
             cell: ({ row }) => <span>{row.getValue("dstPort")}</span>
         },
         {
             accessorKey: "srcIp",
-            header: t('srcIp'),
+            header: () => <div className="whitespace-nowrap">{t('srcIp')}</div>,
             cell: ({ row }) => <span className="break-all">{row.getValue("srcIp")}</span>
         },
         {
             accessorKey: "count",
-            header: t('attackCount'),
+            header: () => <div className="whitespace-nowrap">{t('attackCount')}</div>,
             cell: ({ row }) => (
                 <Button
                     variant="link"
@@ -105,7 +105,7 @@ export default function EventsPage() {
         },
         {
             accessorKey: "firstAttackTime",
-            header: t('firstAttackTime'),
+            header: () => <div className="whitespace-nowrap">{t('firstAttackTime')}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
                     <span>{format(new Date(row.getValue("firstAttackTime")), "yyyy-MM-dd")}</span>
@@ -115,7 +115,7 @@ export default function EventsPage() {
         },
         {
             accessorKey: "lastAttackTime",
-            header: t('lastAttackTime'),
+            header: () => <div className="whitespace-nowrap">{t('lastAttackTime')}</div>,
             cell: ({ row }) => (
                 <div className="flex flex-col">
                     <span>{format(new Date(row.getValue("lastAttackTime")), "yyyy-MM-dd")}</span>
@@ -125,7 +125,7 @@ export default function EventsPage() {
         },
         {
             accessorKey: "isOngoing",
-            header: t('status'),
+            header: () => <div className="whitespace-nowrap">{t('status')}</div>,
             cell: ({ row }) => {
                 const isOngoing = row.getValue("isOngoing")
                 const minutes = row.original.durationInMinutes || 0
