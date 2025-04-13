@@ -144,7 +144,7 @@ graph TD
 ### Prerequisites
 
 - Go 1.24.1 or higher
-- HAProxy 2.x
+- HAProxy 3.x
 - MongoDB 5.x or higher
 - Coraza SPOA
 
@@ -176,7 +176,10 @@ cp server/.env.template server/.env
 go run server/main.go
 ```
 
-The API server will start at `http://localhost:2333` by default.
+The API server will start at `http://localhost:2333/api/v1` by default.
+The swagger UI will start at `http://localhost:2333/swagger/index.html` by default.
+The redoc UI will start at `http://localhost:2333/redoc` by default.
+The frontend will start at `http://localhost:2333/` by default.
 
 ## API Endpoints
 
