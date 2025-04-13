@@ -1,6 +1,6 @@
 {
     "sidebar": {
-        "title": "Simple WAF",
+        "title": "RuiQi WAF",
         "monitor": "监控",
         "logs": "日志",
         "rules": "规则",
@@ -263,5 +263,14 @@
             "upstreamServers": "上游服务器:",
             "certInfo": "证书信息:"
         }
+    },
+    "table": {
+        "selected": "已选择 {{selected}} 条，共 {{total}} 条",
+        "rowsPerPage": "每页行数",
+        "pageInfo": "第 {{current}} 页，共 {{total}} 页",
+        "firstPage": "转到第一页",
+        "previousPage": "转到上一页",
+        "nextPage": "转到下一页",
+        "lastPage": "转到最后一页"
     }
 }

@@ -8,9 +8,9 @@ import {
 import { CertificateForm } from './CertificateForm'
 import { Certificate } from '@/types/certificate'
 import { AnimatePresence, motion } from "motion/react"
-import { 
-    dialogEnterExitAnimation, 
-    dialogContentAnimation, 
+import {
+    dialogEnterExitAnimation,
+    dialogContentAnimation,
     dialogHeaderAnimation,
     dialogContentItemAnimation
 } from '@/components/ui/animation/dialog-animation'
@@ -33,12 +33,12 @@ export function CertificateDialog({
 
     // 根据模式确定标题和描述
     const title = mode === 'create' ? t("certificate.dialog.createTitle") : t("certificate.dialog.updateTitle")
-    const description = mode === 'create' 
+    const description = mode === 'create'
         ? t("certificate.dialog.createDescription")
         : t("certificate.dialog.updateDescription")
-    
+
     // 根据模式准备表单默认值
-    const defaultValues = mode === 'update' && certificate 
+    const defaultValues = mode === 'update' && certificate
         ? {
             name: certificate.name,
             description: certificate.description,
@@ -69,16 +69,16 @@ export function CertificateDialog({
                                         <DialogDescription>{description}</DialogDescription>
                                     </DialogHeader>
                                 </motion.div>
-                                
-                                <motion.div 
+
+                                <motion.div
                                     {...dialogContentItemAnimation}
                                     className="px-6 pb-6"
                                 >
-                                    <CertificateForm 
+                                    <CertificateForm
                                         mode={mode}
                                         certificateId={certificate?.id}
                                         defaultValues={defaultValues}
-                                        onSuccess={() => onOpenChange(false)} 
+                                        onSuccess={() => onOpenChange(false)}
                                     />
                                 </motion.div>
                             </motion.div>

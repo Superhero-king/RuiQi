@@ -86,11 +86,12 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
         <Card className="w-[17.69rem] min-w-[17.69rem] flex flex-col rounded-none gap-1 border-0 shadow-none overflow-auto">
             <CardHeader className="pt-[0.0625rem] pb-0 gap-5 w-full items-center justify-center space-y-0 ">
                 <CardTitle
-                    className="bg-gray-300 font-medium w-[5rem] h-[5rem] rounded-full text-[2.25rem] leading-[1.2] tracking-[0.01em] flex justify-center items-center text-gray-600"
+                    className="w-[5rem] h-[5rem] rounded-full flex justify-center items-center"
                 >
-                    Xray
+                    <img src="/logo.svg" alt="logo" className="w-[5rem] h-[5rem] rounded-full" />
                 </CardTitle>
-                <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case text-gray-600">
+                {/* <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-cyan-300 drop-shadow-sm"> */}
+                <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-cyan-400 to-purple-300 drop-shadow-sm">
                     {t('sidebar.title')}
                 </CardDescription>
             </CardHeader>

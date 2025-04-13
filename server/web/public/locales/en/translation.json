@@ -1,6 +1,6 @@
 {
     "sidebar": {
-        "title": "Simple WAF",
+        "title": "RuiQi WAF",
         "monitor": "Monitor",
         "logs": "Logs",
         "rules": "Rules",
@@ -263,5 +263,14 @@
             "upstreamServers": "Upstream Servers:",
             "certInfo": "Certificate Information:"
         }
+    },
+    "table": {
+        "selected": "{{selected}} of {{total}} row(s) selected.",
+        "rowsPerPage": "Rows per page",
+        "pageInfo": "Page {{current}} of {{total}}",
+        "firstPage": "Go to first page",
+        "previousPage": "Go to previous page",
+        "nextPage": "Go to next page",
+        "lastPage": "Go to last page"
     }
 }
