@@ -40,10 +40,18 @@ COPY --from=frontend-builder /app/dist ./server/web/dist
 # 构建后端
 RUN cd server && go build -o ../simple-waf-server main.go
 
-# 阶段3: 最终镜像 - 使用Alpine并安装HAProxy
-FROM alpine:3.19
-# 安装HAProxy和必要工具
-RUN apk add --no-cache haproxy~=3.0 libcap
+# 阶段3: 最终镜像 - 使用Ubuntu 24.04并安装HAProxy 3.0
+FROM ubuntu:24.04
+# 避免交互式前端
+ENV DEBIAN_FRONTEND=noninteractive
+# 安装HAProxy 3.0（保持不变）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends software-properties-common ca-certificates libcap2-bin && \
+    add-apt-repository -y ppa:vbernat/haproxy-3.0 && \
+    apt-get update && \
+    apt-get install -y haproxy=3.0.* && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # 创建必要的目录
 WORKDIR /app
@@ -60,9 +68,8 @@ RUN chmod +x /app/simple-waf-server && \
     setcap 'cap_net_bind_service=+ep' /app/simple-waf-server
 
 # 创建非root用户
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-# 修改所有权
-RUN chown -R appuser:appgroup /app
+RUN useradd -r -s /bin/false appuser && \
+    chown -R appuser:appuser /app
 
 # 切换到非root用户
 USER appuser
@@ -70,7 +77,7 @@ USER appuser
 # 设置环境变量
 ENV GIN_MODE=release
 
-# 暴露端口 (假设需要80端口作为示例)
+# 暴露端口 
 EXPOSE 2333
 
 # 运行应用，绑定到80端口
