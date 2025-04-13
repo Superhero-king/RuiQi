@@ -11,6 +11,7 @@ type Config struct {
 	CreatedAt       time.Time     `bson:"createdAt" json:"createdAt"`
 	UpdatedAt       time.Time     `bson:"updatedAt" json:"updatedAt"`
 	IsResponseCheck bool          `bson:"isResponseCheck" json:"isResponseCheck"`
+	IsDebug         bool          `bson:"isDebug" json:"isDebug"`
 }
 
 type EngineConfig struct {
@@ -34,6 +35,7 @@ type HaproxyConfig struct {
 	BackupsNumber int    `bson:"backupsNumber" json:"backupsNumber"`
 	SpoeAgentAddr string `bson:"spoeAgentAddr" json:"spoeAgentAddr"`
 	SpoeAgentPort int    `bson:"spoeAgentPort" json:"spoeAgentPort"`
+	Thread        int    `bson:"thread" json:"thread"`
 }
 
 func (c *Config) GetCollectionName() string {

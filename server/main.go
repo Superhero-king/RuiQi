@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mvrilo/go-redoc"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -17,8 +18,7 @@ import (
 	_ "github.com/HUAHUAI23/simple-waf/server/docs" // 导入 swagger 文档
 	"github.com/HUAHUAI23/simple-waf/server/router"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
-	"github.com/mvrilo/go-redoc"
-	ginredoc "github.com/mvrilo/go-redoc/gin"
+	"github.com/HUAHUAI23/simple-waf/server/validator"
 )
 
 //	@title			Simple-WAF API
@@ -64,8 +64,18 @@ func main() {
 	}
 
 	// Create service runner and start background services
-	serviceRunner := daemon.NewServiceRunner()
-	serviceRunner.StartServices()
+	runner, err := daemon.GetRunnerService()
+
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to create service runner")
+		return
+	}
+
+	err = runner.StartServices()
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to start daemon services")
+		return
+	}
 
 	// Set Gin mode based on configuration
 	if config.Global.IsProduction {
@@ -81,18 +91,8 @@ func main() {
 	router.Setup(route, db)
 
 	// 初始化验证器
-	// validators.InitValidators()
+	validator.InitValidators()
 	// validators.InitStructValidators()
-
-	// 添加 Redoc 文档支持
-	doc := redoc.Redoc{
-		Title:       "Simple-WAF API",
-		Description: "简单的 Web 应用防火墙管理系统 API",
-		SpecFile:    "./docs/swagger.json",
-		SpecPath:    "/swagger.json",
-		DocsPath:    "/redoc",
-	}
-	route.Use(ginredoc.New(doc))
 
 	// 设置 Swagger 文档
 	route.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
@@ -102,6 +102,24 @@ func main() {
 		ginSwagger.DeepLinking(true),
 		ginSwagger.PersistAuthorization(true),
 	))
+
+	// 获取Redoc处理器
+	doc := redoc.Redoc{
+		Title:       "Simple-WAF API",
+		Description: "简单的 Web 应用防火墙管理系统 API",
+		SpecFile:    "./docs/swagger.json",
+		SpecPath:    "/swagger.json",
+		DocsPath:    "/redoc",
+	}
+	redocHandler := doc.Handler()
+
+	// 明确定义Redoc路由
+	route.GET("/redoc", func(c *gin.Context) {
+		redocHandler(c.Writer, c.Request)
+	})
+	route.GET("/swagger.json", func(c *gin.Context) {
+		redocHandler(c.Writer, c.Request)
+	})
 
 	// 创建HTTP服务器
 	srv := &http.Server{
@@ -145,7 +163,10 @@ func main() {
 	}
 
 	// 停止后台服务
-	serviceRunner.StopServices()
+	err = runner.StopServices()
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to stop daemon services")
+	}
 	config.Logger.Info().Msg("Background services have been shut down, exiting...")
 
 	// 如果是因为服务器错误而退出，使用非零状态码

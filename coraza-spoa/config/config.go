@@ -79,7 +79,7 @@ func (c config) NewApplicationsWithContext(ctx context.Context, mongoConfig *int
 			TransactionTTL: time.Duration(a.TransactionTTLMS) * time.Millisecond,
 		}
 
-		application, err := appConfig.NewApplicationWithContext(ctx, mongoConfig)
+		application, err := appConfig.NewApplicationWithContext(ctx, mongoConfig, false)
 		if err != nil {
 			return nil, fmt.Errorf("initializing application %q: %v", index, err)
 		}

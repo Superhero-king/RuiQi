@@ -6,6 +6,7 @@ require (
 	github.com/HUAHUAI23/simple-waf/coraza-spoa v0.0.0-20250308163638-ae40316258d8
 	github.com/HUAHUAI23/simple-waf/pkg v0.0.0-20250308163638-ae40316258d8
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-playground/validator/v10 v10.25.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/haproxytech/client-native/v6 v6.1.2
@@ -43,7 +44,6 @@ require (
 	github.com/go-openapi/validate v0.24.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.25.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gofrs/flock v0.12.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

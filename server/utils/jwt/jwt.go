@@ -39,7 +39,7 @@ type Claims struct {
 func GenerateToken(user model.User, expiration time.Duration) (string, error) {
 	// 设置JWT声明
 	claims := Claims{
-		UserID:   user.ID,
+		UserID:   user.ID.Hex(),
 		Username: user.Username,
 		Role:     user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -47,7 +47,7 @@ func GenerateToken(user model.User, expiration time.Duration) (string, error) {
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "simple-waf",
-			Subject:   user.ID,
+			Subject:   user.ID.Hex(),
 		},
 	}
 

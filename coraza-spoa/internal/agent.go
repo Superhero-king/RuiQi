@@ -81,7 +81,7 @@ func (a *Agent) HandleSPOE(ctx context.Context, writer *encoding.ActionWriter, m
 	}
 
 	var interruption ErrInterrupted
-	if err != nil && errors.As(err, &interruption) {
+	if errors.As(err, &interruption) {
 		_ = writer.SetInt64(encoding.VarScopeTransaction, "status", int64(interruption.Interruption.Status))
 		_ = writer.SetString(encoding.VarScopeTransaction, "action", interruption.Interruption.Action)
 		_ = writer.SetString(encoding.VarScopeTransaction, "data", interruption.Interruption.Data)

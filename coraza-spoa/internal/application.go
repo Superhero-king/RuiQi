@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/netip"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
 	"github.com/corazawaf/coraza/v3"
+	"github.com/corazawaf/coraza/v3/debuglog"
 	"github.com/corazawaf/coraza/v3/types"
 	"github.com/dropmorepackets/haproxy-go/pkg/encoding"
 	"github.com/jcchavezs/mergefs"
@@ -46,9 +48,11 @@ type Application struct {
 	AppConfig
 }
 
+// 扩展transaction结构体，添加请求信息
 type transaction struct {
-	tx types.Transaction
-	m  sync.Mutex
+	tx      types.Transaction
+	m       sync.Mutex
+	request *applicationRequest // 存储请求信息
 }
 
 type applicationRequest struct {
@@ -152,10 +156,16 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 	tx := a.waf.NewTransactionWithID(req.ID)
 	defer func() {
 		if err == nil && a.ResponseCheck {
-			a.cache.SetWithExpiration(tx.ID(), &transaction{tx: tx}, a.TransactionTTL)
+			// 存储transaction和请求信息到缓存
+			txCache := &transaction{
+				tx:      tx,
+				request: &req, // 存储请求信息
+			}
+			a.cache.SetWithExpiration(tx.ID(), txCache, a.TransactionTTL)
 			return
 		}
 
+		// 处理中断情况和日志记录
 		if tx.IsInterrupted() && a.logStore != nil {
 			interruption := tx.Interruption()
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
@@ -317,6 +327,17 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 	tx := t.tx
 
 	defer func() {
+		// 处理中断情况和日志记录
+		if tx.IsInterrupted() && a.logStore != nil {
+			interruption := tx.Interruption()
+			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 && t.request != nil {
+				err := a.saveFirewallLog(matchedRules, interruption, t.request, t.request.Headers)
+				if err != nil {
+					a.Logger.Error().Err(err).Msg("failed to save firewall log")
+				}
+			}
+		}
+
 		tx.ProcessLogging()
 		if err := tx.Close(); err != nil {
 			a.Logger.Error().Str("tx", tx.ID()).Err(err).Msg("failed to close transaction")
@@ -405,6 +426,11 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 		Request:   buildRequestString(req, headers),
 		Response:  "", // 暂时不处理响应
 		Domain:    getHostFromRequest(req),
+		SrcIP:     getRealClientIP(req),
+		DstIP:     req.DstIp.String(),
+		SrcPort:   int(req.SrcPort),
+		DstPort:   int(req.DstPort),
+		RequestID: req.ID,
 	}
 
 	// 遍历所有匹配的规则
@@ -453,10 +479,10 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 				firewallLog.URI = uri
 			}
 			if clientIP := matchedRule.ClientIPAddress(); clientIP != "" {
-				firewallLog.ClientIPAddress = clientIP
+				firewallLog.ClientIP = clientIP
 			}
 			if serverIP := matchedRule.ServerIPAddress(); serverIP != "" {
-				firewallLog.ServerIPAddress = serverIP
+				firewallLog.ServerIP = serverIP
 			}
 		}
 	}
@@ -469,8 +495,9 @@ func (a *Application) saveFirewallLog(matchedRules []types.MatchedRule, interrup
 }
 
 // NewApplication creates a new Application with a custom context
-func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *MongoConfig) (*Application, error) {
+func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *MongoConfig, isDebug bool) (*Application, error) {
 	// If no context is provided, use background context
+	isDev := os.Getenv("IS_DEV") == "true"
 	var app *Application
 	var logStore LogStore
 	if mongoConfig == nil {
@@ -487,15 +514,28 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 		}
 	}
 
-	// debugLogger := debuglog.Default().
-	// 	WithLevel(debuglog.LevelDebug).
-	// 	WithOutput(os.Stdout)
+	debugLogger := debuglog.Default().
+		WithLevel(debuglog.LevelDebug).
+		WithOutput(os.Stdout)
 
-	config := coraza.NewWAFConfig().
-		WithDirectives(a.Directives).
-		WithErrorCallback(app.logCallback).
-		// WithDebugLogger(debugLogger).
-		WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	var config coraza.WAFConfig
+	switch {
+	case isDev && isDebug:
+		config = coraza.NewWAFConfig().
+			WithDirectives(a.Directives).
+			WithErrorCallback(app.logCallback).
+			WithDebugLogger(debugLogger).
+			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	case isDebug:
+		config = coraza.NewWAFConfig().
+			WithDirectives(a.Directives).
+			WithErrorCallback(app.logCallback).
+			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	default:
+		config = coraza.NewWAFConfig().
+			WithDirectives(a.Directives).
+			WithRootFS(mergefs.Merge(coreruleset.FS, io.OSFS))
+	}
 
 	waf, err := coraza.NewWAF(config)
 	if err != nil {
@@ -507,13 +547,16 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 	const defaultEvictionInterval = time.Second * 1
 
 	app.cache = cache.NewTTLWithCallback(defaultExpire, defaultEvictionInterval, func(key, value any) {
-		// everytime a transaction runs into a timeout it gets closed.
+		// 当transaction超时时关闭它
 		t := value.(*transaction)
 		if !t.m.TryLock() {
-			// We lost a race and the transaction is already somewhere in use.
+			// 我们在竞争中失败，事务已经在其他地方使用
 			a.Logger.Info().Str("tx", t.tx.ID()).Msg("eviction called on currently used transaction")
 			return
 		}
+
+		// 超时回调只负责清理资源，不再检查中断和记录日志
+		// 因为如果事务中断，应该在请求或响应处理阶段就已经记录了日志
 
 		// Process Logging won't do anything if TX was already logged.
 		t.tx.ProcessLogging()
@@ -527,7 +570,7 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, mongoConfig *M
 
 // NewDefaultApplication creates a new Application with background context
 func (a AppConfig) NewApplication(mongoConfig *MongoConfig) (*Application, error) {
-	return a.NewApplicationWithContext(context.Background(), mongoConfig)
+	return a.NewApplicationWithContext(context.Background(), mongoConfig, false)
 }
 
 func (a *Application) logCallback(mr types.MatchedRule) {
@@ -560,7 +603,17 @@ func (e ErrInterrupted) Is(target error) bool {
 	if !ok {
 		return false
 	}
-	return e.Interruption == t.Interruption
+
+	// 首先检查两个指针是否都为nil
+	if e.Interruption == nil || t.Interruption == nil {
+		return e.Interruption == t.Interruption
+	}
+
+	// 比较Interruption结构体的字段值
+	return e.Interruption.RuleID == t.Interruption.RuleID &&
+		e.Interruption.Action == t.Interruption.Action &&
+		e.Interruption.Status == t.Interruption.Status &&
+		e.Interruption.Data == t.Interruption.Data
 }
 
 // 添加新的辅助函数
@@ -587,7 +640,84 @@ func getHeaderValue(headers []byte, targetHeader string) (string, error) {
 
 func getHostFromRequest(req *applicationRequest) string {
 	if host, err := getHeaderValue(req.Headers, "host"); err == nil && host != "" {
+		// 分离主机名和端口号
+		if colonIndex := strings.Index(host, ":"); colonIndex != -1 {
+			return host[:colonIndex]
+		}
 		return host
 	}
-	return req.DstIp.String()
+	// 如果目标IP也可能包含端口，也做分离处理
+	dstIpStr := req.DstIp.String()
+	if colonIndex := strings.Index(dstIpStr, ":"); colonIndex != -1 {
+		return dstIpStr[:colonIndex]
+	}
+	return dstIpStr
+}
+
+// getRealClientIP 从多种HTTP头部获取客户端真实IP
+func getRealClientIP(req *applicationRequest) string {
+	if req == nil {
+		return ""
+	}
+
+	// 按优先级尝试不同的头部
+	headers := []string{
+		"x-forwarded-for",  // 最常用，链式格式
+		"x-real-ip",        // Nginx常用
+		"true-client-ip",   // Akamai
+		"cf-connecting-ip", // Cloudflare
+		"fastly-client-ip", // Fastly
+		"x-client-ip",      // 通用
+		"x-original-forwarded-for",
+		"forwarded", // 标准头部
+		"x-cluster-client-ip",
+	}
+
+	// 尝试从各个头部获取IP
+	for _, header := range headers {
+		if value, err := getHeaderValue(req.Headers, header); err == nil && value != "" {
+			// 对于X-Forwarded-For和类似的链式格式，提取第一个IP
+			if header == "x-forwarded-for" || header == "x-original-forwarded-for" {
+				ips := strings.Split(value, ",")
+				if len(ips) > 0 {
+					ip := strings.TrimSpace(ips[0])
+					if ip != "" {
+						return ip
+					}
+				}
+			} else if header == "forwarded" { // 对于Forwarded头部，需要特殊处理
+				// 解析Forwarded头部，格式如：for=client;proto=https;by=proxy
+				parts := strings.Split(value, ";")
+				for _, part := range parts {
+					kv := strings.SplitN(part, "=", 2)
+					if len(kv) == 2 && strings.TrimSpace(kv[0]) == "for" {
+						// 去除可能的引号和IPv6方括号
+						ip := strings.TrimSpace(kv[1])
+						ip = strings.Trim(ip, "\"")
+
+						// 处理IPv6地址特殊格式
+						if strings.HasPrefix(ip, "[") && strings.HasSuffix(ip, "]") {
+							ip = ip[1 : len(ip)-1]
+						}
+
+						if ip != "" {
+							return ip
+						}
+					}
+				}
+			} else { // 其他头部直接返回值
+				ip := strings.TrimSpace(value)
+				if ip != "" {
+					return ip
+				}
+			}
+		}
+	}
+
+	// 如果所有头部都没有，返回源IP
+	if req.SrcIp.IsValid() {
+		return req.SrcIp.String()
+	}
+
+	return ""
 }

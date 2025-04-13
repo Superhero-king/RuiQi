@@ -13,9 +13,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
+	"text/template"
 	"time"
 
+	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/HUAHUAI23/simple-waf/server/model"
 	client_native "github.com/haproxytech/client-native/v6"
 	"github.com/haproxytech/client-native/v6/configuration"
@@ -26,6 +29,14 @@ import (
 	runtime_options "github.com/haproxytech/client-native/v6/runtime/options"
 	spoe "github.com/haproxytech/client-native/v6/spoe"
 	"github.com/rs/zerolog"
+)
+
+type HAProxyStatus int32
+
+const (
+	StatusStopped HAProxyStatus = iota
+	StatusRunning
+	StatusError
 )
 
 type HAProxyServiceImpl struct {
@@ -50,10 +61,17 @@ type HAProxyServiceImpl struct {
 	spoeClient      spoe.Spoe                   // SPOE客户端
 	clientNative    client_native.HAProxyClient // 完整客户端
 	isResponseCheck bool                        // 是否启用响应处理
+	status          atomic.Int32                // 使用原子操作的状态
+	isDebug         bool                        // 是否为生产环境
+	thread          int                         // 线程数
 
 	logger zerolog.Logger
 	ctx    context.Context
 	mutex  sync.Mutex
+}
+
+func (s *HAProxyServiceImpl) GetStatus() HAProxyStatus {
+	return HAProxyStatus(s.status.Load())
 }
 
 func (s *HAProxyServiceImpl) Start() error {
@@ -74,13 +92,20 @@ func (s *HAProxyServiceImpl) Start() error {
 	}
 
 	// 启动HAProxy进程
-	cmd := exec.Command(
-		s.HaproxyBin,
+	args := []string{
 		"-f", s.HAProxyConfigFile,
 		"-p", s.PidFile,
 		"-W",
 		"-S", fmt.Sprintf("unix@%s", s.SocketFile),
-	)
+	}
+
+	// 如果是生产环境，添加安静模式参数
+	if s.isDebug {
+		args = append([]string{"-q"}, args...)
+	}
+
+	// 启动HAProxy进程
+	cmd := exec.Command(s.HaproxyBin, args...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -113,6 +138,8 @@ func (s *HAProxyServiceImpl) Start() error {
 		return fmt.Errorf("初始化客户端失败: %v", err)
 	}
 
+	s.status.Store(int32(StatusRunning))
+
 	return nil
 }
 
@@ -135,7 +162,7 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		return err
 	}
 	if _, err := s.getFeCombined(site.ListenPort); err != nil {
-		err = s.createFeCombined(site.ListenPort)
+		err = s.createFeCombined(site.ListenPort, site.EnableHTTPS)
 		if err != nil {
 			return fmt.Errorf("创建前端组合失败: %v", err)
 		}
@@ -173,8 +200,10 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		aclIndex := len(aclList)
 		acl_http := &models.ACL{
 			ACLName:   fmt.Sprintf("host_%s", getDashDomain(site.Domain)), // 使用ACLName字段
-			Criterion: "hdr(host) -i",                                     // 使用Criterion字段
-			Value:     site.Domain,                                        // 使用Value字段
+			Criterion: "hdr(host) -i -m end",
+			Value:     site.Domain, // 使用Value字段
+			// Criterion: "hdr(host) -i",                                     // 使用Criterion字段
+			// Value:     site.Domain,                                        // 使用Value字段
 		}
 		err = s.confClient.CreateACL(int64(aclIndex), "frontend", fmt.Sprintf("fe_%d_http", site.ListenPort), acl_http, transaction.ID, 0)
 		if err != nil {
@@ -186,6 +215,11 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 				Name:    fmt.Sprintf("be_%s", getDashDomain(site.Domain)),
 				Mode:    "http",
 				Enabled: true,
+				From:    "http",
+				// 添加forwarded选项
+				Forwardfor: &models.Forwardfor{
+					Enabled: StringP("enabled"),
+				},
 			},
 		}
 		err = s.confClient.CreateBackend(backend_http, transaction.ID, 0)
@@ -263,8 +297,10 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 		// add ack and rule backend
 		acl_https := &models.ACL{
 			ACLName:   fmt.Sprintf("host_%s", getDashDomain(site.Domain)), // 使用ACLName字段
-			Criterion: "hdr(host) -i",                                     // 使用Criterion字段
-			Value:     site.Domain,                                        // 使用Value字段
+			Criterion: "hdr(host) -i -m end",                              // 修改Criterion字段使用-m end
+			Value:     site.Domain,                                        // 在域名前加上点号
+			// Criterion: "hdr(host) -i",                                     // 使用Criterion字段
+			// Value:     site.Domain,                                        // 使用Value字段
 		}
 		err = s.confClient.CreateACL(int64(aclIndex), "frontend", fmt.Sprintf("fe_%d_https", site.ListenPort), acl_https, transaction.ID, 0)
 		if err != nil {
@@ -311,6 +347,99 @@ func (s *HAProxyServiceImpl) Reload() error {
 	defer s.mutex.Unlock()
 
 	return s.reloadHAProxy()
+}
+
+func (s *HAProxyServiceImpl) HotReloadRemoveConfig() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	// 需要删除的文件，不包括 PidFile 和 SocketFile
+	filesToRemove := []string{
+		s.HAProxyConfigFile,
+		s.SpoeConfigFile,
+	}
+
+	// 保存 PidFile 和 SocketFile 的绝对路径，以便后续比较
+	pidFileAbs, _ := filepath.Abs(s.PidFile)
+	socketFileAbs, _ := filepath.Abs(s.SocketFile)
+
+	// 需要删除的目录
+	dirsToRemove := []string{
+		s.TransactionDir,
+		s.SpoeTransactionDir,
+		s.CertDir,
+	}
+
+	// 特殊处理 filepath.Dir(s.HAProxyConfigFile)
+	configDir := filepath.Dir(s.HAProxyConfigFile)
+	if configDir != "" {
+		// 先列出该目录下所有文件
+		entries, err := os.ReadDir(configDir)
+		if err == nil {
+			// 逐个删除文件，跳过 PidFile 和 SocketFile
+			for _, entry := range entries {
+				if entry.IsDir() {
+					continue // 跳过子目录，我们会单独处理目录
+				}
+
+				filePath := filepath.Join(configDir, entry.Name())
+				filePathAbs, _ := filepath.Abs(filePath)
+
+				// 检查是否是要保留的文件
+				if filePathAbs == pidFileAbs || filePathAbs == socketFileAbs {
+					continue // 跳过 PidFile 和 SocketFile
+				}
+
+				s.logger.Info().Msgf("正在删除文件: %s", filePath)
+				if err := os.Remove(filePath); err != nil {
+					s.logger.Error().Msgf("删除文件失败 %s: %v", filePath, err)
+					// 继续删除其他文件，不立即返回错误
+				}
+			}
+		}
+	}
+
+	// 删除文件
+	for _, file := range filesToRemove {
+		if file == "" {
+			continue // 跳过空路径
+		}
+
+		// 检查文件是否存在
+		if _, err := os.Stat(file); err == nil {
+			// 确认不是需要保留的文件
+			fileAbs, _ := filepath.Abs(file)
+			if fileAbs == pidFileAbs || fileAbs == socketFileAbs {
+				continue // 跳过 PidFile 和 SocketFile
+			}
+
+			s.logger.Info().Msgf("正在删除文件: %s", file)
+			if err := os.Remove(file); err != nil {
+				s.logger.Error().Msgf("删除文件失败 %s: %v", file, err)
+				// 继续删除其他文件，不立即返回错误
+			}
+		}
+	}
+
+	// 由于我们需要保留configDir中的某些文件，所以不能直接删除configDir
+	// 删除其他目录
+	for _, dir := range dirsToRemove {
+		if dir == "" || dir == configDir {
+			continue // 跳过空路径和配置目录
+		}
+
+		// 检查目录是否存在
+		if _, err := os.Stat(dir); err == nil {
+			s.logger.Info().Msgf("正在删除目录: %s", dir)
+			if err := os.RemoveAll(dir); err != nil {
+				s.logger.Error().Msgf("删除目录失败 %s: %v", dir, err)
+				// 继续删除其他目录，不立即返回错误
+			}
+		}
+	}
+
+	s.logger.Info().Msg("配置清理完成")
+	return nil
 }
 
 func (s *HAProxyServiceImpl) RemoveConfig() error {
@@ -402,13 +531,15 @@ func (s *HAProxyServiceImpl) InitHAProxyConfig() error {
 		username = "haproxy"
 	}
 
-	basicConfig := fmt.Sprintf(`# _version = 1
+	// 定义配置模板
+	configTemplate := `# _version = 1
 global
     log stdout format raw local0
-	# nbthread 8 # 线程数
-    # maxconn 4000 # 最大连接数
-    # user %s
-    # group %s
+{{if gt .Thread 0}}    nbthread {{.Thread}} # 线程数
+{{end}} 
+    # user {{.Username}}
+    # group {{.Username}}
+	# maxconn 4000 # 最大连接数
 defaults http
     mode http
     log global
@@ -416,7 +547,6 @@ defaults http
     timeout client 1m
     timeout server 1m
     timeout connect 10s
-
 defaults tcp
     mode tcp
     log global
@@ -424,10 +554,37 @@ defaults tcp
     timeout client 1m
     timeout server 1m
     timeout connect 10s
+frontend stats from http
+  mode http
+  bind *:8404
+  stats enable
+  stats uri /stats
+  stats show-modules
 # The following part will be dynamically configured
-`, username, username)
+`
+	fmt.Println("s.thread", s.thread)
+	// 准备模板数据
+	data := struct {
+		Username string
+		Thread   int
+	}{
+		Username: username,
+		Thread:   s.thread,
+	}
 
-	if err := os.WriteFile(s.HAProxyConfigFile, []byte(basicConfig), 0644); err != nil {
+	// 解析模板
+	tmpl, err := template.New("haproxy-config").Parse(configTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %v", err)
+	}
+
+	// 执行模板并写入文件
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return fmt.Errorf("failed to execute template: %v", err)
+	}
+
+	if err := os.WriteFile(s.HAProxyConfigFile, buf.Bytes(), 0644); err != nil {
 		return fmt.Errorf("failed to create basic config file: %v", err)
 	}
 
@@ -615,6 +772,7 @@ func (s *HAProxyServiceImpl) AddCorazaBackend() error {
 		BackendBase: models.BackendBase{
 			Name:    "coraza-spoa",
 			Mode:    "tcp",
+			From:    "tcp",
 			Enabled: true,
 		},
 	}
@@ -639,6 +797,25 @@ func (s *HAProxyServiceImpl) AddCorazaBackend() error {
 	}
 
 	s.confClient.DeleteTransaction(transaction.ID)
+
+	return nil
+}
+
+func (s *HAProxyServiceImpl) Reset() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	appConfig, err := config.GetAppConfig()
+	if err != nil {
+		return fmt.Errorf("获取应用配置失败: %v", err)
+	}
+
+	s.thread = appConfig.Haproxy.Thread
+	s.isResponseCheck = appConfig.IsResponseCheck
+	s.isDebug = appConfig.IsDebug
+
+	if err := s.resetClients(); err != nil {
+		return fmt.Errorf("重置客户端失败: %v", err)
+	}
 
 	return nil
 }
@@ -757,6 +934,15 @@ func (s *HAProxyServiceImpl) initClients() error {
 	return nil
 }
 
+func (s *HAProxyServiceImpl) resetClients() error {
+	s.confClient = nil
+	s.spoeClient = nil
+	s.runtimeClient = nil
+	s.clientNative = nil
+
+	return nil
+}
+
 // stopHAProxy 停止HAProxy进程
 func (s *HAProxyServiceImpl) stopHAProxy() error {
 	// 如果实例中存储了HAProxy命令，使用它终止进程
@@ -817,6 +1003,7 @@ func (s *HAProxyServiceImpl) stopHAProxy() error {
 		}
 	}
 
+	s.status.Store(int32(StatusStopped))
 	return nil
 }
 
@@ -941,7 +1128,7 @@ func (s *HAProxyServiceImpl) getFeCombined(port int) (string, error) {
 	return frontend.Name, nil
 }
 
-func (s *HAProxyServiceImpl) createFeCombined(port int) error {
+func (s *HAProxyServiceImpl) createFeCombined(port int, isHttpsRedirect bool) error {
 	// 确保配置客户端初始化
 	if err := s.ensureConfClient(); err != nil {
 		return fmt.Errorf("初始化配置客户端失败: %v", err)
@@ -962,6 +1149,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 			Mode:           "tcp",
 			DefaultBackend: fmt.Sprintf("be_%d_https", port), // 设置默认后端
 			Enabled:        true,
+			From:           "tcp",
 		},
 	}
 	err = s.confClient.CreateFrontend(fe_combined, transaction.ID, 0)
@@ -1034,6 +1222,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 			Name:    fmt.Sprintf("be_%d_http", port),
 			Mode:    "tcp",
 			Enabled: true,
+			From:    "tcp",
 		},
 	}
 	err = s.confClient.CreateBackend(be_http, transaction.ID, 0)
@@ -1060,6 +1249,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 			Name:    fmt.Sprintf("be_%d_https", port),
 			Mode:    "tcp",
 			Enabled: true,
+			From:    "tcp",
 		},
 	}
 	err = s.confClient.CreateBackend(be_https, transaction.ID, 0)
@@ -1090,8 +1280,12 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 			Mode:           "http",
 			DefaultBackend: fmt.Sprintf("p%d_backend", port),
 			Enabled:        true,
+			From:           "http",
 			// 日志格式使用反斜杠转义空格和特殊字符
 			LogFormat: "\"%ci:%cp\\ [%t]\\ %ft\\ %b/%s\\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\\ %ST\\ %B\\ %CC\\ %CS\\ %tsc\\ %ac/%fc/%bc/%sc/%rc\\ %sq/%bq\\ %hr\\ %hs\\ %{+Q}r\\ %[var(txn.coraza.id)]\\ spoa-error:\\ %[var(txn.coraza.error)]\\ waf-hit:\\ %[var(txn.coraza.fail)]\"",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateFrontend(fe_http, transaction.ID, 0)
@@ -1113,6 +1307,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建绑定失败: %v", err)
 	}
 
+	// 添加 spoe 过滤
 	fe_http_filter := &models.Filter{
 		Type:       "spoe",           // 过滤器类型
 		SpoeEngine: "coraza",         // SPOE引擎名称
@@ -1123,37 +1318,85 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建过滤器失败: %v", err)
 	}
 
-	fe_http_request_rule := []struct {
+	// 添加HTTP请求规则
+	var fe_http_request_rule []struct {
 		index int64
 		rule  *models.HTTPRequestRule
-	}{
-		{0, &models.HTTPRequestRule{
-			Type:       "redirect",
-			RedirCode:  Int64P(302),
-			RedirType:  "location", // 指定重定向类型
-			RedirValue: "%[var(txn.coraza.data)]",
-			Cond:       "if",
-			CondTest:   "{ var(txn.coraza.action) -m str redirect }",
-		}},
-		{1, &models.HTTPRequestRule{
-			Type:       "deny",
-			DenyStatus: Int64P(403),
-			HdrName:    "waf-block", // 设置头部名称
-			HdrFormat:  "request",   // 设置头部值
-			Cond:       "if",
-			CondTest:   "{ var(txn.coraza.action) -m str deny }",
-		}},
-		{2, &models.HTTPRequestRule{
-			Type:     "silent-drop",
-			Cond:     "if",
-			CondTest: "{ var(txn.coraza.action) -m str drop }",
-		}},
-		{3, &models.HTTPRequestRule{
-			Type:       "deny",
-			DenyStatus: Int64P(500),
-			Cond:       "if",
-			CondTest:   "{ var(txn.coraza.error) -m int gt 0 }",
-		}},
+	}
+	if isHttpsRedirect {
+		fe_http_request_rule = []struct {
+			index int64
+			rule  *models.HTTPRequestRule
+		}{
+			{0, &models.HTTPRequestRule{
+				Type:       "redirect",
+				RedirCode:  Int64P(301),
+				RedirType:  "scheme",
+				RedirValue: "https",
+			}},
+			{1, &models.HTTPRequestRule{
+				Type:       "redirect",
+				RedirCode:  Int64P(302),
+				RedirType:  "location", // 指定重定向类型
+				RedirValue: "%[var(txn.coraza.data)]",
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str redirect }",
+			}},
+			{2, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(403),
+				HdrName:    "waf-block", // 设置头部名称
+				HdrFormat:  "request",   // 设置头部值
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str deny }",
+			}},
+			{3, &models.HTTPRequestRule{
+				Type:     "silent-drop",
+				Cond:     "if",
+				CondTest: "{ var(txn.coraza.action) -m str drop }",
+			}},
+			{4, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(500),
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.error) -m int gt 0 }",
+			}},
+		}
+	} else {
+
+		fe_http_request_rule = []struct {
+			index int64
+			rule  *models.HTTPRequestRule
+		}{
+			{0, &models.HTTPRequestRule{
+				Type:       "redirect",
+				RedirCode:  Int64P(302),
+				RedirType:  "location", // 指定重定向类型
+				RedirValue: "%[var(txn.coraza.data)]",
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str redirect }",
+			}},
+			{1, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(403),
+				HdrName:    "waf-block", // 设置头部名称
+				HdrFormat:  "request",   // 设置头部值
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.action) -m str deny }",
+			}},
+			{2, &models.HTTPRequestRule{
+				Type:     "silent-drop",
+				Cond:     "if",
+				CondTest: "{ var(txn.coraza.action) -m str drop }",
+			}},
+			{3, &models.HTTPRequestRule{
+				Type:       "deny",
+				DenyStatus: Int64P(500),
+				Cond:       "if",
+				CondTest:   "{ var(txn.coraza.error) -m int gt 0 }",
+			}},
+		}
+
 	}
 
 	for i, item := range fe_http_request_rule {
@@ -1211,8 +1454,12 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 			Mode:           "http",
 			DefaultBackend: fmt.Sprintf("p%d_backend", port),
 			Enabled:        true,
+			From:           "http",
 			// 日志格式使用反斜杠转义空格和特殊字符
 			LogFormat: "\"%ci:%cp\\ [%t]\\ %ft\\ %b/%s\\ %Th/%Ti/%TR/%Tq/%Tw/%Tc/%Tr/%Tt\\ %ST\\ %B\\ %CC\\ %CS\\ %tsc\\ %ac/%fc/%bc/%sc/%rc\\ %sq/%bq\\ %hr\\ %hs\\ %{+Q}r\\ %[var(txn.coraza.id)]\\ spoa-error:\\ %[var(txn.coraza.error)]\\ waf-hit:\\ %[var(txn.coraza.fail)]\"",
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateFrontend(fe_https, transaction.ID, 0)
@@ -1232,6 +1479,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建绑定失败: %v", err)
 	}
 
+	// 添加 spoe 过滤
 	fe_https_filter := &models.Filter{
 		Type:       "spoe",           // 过滤器类型
 		SpoeEngine: "coraza",         // SPOE引擎名称
@@ -1242,6 +1490,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		return fmt.Errorf("创建过滤器失败: %v", err)
 	}
 
+	// 添加HTTPs请求规则
 	fe_https_request_rule := []struct {
 		index int64
 		rule  *models.HTTPRequestRule
@@ -1282,7 +1531,7 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 		}
 	}
 
-	// 添加HTTP响应规则 - 确保HTTP响应规则结构正确
+	// 添加HTTPs响应规则 - 确保HTTP响应规则结构正确
 	fe_https_response_rule := []struct {
 		index int64
 		rule  *models.HTTPResponseRule
@@ -1329,6 +1578,11 @@ func (s *HAProxyServiceImpl) createFeCombined(port int) error {
 			Name:    fmt.Sprintf("p%d_backend", port),
 			Mode:    "http",
 			Enabled: true,
+			From:    "http",
+			// 添加forwarded选项
+			Forwardfor: &models.Forwardfor{
+				Enabled: StringP("enabled"),
+			},
 		},
 	}
 	err = s.confClient.CreateBackend(be_default, transaction.ID, 0)
@@ -1411,8 +1665,5 @@ func getDashDomain(domain string) string {
 func isIPAddress(domain string) bool {
 	// 检查IPv4地址
 	ip := net.ParseIP(domain)
-	if ip != nil {
-		return true
-	}
-	return false
+	return ip != nil
 }

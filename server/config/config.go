@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
+	"github.com/HUAHUAI23/simple-waf/server/constant"
 	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -153,13 +155,13 @@ func InitDB(db *mongo.Database) error {
 func createDefaultConfig() model.Config {
 	now := time.Now()
 	return model.Config{
-		Name: "default config",
+		Name: constant.GetString("APP_CONFIG_NAME", "AppConfig"),
 		Engine: model.EngineConfig{
 			Bind:            "127.0.0.1:2342",
 			UseBuiltinRules: true,
 			AppConfig: []model.AppConfig{
 				{
-					Name: "coraza",
+					Name: constant.GetString("Default_ENGINE_NAME", "coraza"),
 					Directives: `Include @coraza.conf-recommended
 Include @crs-setup.conf.example
 Include @owasp_crs/*.conf
@@ -178,9 +180,45 @@ SecRuleEngine On`,
 			BackupsNumber: 5,
 			SpoeAgentAddr: "127.0.0.1",
 			SpoeAgentPort: 2342,
+			Thread:        0,
 		},
 		CreatedAt:       now,
 		UpdatedAt:       now,
 		IsResponseCheck: false,
+		IsDebug:         !Global.IsProduction,
 	}
+}
+
+func GetAppConfig() (*model.Config, error) {
+	// 连接数据库
+	client, err := mongodb.Connect(Global.DBConfig.URI)
+	if err != nil {
+		return nil, err
+	}
+
+	var cfg model.Config
+	// 获取配置集合
+	db := client.Database(Global.DBConfig.Database)
+	collection := db.Collection(cfg.GetCollectionName())
+
+	// 创建带超时的上下文
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel() // 确保资源被释放
+
+	// 使用常量获取配置名称，如果不存在则使用默认值"AppConfig"
+	configName := constant.GetString("APP_CONFIG_NAME", "AppConfig")
+
+	// 查询指定名称的配置
+	err = collection.FindOne(
+		ctx,
+		bson.D{{Key: "name", Value: configName}},
+	).Decode(&cfg)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("未找到配置记录")
+		}
+		return nil, fmt.Errorf("获取配置失败: %w", err)
+	}
+	return &cfg, nil
 }

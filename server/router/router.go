@@ -1,11 +1,15 @@
 package router
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/HUAHUAI23/simple-waf/server/controller"
 	"github.com/HUAHUAI23/simple-waf/server/middleware"
 	"github.com/HUAHUAI23/simple-waf/server/model"
 	"github.com/HUAHUAI23/simple-waf/server/repository"
 	"github.com/HUAHUAI23/simple-waf/server/service"
+	"github.com/HUAHUAI23/simple-waf/server/utils/response"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -22,13 +26,24 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	// 创建仓库
 	userRepo := repository.NewUserRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
-
+	siteRepo := repository.NewSiteRepository(db)
+	wafLogRepo := repository.NewWAFLogRepository(db)
+	certRepo := repository.NewCertificateRepository(db)
+	configRepo := repository.NewConfigRepository(db)
 	// 创建服务
 	authService := service.NewAuthService(userRepo, roleRepo)
-
+	siteService := service.NewSiteService(siteRepo)
+	wafLogService := service.NewWAFLogService(wafLogRepo)
+	certService := service.NewCertificateService(certRepo)
+	runnerService, _ := service.NewRunnerService()
+	configService := service.NewConfigService(configRepo)
 	// 创建控制器
 	authController := controller.NewAuthController(authService)
-
+	siteController := controller.NewSiteController(siteService)
+	wafLogController := controller.NewWAFLogController(wafLogService)
+	certController := controller.NewCertificateController(certService)
+	runnerController := controller.NewRunnerController(runnerService)
+	configController := controller.NewConfigController(configService)
 	// 将仓库添加到上下文中，供中间件使用
 	route.Use(func(c *gin.Context) {
 		c.Set("userRepo", userRepo)
@@ -85,27 +100,53 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	}
 
 	// 站点管理模块
-	siteRoutes := authenticated.Group("/sites")
+	siteRoutes := authenticated.Group("/site")
 	{
 		// 创建站点 - 需要site:create权限
-		siteRoutes.POST("", middleware.HasPermission(model.PermSiteCreate), nil)
+		siteRoutes.POST("", middleware.HasPermission(model.PermSiteCreate), siteController.CreateSite)
 		// 获取站点列表 - 需要site:read权限
-		siteRoutes.GET("", middleware.HasPermission(model.PermSiteRead), nil)
+		siteRoutes.GET("", middleware.HasPermission(model.PermSiteRead), siteController.GetSites)
 		// 获取单个站点 - 需要site:read权限
-		siteRoutes.GET("/:id", middleware.HasPermission(model.PermSiteRead), nil)
+		siteRoutes.GET("/:id", middleware.HasPermission(model.PermSiteRead), siteController.GetSiteByID)
 		// 更新站点 - 需要site:update权限
-		siteRoutes.PUT("/:id", middleware.HasPermission(model.PermSiteUpdate), nil)
+		siteRoutes.PUT("/:id", middleware.HasPermission(model.PermSiteUpdate), siteController.UpdateSite)
 		// 删除站点 - 需要site:delete权限
-		siteRoutes.DELETE("/:id", middleware.HasPermission(model.PermSiteDelete), nil)
+		siteRoutes.DELETE("/:id", middleware.HasPermission(model.PermSiteDelete), siteController.DeleteSite)
+	}
+
+	// 证书管理路由
+	certRoutes := authenticated.Group("/certificate")
+	{
+		certRoutes.POST("", middleware.HasPermission(model.PermCertCreate), certController.CreateCertificate)
+		certRoutes.GET("", middleware.HasPermission(model.PermCertRead), certController.GetCertificates)
+		certRoutes.GET("/:id", middleware.HasPermission(model.PermCertRead), certController.GetCertificateByID)
+		certRoutes.PUT("/:id", middleware.HasPermission(model.PermCertUpdate), certController.UpdateCertificate)
+		certRoutes.DELETE("/:id", middleware.HasPermission(model.PermCertDelete), certController.DeleteCertificate)
+	}
+
+	// 日志
+	wafLogRoutes := authenticated.Group("/log")
+	{
+		// 获取攻击事件 - 需要logs:read权限
+		wafLogRoutes.GET("/event", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackEvents)
+		// 获取攻击日志 - 需要logs:read权限
+		wafLogRoutes.GET("", middleware.HasPermission(model.PermWAFLogRead), wafLogController.GetAttackLogs)
 	}
 
 	// 配置管理模块
+	runnerRoutes := authenticated.Group("/runner")
+	{
+		// 获取配置 - 需要config:read权限
+		runnerRoutes.GET("/status", middleware.HasPermission(model.PermConfigRead), runnerController.GetStatus)
+		// 更新配置 - 需要config:update权限
+		runnerRoutes.POST("/control", middleware.HasPermission(model.PermConfigUpdate), runnerController.Control)
+	}
 	configRoutes := authenticated.Group("/config")
 	{
 		// 获取配置 - 需要config:read权限
-		configRoutes.GET("", middleware.HasPermission(model.PermConfigRead), nil)
+		configRoutes.GET("", middleware.HasPermission(model.PermConfigRead), configController.GetConfig)
 		// 更新配置 - 需要config:update权限
-		configRoutes.PUT("", middleware.HasPermission(model.PermConfigUpdate), nil)
+		configRoutes.PATCH("", middleware.HasPermission(model.PermConfigUpdate), configController.PatchConfig)
 	}
 
 	// 审计日志模块
@@ -123,4 +164,31 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 		// 重启系统 - 需要system:restart权限
 		systemRoutes.POST("/restart", middleware.HasPermission(model.PermSystemRestart), nil)
 	}
+
+	// ===== 前端静态资源托管 =====
+
+	// 托管静态资源
+	route.Static("/assets", "./web/dist/assets")
+
+	// 托管本地化文件
+	route.Static("/locales", "./web/dist/locales")
+
+	// 托管其他静态文件
+	route.StaticFile("/favicon.ico", "./web/dist/favicon.ico")
+	route.StaticFile("/logo.png", "./web/dist/logo.png")
+	route.StaticFile("/logo.svg", "./web/dist/logo.svg")
+
+	// 处理所有非API路由，返回前端入口
+
+	// NoRoute处理
+	route.NoRoute(func(c *gin.Context) {
+		// 如果是API请求，返回404
+		if strings.HasPrefix(c.Request.URL.Path, "/api") {
+			response.BadRequest(c, errors.New("API路由不存在"), true)
+			return
+		}
+
+		// 所有其他路由返回前端入口文件
+		c.File("./web/dist/index.html")
+	})
 }

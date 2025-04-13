@@ -12,6 +12,7 @@ import (
 
 type HAProxyService interface {
 	RemoveConfig() error
+	HotReloadRemoveConfig() error
 	CreateHAProxyCrtStore() error
 	InitSpoeConfig() error
 	InitHAProxyConfig() error
@@ -20,6 +21,8 @@ type HAProxyService interface {
 	Start() error
 	Reload() error
 	Stop() error
+	GetStatus() HAProxyStatus
+	Reset() error
 }
 
 // NewHAProxyService 创建一个新的HAProxy服务实例
@@ -38,6 +41,15 @@ func NewHAProxyService(configBaseDir, haproxyBin string, ctx context.Context) (H
 	// 如果未指定二进制路径，假设在PATH中可用
 	if haproxyBin == "" {
 		haproxyBin = "haproxy"
+	}
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	appConfig, err := config.GetAppConfig()
+	if err != nil {
+		return nil, fmt.Errorf("无法获取应用配置: %v", err)
 	}
 
 	logger := config.GetLogger().With().Str("component", "haproxy").Logger()
@@ -59,5 +71,7 @@ func NewHAProxyService(configBaseDir, haproxyBin string, ctx context.Context) (H
 		isResponseCheck:    false,
 		ctx:                ctx,
 		logger:             logger,
+		isDebug:            config.Global.IsProduction,
+		thread:             appConfig.Haproxy.Thread,
 	}, nil
 }

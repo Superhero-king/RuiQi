@@ -1,5 +1,5 @@
 // validators/validators.go
-package validators
+package validator
 
 import (
 	"github.com/gin-gonic/gin/binding"

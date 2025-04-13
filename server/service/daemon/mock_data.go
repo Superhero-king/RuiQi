@@ -23,21 +23,14 @@ func GetTestSites() []model.Site {
 			UpdatedAt:    now,
 			ActiveStatus: true,
 			Backend: model.Backend{
-				Name: "be_test1_servers",
 				Servers: []model.Server{
 					{
-						Name:   "srv1",
-						Host:   "httpbin.org",
-						Port:   80,
-						Weight: 10,
-						IsSSL:  false,
+						Host: "httpbin.org",
+						Port: 80,
 					},
 					{
-						Name:   "srv2",
-						Host:   "httpbin.org",
-						Port:   80,
-						Weight: 5,
-						IsSSL:  false,
+						Host: "httpbin.org",
+						Port: 80,
 					},
 				},
 			},
@@ -53,14 +46,10 @@ func GetTestSites() []model.Site {
 			UpdatedAt:    now.Add(-7 * 24 * time.Hour),
 			ActiveStatus: true,
 			Backend: model.Backend{
-				Name: "be_dev_servers",
 				Servers: []model.Server{
 					{
-						Name:   "dev-srv",
-						Host:   "httpbin.org",
-						Port:   80,
-						Weight: 1,
-						IsSSL:  false,
+						Host: "httpbin.org",
+						Port: 80,
 					},
 				},
 			},
@@ -132,14 +121,10 @@ JtutDjT7wgLTacd+39nhwVKw
 				FingerPrint: "5E:FF:56:A2:AF:15:88:25:AE:E2:2B:B5:11:64:63:F8:8E:7C:D2:2E",
 			},
 			Backend: model.Backend{
-				Name: "be_secure_servers",
 				Servers: []model.Server{
 					{
-						Name:   "web1",
-						Host:   "httpbin.org",
-						Port:   443,
-						Weight: 10,
-						IsSSL:  false,
+						Host: "httpbin.org",
+						Port: 443,
 					},
 				},
 			},
@@ -211,14 +196,10 @@ F4HspkmPawQNPqFCDqHcHaA=
 				FingerPrint: "5E:FF:56:A2:AF:15:88:25:AE:E2:2B:B5:11:64:63:F8:8E:7C:D2:2E",
 			},
 			Backend: model.Backend{
-				Name: "be_secure_servers",
 				Servers: []model.Server{
 					{
-						Name:   "web1",
-						Host:   "httpbin.org",
-						Port:   443,
-						Weight: 10,
-						IsSSL:  false,
+						Host: "httpbin.org",
+						Port: 443,
 					},
 				},
 			},
@@ -234,14 +215,10 @@ F4HspkmPawQNPqFCDqHcHaA=
 			UpdatedAt:    now.Add(-7 * 24 * time.Hour),
 			ActiveStatus: false,
 			Backend: model.Backend{
-				Name: "be_dev_servers",
 				Servers: []model.Server{
 					{
-						Name:   "dev-srv",
-						Host:   "httpbin.org",
-						Port:   80,
-						Weight: 1,
-						IsSSL:  false,
+						Host: "httpbin.org",
+						Port: 80,
 					},
 				},
 			},
