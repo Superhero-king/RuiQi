@@ -60,10 +60,50 @@ export default {
                     '85%': { transform: 'rotate(3deg)' },
                     '92%': { transform: 'rotate(-2deg)' },
                     '100%': { transform: 'rotate(0deg)' }
+                },
+                'float': {
+                    '0%': { transform: 'translateY(0px) translateX(0px)' },
+                    '50%': { transform: 'translateY(-20px) translateX(10px)' },
+                    '100%': { transform: 'translateY(0px) translateX(0px)' }
+                },
+                'float-reverse': {
+                    '0%': { transform: 'translateY(0px) translateX(0px)' },
+                    '50%': { transform: 'translateY(20px) translateX(-10px)' },
+                    '100%': { transform: 'translateY(0px) translateX(0px)' }
+                },
+                'pulse-glow': {
+                    '0%, 100%': { opacity: 0.6, transform: 'scale(1)' },
+                    '50%': { opacity: 1, transform: 'scale(1.05)' }
+                },
+                'fade-in-up': {
+                    '0%': { opacity: 0, transform: 'translateY(20px)' },
+                    '100%': { opacity: 1, transform: 'translateY(0)' }
+                },
+                'wiggle': {
+                    '0%, 100%': { transform: 'rotate(-2deg)' },
+                    '50%': { transform: 'rotate(2deg)' }
+                },
+                'gradient-shift': {
+                    '0%': { backgroundPosition: '0% 50%' },
+                    '50%': { backgroundPosition: '100% 50%' },
+                    '100%': { backgroundPosition: '0% 50%' }
+                },
+                'aurora': {
+                    '0%': { filter: 'hue-rotate(0deg) brightness(1) saturate(1.5)' },
+                    '33%': { filter: 'hue-rotate(60deg) brightness(1.1) saturate(1.8)' },
+                    '66%': { filter: 'hue-rotate(180deg) brightness(1.05) saturate(1.6)' },
+                    '100%': { filter: 'hue-rotate(360deg) brightness(1) saturate(1.5)' }
                 }
             },
             animation: {
-                'icon-shake': 'icon-shake 0.7s ease-out'
+                'icon-shake': 'icon-shake 0.7s ease-out',
+                'float': 'float 8s ease-in-out infinite',
+                'float-reverse': 'float-reverse 9s ease-in-out infinite',
+                'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
+                'fade-in-up': 'fade-in-up 0.5s ease-out',
+                'wiggle': 'wiggle 1s ease-in-out infinite',
+                'gradient-shift': 'gradient-shift 8s ease infinite',
+                'aurora': 'aurora 20s ease infinite'
             }
         }
     },
