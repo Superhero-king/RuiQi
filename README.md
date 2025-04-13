@@ -174,6 +174,7 @@ cp server/.env.template server/.env
 
 ```bash
 go run server/main.go
+docker build -t simple-waf:latest .
 ```
 
 The API server will start at `http://localhost:2333/api/v1` by default.
