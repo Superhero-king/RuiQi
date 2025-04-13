@@ -1,14 +1,16 @@
-# 多阶段构建
 # 阶段1: 构建Node.js前端
-FROM node:23.10.0 AS frontend-builder
+FROM node:23.10.0-alpine AS frontend-builder
 # 安装pnpm
 RUN npm install -g pnpm@10.6.5
 # 设置工作目录
 WORKDIR /app
-# 复制前端项目文件
-COPY server/web/ ./
-# 安装依赖并构建前端
+# 先复制package.json和pnpm-lock.yaml (如果有)
+COPY server/web/package.json server/web/pnpm-lock.yaml* ./
+# 安装依赖
 RUN pnpm install
+# 复制前端项目其他文件
+COPY server/web/ ./
+# 构建前端
 RUN pnpm build
 
 # 阶段2: 构建Go后端
@@ -20,29 +22,28 @@ ENV GO111MODULE=on \
     GOARCH=amd64
 # 设置工作目录
 WORKDIR /build
+# 复制go.work
+COPY go.work ./
+# 先复制go.mod和go.sum文件（如果存在）
+COPY server/go.mod server/go.sum* ./server/
+COPY pkg/go.mod pkg/go.sum* ./pkg/
+COPY coraza-spoa/go.mod coraza-spoa/go.sum* ./coraza-spoa/
+# 预下载依赖
+RUN go work use ./coraza-spoa ./pkg ./server && \
+    go mod download
 # 复制整个项目结构
 COPY coraza-spoa/ ./coraza-spoa/
 COPY pkg/ ./pkg/
 COPY server/ ./server/
-COPY go.work ./
 # 复制前端构建产物到正确位置
 COPY --from=frontend-builder /app/dist ./server/web/dist
-# 使用Go的工作区功能进行构建
-RUN go work use ./coraza-spoa ./pkg ./server
+# 构建后端
 RUN cd server && go build -o ../simple-waf-server main.go
 
-# 阶段3: 最终镜像 - 使用Ubuntu 24.04并安装HAProxy 3.0
-FROM ubuntu:24.04
-# 避免交互式前端
-ENV DEBIAN_FRONTEND=noninteractive
-# 安装HAProxy 3.0
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common ca-certificates && \
-    add-apt-repository -y ppa:vbernat/haproxy-3.0 && \
-    apt-get update && \
-    apt-get install -y haproxy=3.0.* && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# 阶段3: 最终镜像 - 使用Alpine并安装HAProxy
+FROM alpine:3.19
+# 安装HAProxy和必要工具
+RUN apk add --no-cache haproxy~=3.0 libcap
 
 # 创建必要的目录
 WORKDIR /app
@@ -54,14 +55,23 @@ COPY --from=backend-builder /build/server/web/dist ./web/dist
 # 复制Swagger文档文件
 COPY --from=backend-builder /build/server/docs/ ./docs/
 
-# 设置运行权限
-RUN chmod +x /app/simple-waf-server
+# 设置运行权限并添加CAP_NET_BIND_SERVICE权限
+RUN chmod +x /app/simple-waf-server && \
+    setcap 'cap_net_bind_service=+ep' /app/simple-waf-server
+
+# 创建非root用户
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# 修改所有权
+RUN chown -R appuser:appgroup /app
+
+# 切换到非root用户
+USER appuser
 
 # 设置环境变量
 ENV GIN_MODE=release
 
-# 暴露端口
+# 暴露端口 (假设需要80端口作为示例)
 EXPOSE 2333
 
-# 运行应用
+# 运行应用，绑定到80端口
 CMD ["/app/simple-waf-server"]
