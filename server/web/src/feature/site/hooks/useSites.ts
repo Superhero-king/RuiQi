@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { siteApi } from '@/api/site'
 import { CreateSiteRequest, UpdateSiteRequest } from '@/types/site'
 import { useToast } from '@/hooks/use-toast'
+import { useTranslation } from 'react-i18next'
 
 type ApiError = {
     message: string
@@ -15,13 +16,14 @@ export const useCreateSite = () => {
     const queryClient = useQueryClient()
     const { toast } = useToast()
     const [error, setError] = useState<string | null>(null)
+    const { t } = useTranslation()
 
     const mutation = useMutation({
         mutationFn: (data: CreateSiteRequest) => siteApi.createSite(data),
         onSuccess: () => {
             toast({
-                title: "创建成功",
-                description: "站点已成功创建",
+                title: t("site.toast.createSuccess", "创建成功"),
+                description: t("site.toast.siteCreated", "站点已成功创建"),
             })
             queryClient.invalidateQueries({ queryKey: ['sites'] })
         },
@@ -29,8 +31,8 @@ export const useCreateSite = () => {
             console.error('创建站点失败:', error)
             setError(error.message || "创建站点时出现错误")
             toast({
-                title: "创建失败",
-                description: error.message || "创建站点时出现错误",
+                title: t("site.toast.createFailed", "创建失败"),
+                description: error.message || t("site.toast.createError", "创建站点时出现错误"),
                 variant: "destructive",
             })
         }
@@ -51,13 +53,14 @@ export const useDeleteSite = () => {
     const queryClient = useQueryClient()
     const { toast } = useToast()
     const [error, setError] = useState<string | null>(null)
+    const { t } = useTranslation()
 
     const mutation = useMutation({
         mutationFn: (id: string) => siteApi.deleteSite(id),
         onSuccess: () => {
             toast({
-                title: "删除成功",
-                description: "站点已成功删除",
+                title: t("site.toast.deleteSuccess", "删除成功"),
+                description: t("site.toast.siteDeleted", "站点已成功删除"),
             })
             queryClient.invalidateQueries({ queryKey: ['sites'] })
         },
@@ -65,8 +68,8 @@ export const useDeleteSite = () => {
             console.error('删除站点失败:', error)
             setError(error.message || "删除站点时出现错误")
             toast({
-                title: "删除失败",
-                description: error.message || "删除站点时出现错误",
+                title: t("site.toast.deleteFailed", "删除失败"),
+                description: error.message || t("site.toast.deleteError", "删除站点时出现错误"),
                 variant: "destructive",
             })
         }
@@ -87,14 +90,15 @@ export const useUpdateSite = () => {
     const queryClient = useQueryClient()
     const { toast } = useToast()
     const [error, setError] = useState<string | null>(null)
+    const { t } = useTranslation()
 
     const mutation = useMutation({
         mutationFn: ({ id, data }: { id: string, data: UpdateSiteRequest }) =>
             siteApi.updateSite(id, data),
         onSuccess: () => {
             toast({
-                title: "更新成功",
-                description: "站点已成功更新",
+                title: t("site.toast.updateSuccess", "更新成功"),
+                description: t("site.toast.siteUpdated", "站点已成功更新"),
             })
             queryClient.invalidateQueries({ queryKey: ['sites'] })
         },
@@ -102,8 +106,8 @@ export const useUpdateSite = () => {
             console.error('更新站点失败:', error)
             setError(error.message || "更新站点时出现错误")
             toast({
-                title: "更新失败",
-                description: error.message || "更新站点时出现错误",
+                title: t("site.toast.updateFailed", "更新失败"),
+                description: error.message || t("site.toast.updateError", "更新站点时出现错误"),
                 variant: "destructive",
             })
         }

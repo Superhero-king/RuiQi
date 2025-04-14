@@ -6,6 +6,7 @@ import { ConfigPatchRequest } from '@/types/config'
 import { useToast } from '@/hooks/use-toast'
 import { ApiError } from '@/api/index'
 import { ConstantCategory, getConstant } from '@/constant'
+import { useTranslation } from 'react-i18next'
 
 // 获取配置查询hook
 export const useConfigQuery = () => {
@@ -27,13 +28,14 @@ export const useUpdateConfig = () => {
     const queryClient = useQueryClient()
     const { toast } = useToast()
     const [error, setError] = useState<ApiError | null>(null)
+    const { t } = useTranslation()
 
     const mutation = useMutation({
         mutationFn: (data: ConfigPatchRequest) => configApi.updateConfig(data),
         onSuccess: () => {
             toast({
-                title: "更新成功",
-                description: "系统配置已成功更新",
+                title: t("globalSetting.config.updateSuccess", "更新成功"),
+                description: t("globalSetting.config.systemConfigUpdated", "系统配置已成功更新"),
                 duration: getConstant(ConstantCategory.FEATURE, 'TOAST_DURATION', 3000),
             })
             queryClient.invalidateQueries({ queryKey: ['config'] })
@@ -42,8 +44,8 @@ export const useUpdateConfig = () => {
             console.error('更新配置失败:', error)
             setError(error)
             toast({
-                title: "更新失败",
-                description: error.message || "更新配置时出现错误",
+                title: t("globalSetting.config.updateFailed", "更新失败"),
+                description: error.message || t("globalSetting.config.updateError", "更新配置时出现错误"),
                 variant: "destructive",
                 duration: getConstant(ConstantCategory.FEATURE, 'TOAST_DURATION', 3000),
             })
