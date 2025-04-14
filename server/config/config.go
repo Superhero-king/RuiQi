@@ -162,10 +162,20 @@ func createDefaultConfig() model.Config {
 			AppConfig: []model.AppConfig{
 				{
 					Name: constant.GetString("Default_ENGINE_NAME", "coraza"),
-					Directives: `Include @coraza.conf-recommended
+					Directives: `SecAction \
+    "id:20001,\
+    phase:1,\
+    nolog,\
+    pass,\
+    t:none,\
+    setvar:'tx.allowed_methods=GET HEAD POST OPTIONS PUT DELETE PATCH'"
+
+Include @coraza.conf-recommended
 Include @crs-setup.conf.example
 Include @owasp_crs/*.conf
-SecRuleEngine On`,
+SecRuleEngine On
+
+SecRuleUpdateTargetById 933120 !ARGS:json.engine.appConfig.0.directives`,
 					// The transaction cache lifetime in milliseconds (60000ms = 60s)
 					TransactionTTL: 60000,
 					LogLevel:       "info",
