@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # MongoDB 服务
+  mongodb:
+    image: mongo:6.0
+    container_name: waf-demo-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: your_mongo_password  # 请替换为您的实际密码
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - waf-network
+
+  # Simple WAF 服务
+  simple-waf:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: simple-waf
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      DB_URI: mongodb://root:your_mongo_password@mongodb:27017  # 请替换为您的实际密码
+      JWT_SECRET: ffffffffffffffffffffffffffffff
+      IS_PRODUCTION: "false"
+      VITE_API_BASE_URL: http://localhost:2333/api/v1
+    ports:
+      - "2333:2333"
+    networks:
+      - waf-network
+
+# 定义持久化卷
+volumes:
+  mongodb_data:
+    driver: local
+
+# 定义网络
+networks:
+  waf-network:
+    driver: bridge
