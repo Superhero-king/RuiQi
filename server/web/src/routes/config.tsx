@@ -4,7 +4,6 @@ import { Suspense, lazy, ReactElement } from "react"
 import { RoutePath, ROUTES } from "./constants"
 import { useTranslation } from 'react-i18next'
 import { TFunction } from 'i18next'
-import { Loader } from "lucide-react"
 import { ProtectedRoute } from "@/feature/auth/components/ProtectedRoute"
 
 // 直接导入布局组件
@@ -22,6 +21,7 @@ import LogsPage from "@/pages/logs/pages/log/page"
 import SiteManagerPage from "@/pages/setting/pages/site/page"
 import { columns, MonitorOverview, payments } from "@/pages/monitor/components"
 import { SysRules, UserRules, IpGroup } from "@/pages/rule/components"
+import { LoadingFallback } from "@/components/common/loading-fallback"
 
 // 懒加载认证页面
 const LoginPage = lazy(() => import("@/pages/auth/login"))
@@ -29,11 +29,7 @@ const ResetPasswordPage = lazy(() => import("@/pages/auth/reset-password"))
 
 // 懒加载组件包装器
 const lazyLoad = (Component: React.ComponentType) => (
-    <Suspense fallback={
-        <div className="flex h-screen w-full items-center justify-center">
-            <Loader className="h-6 w-6 animate-spin text-primary" />
-        </div>
-    }>
+    <Suspense fallback={<LoadingFallback />}>
         <Component />
     </Suspense>
 )

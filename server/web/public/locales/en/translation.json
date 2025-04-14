@@ -28,7 +28,56 @@
     },
     "common": {
         "loading": "Loading...",
-        "language": "Select a language"
+        "language": "Select a language",
+        "copied": "Copied"
+    },
+    "error": {
+        "title": "An Error Occurred",
+        "code": "Error Code",
+        "appProblem": "The application encountered an unexpected problem",
+        "unexpected": "An unexpected error occurred",
+        "refresh": "Refresh Page",
+        "returnHome": "Return Home",
+        "loading": "Error loading data",
+        "message": "Error Message",
+        "details": "Error Details",
+        "requestId": "Request ID",
+        "cannotParse": "Cannot parse error details",
+        "viewDetails": "View Details",
+        "hideDetails": "Hide Details",
+        "retry": "Retry",
+        "network": {
+            "title": "Network Connection Error",
+            "description": "Cannot connect to the server. Please check your network connection."
+        },
+        "timeout": {
+            "title": "Request Timeout",
+            "description": "Server response time is too long. Please try again later."
+        },
+        "forbidden": {
+            "title": "Access Denied",
+            "description": "You don't have permission to access this resource."
+        },
+        "unauthorized": {
+            "title": "Unauthorized Access",
+            "description": "Your login status is invalid. Please log in again."
+        },
+        "server": {
+            "title": "Server Error",
+            "description": "The server is temporarily unable to process your request. Please try again later."
+        },
+        "client": {
+            "title": "Request Error",
+            "description": "The request parameters or format are incorrect."
+        },
+        "validation": {
+            "title": "Data Validation Failed",
+            "description": "The submitted data did not pass validation."
+        },
+        "unknown": {
+            "title": "Error Occurred",
+            "description": "An unknown error occurred while loading data."
+        }
     },
     "auth": {
         "login": "Login",
@@ -118,7 +167,11 @@
             "stop": "Stop",
             "restart": "Restart",
             "forceStop": "Force Stop",
-            "reload": "Hot Reload"
+            "reload": "Hot Reload",
+            "operationSuccess": "Operation Successful",
+            "operationCompleted": "Engine control operation completed successfully",
+            "operationFailed": "Operation Failed",
+            "operationError": "An error occurred during engine control"
         },
         "config": {
             "generalConfig": "General Configuration",
@@ -139,7 +192,11 @@
             "internationalization": "Internationalization",
             "internationalizationDescription": "Set system interface language",
             "saving": "Saving...",
-            "saveSettings": "Save Settings"
+            "saveSettings": "Save Settings",
+            "updateSuccess": "Update Successful",
+            "systemConfigUpdated": "System configuration updated successfully",
+            "updateFailed": "Update Failed",
+            "updateError": "An error occurred while updating configuration"
         }
     },
     "certificate": {
@@ -190,6 +247,20 @@
             "cancel": "Cancel",
             "deleting": "Deleting...",
             "delete": "Delete"
+        },
+        "toast": {
+            "createSuccess": "Created Successfully",
+            "certificateCreated": "Certificate has been created successfully",
+            "createFailed": "Creation Failed",
+            "createError": "An error occurred while creating the certificate",
+            "updateSuccess": "Updated Successfully",
+            "certificateUpdated": "Certificate has been updated successfully",
+            "updateFailed": "Update Failed",
+            "updateError": "An error occurred while updating the certificate",
+            "deleteSuccess": "Deleted Successfully",
+            "certificateDeleted": "Certificate has been deleted successfully",
+            "deleteFailed": "Deletion Failed",
+            "deleteError": "An error occurred while deleting the certificate"
         }
     },
     "site": {
@@ -254,6 +325,20 @@
             "cancel": "Cancel",
             "deleting": "Deleting...",
             "delete": "Delete"
+        },
+        "toast": {
+            "createSuccess": "Created Successfully",
+            "siteCreated": "Site has been created successfully",
+            "createFailed": "Creation Failed",
+            "createError": "An error occurred while creating the site",
+            "updateSuccess": "Updated Successfully",
+            "siteUpdated": "Site has been updated successfully",
+            "updateFailed": "Update Failed",
+            "updateError": "An error occurred while updating the site",
+            "deleteSuccess": "Deleted Successfully",
+            "siteDeleted": "Site has been deleted successfully",
+            "deleteFailed": "Deletion Failed",
+            "deleteError": "An error occurred while deleting the site"
         },
         "view": {
             "cardView": "Card View",

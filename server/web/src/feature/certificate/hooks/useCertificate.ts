@@ -3,27 +3,29 @@ import { useState } from 'react'
 import { certificatesApi } from '@/api/certificate'
 import { CertificateCreateRequest, CertificateUpdateRequest } from '@/types/certificate'
 import { useToast } from '@/hooks/use-toast'
+import { useTranslation } from 'react-i18next'
 
 export const useCreateCertificate = () => {
     const queryClient = useQueryClient()
     const { toast } = useToast()
+    const { t } = useTranslation()
     const [error, setError] = useState<string | null>(null)
 
     const mutation = useMutation({
         mutationFn: (data: CertificateCreateRequest) => certificatesApi.createCertificate(data),
         onSuccess: () => {
             toast({
-                title: "创建成功",
-                description: "证书已成功创建",
+                title: t('certificate.toast.createSuccess'),
+                description: t('certificate.toast.certificateCreated'),
             })
             queryClient.invalidateQueries({ queryKey: ['certificates'] })
         },
         onError: (error: ApiError) => {
-            console.error('创建证书失败:', error)
-            setError(error.message || "创建证书时出现错误")
+            console.error(t('certificate.toast.createFailed'), error)
+            setError(error.message || t('certificate.toast.createError'))
             toast({
-                title: "创建失败",
-                description: error.message || "创建证书时出现错误",
+                title: t('certificate.toast.createFailed'),
+                description: error.message || t('certificate.toast.createError'),
                 variant: "destructive",
             })
         }
@@ -40,23 +42,24 @@ export const useCreateCertificate = () => {
 export const useDeleteCertificate = () => {
     const queryClient = useQueryClient()
     const { toast } = useToast()
+    const { t } = useTranslation()
     const [error, setError] = useState<string | null>(null)
 
     const mutation = useMutation({
         mutationFn: (id: string) => certificatesApi.deleteCertificate(id),
         onSuccess: () => {
             toast({
-                title: "删除成功",
-                description: "证书已成功删除",
+                title: t('certificate.toast.deleteSuccess'),
+                description: t('certificate.toast.certificateDeleted'),
             })
             queryClient.invalidateQueries({ queryKey: ['certificates'] })
         },
         onError: (error: ApiError) => {
-            console.error('删除证书失败:', error)
-            setError(error.message || "删除证书时出现错误")
+            console.error(t('certificate.toast.deleteFailed'), error)
+            setError(error.message || t('certificate.toast.deleteError'))
             toast({
-                title: "删除失败",
-                description: error.message || "删除证书时出现错误",
+                title: t('certificate.toast.deleteFailed'),
+                description: error.message || t('certificate.toast.deleteError'),
                 variant: "destructive",
             })
         }
@@ -73,6 +76,7 @@ export const useDeleteCertificate = () => {
 export const useUpdateCertificate = () => {
     const queryClient = useQueryClient()
     const { toast } = useToast()
+    const { t } = useTranslation()
     const [error, setError] = useState<string | null>(null)
 
     const mutation = useMutation({
@@ -80,17 +84,17 @@ export const useUpdateCertificate = () => {
             certificatesApi.updateCertificate(id, data),
         onSuccess: () => {
             toast({
-                title: "更新成功",
-                description: "证书已成功更新",
+                title: t('certificate.toast.updateSuccess'),
+                description: t('certificate.toast.certificateUpdated'),
             })
             queryClient.invalidateQueries({ queryKey: ['certificates'] })
         },
         onError: (error: ApiError) => {
-            console.error('更新证书失败:', error)
-            setError(error.message || "更新证书时出现错误")
+            console.error(t('certificate.toast.updateFailed'), error)
+            setError(error.message || t('certificate.toast.updateError'))
             toast({
-                title: "更新失败",
-                description: error.message || "更新证书时出现错误",
+                title: t('certificate.toast.updateFailed'),
+                description: error.message || t('certificate.toast.updateError'),
                 variant: "destructive",
             })
         }

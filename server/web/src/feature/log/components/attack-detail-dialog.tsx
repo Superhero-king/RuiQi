@@ -16,6 +16,7 @@ import {
     dialogContentItemAnimation
 } from "@/components/ui/animation/dialog-animation"
 import { useTranslation } from "react-i18next"
+import { CopyableText } from "@/components/common/copyable-text"
 
 interface AttackDetailDialogProps {
     open: boolean
@@ -79,7 +80,9 @@ export function AttackDetailDialog({ open, onOpenChange, data }: AttackDetailDia
                                                     <div className="space-y-4">
                                                         <div>
                                                             <span className="text-muted-foreground text-sm block mb-1">{t("attackDetail.target")}</span>
-                                                            <div className="font-medium truncate text-card-foreground">{data.target}</div>
+                                                            <div className="font-medium truncate text-card-foreground">
+                                                                <CopyableText text={data.target} className="font-medium text-card-foreground" />
+                                                            </div>
                                                         </div>
                                                         <div>
                                                             <span className="text-muted-foreground text-sm block mb-1">{t("attackDetail.message")}</span>

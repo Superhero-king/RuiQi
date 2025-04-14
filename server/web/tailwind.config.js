@@ -93,6 +93,10 @@ export default {
                     '33%': { filter: 'hue-rotate(60deg) brightness(1.1) saturate(1.8)' },
                     '66%': { filter: 'hue-rotate(180deg) brightness(1.05) saturate(1.6)' },
                     '100%': { filter: 'hue-rotate(360deg) brightness(1) saturate(1.5)' }
+                },
+                'logo-pulse': {
+                    '0%, 100%': { opacity: 0.9, transform: 'scale(0.95)' },
+                    '50%': { opacity: 1, transform: 'scale(1.05)' }
                 }
             },
             animation: {
@@ -103,7 +107,8 @@ export default {
                 'fade-in-up': 'fade-in-up 0.5s ease-out',
                 'wiggle': 'wiggle 1s ease-in-out infinite',
                 'gradient-shift': 'gradient-shift 8s ease infinite',
-                'aurora': 'aurora 20s ease infinite'
+                'aurora': 'aurora 20s ease infinite',
+                'logo-pulse': 'logo-pulse 1.5s infinite ease-in-out'
             }
         }
     },

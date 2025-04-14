@@ -14,50 +14,50 @@ import { ReactElement } from 'react'
 // 错误配置类型
 export interface ErrorConfig {
     icon: ReactElement
-    title: string
-    description: string
+    titleKey: string
+    descriptionKey: string
 }
 
 // 错误配置映射
 export const errorConfigs: Record<ErrorTypeValue, ErrorConfig> = {
     [ErrorType.NETWORK]: {
         icon: <WifiOff className="h-5 w-5" />,
-      title: '网络连接错误',
-        description: '无法连接到服务器，请检查您的网络连接。'
+        titleKey: 'error.network.title',
+        descriptionKey: 'error.network.description'
     },
     [ErrorType.TIMEOUT]: {
         icon: <Clock className="h-5 w-5" />,
-      title: '请求超时',
-        description: '服务器响应时间过长，请稍后重试。'
+        titleKey: 'error.timeout.title',
+        descriptionKey: 'error.timeout.description'
     },
     [ErrorType.FORBIDDEN]: {
         icon: <Ban className="h-5 w-5" />,
-      title: '访问被拒绝',
-        description: '您没有权限访问此资源。'
+        titleKey: 'error.forbidden.title',
+        descriptionKey: 'error.forbidden.description'
     },
     [ErrorType.UNAUTHORIZED]: {
         icon: <ShieldAlert className="h-5 w-5" />,
-      title: '未授权访问',
-        description: '您的登录状态已失效，请重新登录。'
+        titleKey: 'error.unauthorized.title',
+        descriptionKey: 'error.unauthorized.description'
     },
     [ErrorType.SERVER]: {
         icon: <ServerOff className="h-5 w-5" />,
-      title: '服务器错误',
-        description: '服务器暂时无法处理您的请求，请稍后重试。'
+        titleKey: 'error.server.title',
+        descriptionKey: 'error.server.description'
     },
     [ErrorType.CLIENT]: {
         icon: <FileWarning className="h-5 w-5" />,
-      title: '请求错误',
-        description: '请求参数或格式有误。'
+        titleKey: 'error.client.title',
+        descriptionKey: 'error.client.description'
     },
     [ErrorType.VALIDATION]: {
         icon: <Bug className="h-5 w-5" />,
-      title: '数据验证失败',
-        description: '提交的数据未通过验证。'
+        titleKey: 'error.validation.title',
+        descriptionKey: 'error.validation.description'
     },
     [ErrorType.UNKNOWN]: {
         icon: <AlertCircle className="h-5 w-5" />,
-      title: '发生错误',
-        description: '加载数据时发生未知错误。'
+        titleKey: 'error.unknown.title',
+        descriptionKey: 'error.unknown.description'
     }
 }
