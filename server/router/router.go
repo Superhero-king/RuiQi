@@ -176,6 +176,7 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	// 托管其他静态文件
 	route.StaticFile("/favicon.ico", "./web/dist/favicon.ico")
 	route.StaticFile("/logo.png", "./web/dist/logo.png")
+	route.StaticFile("/logo32.png", "./web/dist/logo32.png")
 	route.StaticFile("/logo.svg", "./web/dist/logo.svg")
 
 	// 处理所有非API路由，返回前端入口
