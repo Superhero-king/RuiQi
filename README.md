@@ -17,13 +17,9 @@ run the application in less than 30 seconds,default username: **admin**,default 
 
 [![](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://usw.sealos.io/?openapp=system-template%3FtemplateName%3DRuiqi-Waf)
 
-## 📹 Demo Video
+## 📺 Demo Video
 
-<p align="center">
-  <a href="https://raw.githubusercontent.com/HUAHUAI23/simple-waf/main/doc/video/clickToRun.mp4" target="_blank">
-    <strong>📺 Click here to watch the demo video</strong>
-  </a>
-</p>
+https://raw.githubusercontent.com/HUAHUAI23/simple-waf/main/doc/video/clickToRun.mp4
 
 ## Core Architecture
 
