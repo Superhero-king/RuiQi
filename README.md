@@ -20,10 +20,9 @@ run the application in less than 30 seconds,default username: **admin**,default 
 ## 📹 Demo Video
 
 <p align="center">
-  <video width="720" controls>
-    <source src="https://raw.githubusercontent.com/HUAHUAI23/simple-waf/main/doc/video/clickToRun.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
+  <a href="https://raw.githubusercontent.com/HUAHUAI23/simple-waf/main/doc/video/clickToRun.mp4" target="_blank">
+    <strong>📺 Click here to watch the demo video</strong>
+  </a>
 </p>
 
 ## Core Architecture
