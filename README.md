@@ -21,7 +21,7 @@ run the application in less than 30 seconds,default username: **admin**,default 
 
 <p align="center">
   <video width="720" controls>
-    <source src="https://github.com/HUAHUAI23/simple-waf/blob/main/doc/video/clickToRun.mp4" type="video/mp4">
+    <source src="https://raw.githubusercontent.com/HUAHUAI23/simple-waf/main/doc/video/clickToRun.mp4" type="video/mp4">
     Your browser does not support the video tag.
   </video>
 </p>
