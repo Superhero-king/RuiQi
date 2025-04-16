@@ -17,14 +17,13 @@ run the application in less than 30 seconds,default username: **admin**,default 
 
 [![](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://usw.sealos.io/?openapp=system-template%3FtemplateName%3DRuiqi-Waf)
 
-## 📹 Demo Video
+## 📺 Demo Video
 
-<p align="center">
-  <video width="720" controls>
-    <source src="https://raw.githubusercontent.com/HUAHUAI23/simple-waf/main/doc/video/clickToRun.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-</p>
+
+
+https://github.com/user-attachments/assets/f74000d7-d229-4d00-843b-1ba28caeb13d
+
+
 
 ## Core Architecture
 
