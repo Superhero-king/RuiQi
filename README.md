@@ -19,7 +19,11 @@ run the application in less than 30 seconds,default username: **admin**,default 
 
 ## 📺 Demo Video
 
-https://raw.githubusercontent.com/HUAHUAI23/simple-waf/main/doc/video/clickToRun.mp4
+
+
+https://github.com/user-attachments/assets/f74000d7-d229-4d00-843b-1ba28caeb13d
+
+
 
 ## Core Architecture
 
