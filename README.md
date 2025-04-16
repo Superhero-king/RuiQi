@@ -11,6 +11,21 @@
 
 A modern web application firewall (WAF) management system built on top of [HAProxy](https://www.haproxy.org/) and [OWASP Coraza WAF](https://github.com/corazawaf/coraza) with the [Coraza SPOA](https://github.com/corazawaf/coraza-spoa) integration. This system provides a comprehensive backend API for managing HAProxy configurations, Coraza WAF rules, and traffic inspection.
 
+## 🌐 Click To Run
+
+run the application in less than 30 seconds,default username: **admin**,default password: **admin123**
+
+[![](https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg)](https://usw.sealos.io/?openapp=system-template%3FtemplateName%3DRuiqi-Waf)
+
+## 📹 Demo Video
+
+<p align="center">
+  <video width="720" controls>
+    <source src="https://github.com/HUAHUAI23/simple-waf/blob/main/docs/clickToRun.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
+
 ## Core Architecture
 
 Simple WAF implements a modular architecture with HAProxy at the front handling traffic and Coraza WAF providing security inspection through SPOE (Stream Processing Offload Engine):
@@ -35,7 +50,7 @@ graph TD
 ### SPOE Communication Workflow
 
 ```
-[HAProxy Request] → [internal.Agent.Serve(Listener)] 
+[HAProxy Request] → [internal.Agent.Serve(Listener)]
                           ↓
                    Create spop.Agent
                    agent := spop.Agent{
@@ -52,8 +67,8 @@ graph TD
                    p := newProtocolClient(ctx, nc, as, handler)
                           ↓
                    Start goroutine for connection
-                   go func() { 
-                       p.Serve() 
+                   go func() {
+                       p.Serve()
                    }()
                           ↓
                 [protocolClient.Serve]
@@ -62,10 +77,10 @@ graph TD
                 [frameHandler processes Frame]
                    Dispatch based on frame type
                           ↓
-                [onNotify handles messages] 
+                [onNotify handles messages]
                    Create message scanner and objects
                    Call Handler.HandleSPOE
-                          ↓ 
+                          ↓
                 [internal.Agent.HandleSPOE processing]
                           ↓
                    Parse message type (coraza-req/coraza-res)
@@ -84,23 +99,27 @@ graph TD
 ## Features
 
 - **HAProxy Integration**
+
   - Full HAProxy lifecycle management (start, stop, restart)
   - Dynamic configuration generation
   - Real-time status monitoring
 
 - **Coraza WAF Integration**
+
   - OWASP Core Rule Set (CRS) support
   - ModSecurity SecLang rule compatibility
   - Custom rule management
   - WAF engine lifecycle management
 
 - **Advanced Security**
+
   - HTTP request inspection
   - HTTP response inspection
   - Real-time attack detection and prevention
   - RBAC user permission system
 
 - **Monitoring and Logging**
+
   - WAF attack logs and analytics
   - Traffic statistics
   - Performance metrics
@@ -154,6 +173,7 @@ go run main.go
 ```
 
 The development server will start with:
+
 - API server: `http://localhost:2333/api/v1`
 - Swagger UI: `http://localhost:2333/swagger/index.html`
 - ReDoc UI: `http://localhost:2333/redoc`
@@ -198,4 +218,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [OWASP Coraza WAF](https://github.com/corazawaf/coraza)
 - [Coraza SPOA](https://github.com/corazawaf/coraza-spoa)
 - [HAProxy](https://www.haproxy.org/)
-- [Go Gin Framework](https://github.com/gin-gonic/gin) 
+- [Go Gin Framework](https://github.com/gin-gonic/gin)
