@@ -55,7 +55,7 @@ export function LoginForm() {
                                             <User className="absolute left-3 top-3 h-5 w-5 text-gray-400 group-hover:text-purple-500 transition-colors duration-300" />
                                             <Input
                                                 placeholder={t('auth.usernamePlaceholder')}
-                                                className="pl-10 py-6 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
+                                                className="pl-10 py-6 text-gray-700 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
                                                 {...field}
                                                 onChange={(e) => {
                                                     clearError()
@@ -81,7 +81,7 @@ export function LoginForm() {
                                             <Input
                                                 type="password"
                                                 placeholder={t('auth.passwordPlaceholder')}
-                                                className="pl-10 py-6 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
+                                                className="pl-10 py-6 text-gray-700 bg-gray-50 border-gray-200 focus:bg-white transition-all group-hover:border-purple-300"
                                                 {...field}
                                                 onChange={(e) => {
                                                     clearError()
@@ -97,7 +97,7 @@ export function LoginForm() {
 
                         <Button
                             type="submit"
-                            className="w-full mt-6 py-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg animate-fade-in-up [animation-delay:300ms] hover:translate-y-[-2px]"
+                            className="w-full mt-6 py-6 text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg animate-fade-in-up [animation-delay:300ms] hover:translate-y-[-2px]"
                             disabled={isLoading}
                         >
                             {isLoading ? t('auth.loggingIn') : t('auth.login')}

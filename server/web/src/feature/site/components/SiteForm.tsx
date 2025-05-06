@@ -209,7 +209,7 @@ export function SiteForm({
                                             <FormControl>
                                                 <Input
                                                     placeholder={t('site.dialog.siteNamePlaceholder')}
-                                                    className="rounded-md p-3 h-12"
+                                                    className="dark:text-shadow-glow-white rounded-md p-3 h-12"
                                                     {...field}
                                                 />
                                             </FormControl>
@@ -227,7 +227,7 @@ export function SiteForm({
                                             <FormControl>
                                                 <Input
                                                     placeholder={t('site.dialog.domainPlaceholder')}
-                                                    className="rounded-md p-3 h-12"
+                                                    className="dark:text-shadow-glow-white rounded-md p-3 h-12"
                                                     {...field}
                                                 />
                                             </FormControl>
@@ -244,13 +244,10 @@ export function SiteForm({
                                             <FormLabel className="text-sm font-medium">{t('site.listenPort')}</FormLabel>
                                             <FormControl>
                                                 <Input
-                                                    type="number"
-                                                    min={1}
-                                                    max={65535}
                                                     placeholder="80"
-                                                    className="rounded-md p-3 h-12"
+                                                    className="rounded-md p-3 h-12 dark:text-shadow-glow-white"
                                                     {...field}
-                                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                                    onChange={(e) => field.onChange(e.target.value)}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -263,7 +260,7 @@ export function SiteForm({
                                     name="activeStatus"
                                     render={({ field }) => (
                                         <div className="flex flex-col gap-1.5">
-                                            <div className="text-sm font-medium">{t('site.status')}</div>
+                                            <div className="text-sm font-medium dark:text-shadow-glow-white">{t('site.status')}</div>
                                             <div className="w-full flex items-center justify-between rounded-md border p-3 h-12">
                                                 <FormControl>
                                                     <div className="flex items-center justify-between w-full">
@@ -290,9 +287,9 @@ export function SiteForm({
                                 name="enableHTTPS"
                                 render={({ field }) => (
                                     <div className="w-full">
-                                        <div className="text-sm font-medium">{t('site.dialog.enableHttps')}</div>
-                                        <div className="text-xs text-muted-foreground mb-1">{t('site.dialog.httpsDescription')}</div>
-                                        <div className="w-full rounded-md border p-3 flex justify-between items-center">
+                                        <div className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.enableHttps')}</div>
+                                        <div className="text-xs text-muted-foreground mb-1 dark:text-shadow-glow-white">{t('site.dialog.httpsDescription')}</div>
+                                        <div className="w-full rounded-md border p-3 flex justify-between items-center dark:border-none">
                                             <FormControl>
                                                 <Switch
                                                     checked={field.value}
@@ -307,13 +304,13 @@ export function SiteForm({
                             {form.watch('enableHTTPS') && (
                                 <div className="p-4 border rounded-md">
                                     <div>
-                                        <FormLabel className="text-sm font-medium">{t('site.dialog.selectCertificate')}</FormLabel>
+                                        <FormLabel className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.selectCertificate')}</FormLabel>
                                         <div className="flex gap-2 mt-1">
                                             <Select
                                                 value={selectedCertificateId}
                                                 onValueChange={handleCertificateChange}
                                             >
-                                                <SelectTrigger className="w-full">
+                                                <SelectTrigger className="w-full dark:text-shadow-glow-white">
                                                     <SelectValue placeholder={t('site.dialog.selectCertificate')} />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -328,7 +325,7 @@ export function SiteForm({
                                                         </SelectItem>
                                                     ))}
                                                     <SelectItem value="upload-new">
-                                                        <span className="flex items-center text-blue-600">
+                                                        <span className="flex items-center text-blue-600 dark:text-shadow-glow-white dark:text-teal-50">
                                                             <Upload className="mr-2 h-4 w-4" />
                                                             {t('site.dialog.uploadNewCert')}
                                                         </span>
@@ -349,8 +346,8 @@ export function SiteForm({
 
 
                                     {selectedCertificate && (
-                                        <div className="mt-4 p-4 border rounded-md bg-gray-50">
-                                            <h4 className="text-sm font-medium mb-2">{t('site.dialog.selectedCertInfo')}</h4>
+                                        <div className="mt-4 p-4 border rounded-md bg-zinc-50 dark:bg-gray-800/10 dark:border-gray-700">
+                                            <h4 className="text-sm font-medium mb-2 dark:text-shadow-glow-white">{t('site.dialog.selectedCertInfo')}</h4>
                                             <div className="space-y-2 text-sm">
                                                 <InfoRow label={t('certificate.name')} value={selectedCertificate?.name || ''} />
                                                 <InfoRow
@@ -362,10 +359,10 @@ export function SiteForm({
                                                     value={new Date(selectedCertificate?.expireDate || '').toLocaleDateString()}
                                                 />
                                                 <div className="flex">
-                                                    <span className="w-24 text-muted-foreground">{t('certificate.dialog.domains')}:</span>
+                                                    <span className="w-24 text-muted-foreground dark:text-shadow-glow-white">{t('certificate.dialog.domains')}:</span>
                                                     <div className="flex flex-wrap gap-1">
                                                         {selectedCertificate?.domains.map((domain, index) => (
-                                                            <span key={index} className="px-2 py-0.5 bg-gray-200 rounded text-xs">
+                                                            <span key={index} className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-xs dark:text-shadow-glow-white">
                                                                 {domain}
                                                             </span>
                                                         ))}
@@ -391,7 +388,7 @@ export function SiteForm({
                                     variant="outline"
                                     size="sm"
                                     onClick={addServer}
-                                    className="flex items-center gap-1"
+                                    className="flex items-center gap-1 dark:text-shadow-glow-white"
                                 >
                                     <PlusCircle className="h-4 w-4" />
                                     {t('site.dialog.addServer')}
@@ -425,11 +422,11 @@ export function SiteForm({
                                                 name={`backend.servers.${index}.host`}
                                                 render={({ field }) => (
                                                     <div className="flex flex-col gap-1.5 justify-between">
-                                                        <FormLabel className="text-sm font-medium">{t('site.dialog.hostAddress')}</FormLabel>
+                                                        <FormLabel className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.hostAddress')}</FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 placeholder={t('site.dialog.hostPlaceholder')}
-                                                                className="rounded-md p-3"
+                                                                className="rounded-md p-3 dark:text-shadow-glow-white"
                                                                 {...field}
                                                             />
                                                         </FormControl>
@@ -444,16 +441,13 @@ export function SiteForm({
                                                 render={({ field }) => (
 
                                                     <div className="flex flex-col gap-1.5 justify-between">
-                                                        <FormLabel className="text-sm font-medium">{t('site.dialog.port')}</FormLabel>
+                                                        <FormLabel className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.port')}</FormLabel>
                                                         <FormControl>
                                                             <Input
-                                                                type="number"
-                                                                min={1}
-                                                                max={65535}
                                                                 placeholder="80"
-                                                                className="rounded-md p-3"
+                                                                className="rounded-md p-3 dark:text-shadow-glow-white"
                                                                 {...field}
-                                                                onChange={(e) => field.onChange(Number(e.target.value))}
+                                                                onChange={(e) => field.onChange(e.target.value)}
                                                             />
                                                         </FormControl>
                                                         <FormMessage />
@@ -467,7 +461,7 @@ export function SiteForm({
                                                 render={({ field }) => (
 
                                                     <div className="flex flex-col gap-1.5">
-                                                        <div className="text-sm font-medium">{t('site.dialog.enableSsl')}</div>
+                                                        <div className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.enableSsl')}</div>
                                                         <FormControl>
                                                             <div className="w-full flex items-center justify-between rounded-md border p-3">
                                                                 <div className="flex items-center justify-between w-full">
@@ -475,7 +469,7 @@ export function SiteForm({
                                                                         checked={field.value}
                                                                         onCheckedChange={field.onChange}
                                                                     />
-                                                                    <label className="text-xs text-muted-foreground cursor-pointer">{t('site.dialog.backendHttps')}</label>
+                                                                    <label className="text-xs text-muted-foreground cursor-pointer dark:text-shadow-glow-white">{t('site.dialog.backendHttps')}</label>
                                                                 </div>
                                                             </div>
                                                         </FormControl>
@@ -498,9 +492,9 @@ export function SiteForm({
                                 name="wafEnabled"
                                 render={({ field }) => (
                                     <div className="w-full">
-                                        <div className="text-sm font-medium">{t('site.dialog.enableWaf')}</div>
-                                        <div className="text-xs text-muted-foreground mb-1">{t('site.dialog.wafDescription')}</div>
-                                        <div className="w-full rounded-md border p-3 flex justify-between items-center">
+                                        <div className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.enableWaf')}</div>
+                                        <div className="text-xs text-muted-foreground mb-1 dark:text-shadow-glow-white">{t('site.dialog.wafDescription')}</div>
+                                        <div className="w-full rounded-md border p-3 flex justify-between items-center dark:border-none">
                                             <FormControl>
                                                 <Switch
                                                     checked={field.value}
@@ -518,14 +512,14 @@ export function SiteForm({
                                     name="wafMode"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium">{t('site.dialog.wafMode')}</FormLabel>
+                                            <FormLabel className="text-sm font-medium dark:text-shadow-glow-white">{t('site.dialog.wafMode')}</FormLabel>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <FormControl>
                                                     <Select
                                                         value={field.value}
                                                         onValueChange={field.onChange}
                                                     >
-                                                        <SelectTrigger className="w-full">
+                                                        <SelectTrigger className="w-full dark:text-shadow-glow-white">
                                                             <SelectValue placeholder={t('site.dialog.selectWafMode')} />
                                                         </SelectTrigger>
                                                         <SelectContent>

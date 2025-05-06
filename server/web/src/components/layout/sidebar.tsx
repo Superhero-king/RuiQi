@@ -1,43 +1,44 @@
+"use client"
+
 import { Link, useLocation, useNavigate } from "react-router"
 import { cn } from "@/lib/utils"
 import { Settings, Shield, BarChart2, FileText, LogOut } from "lucide-react"
 import { ROUTES } from "@/routes/constants"
-import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card"
-import { useTranslation } from 'react-i18next'
-import { TFunction } from 'i18next'
+import { useTranslation } from "react-i18next"
+import type { TFunction } from "i18next"
 import { useAuthStore } from "@/store/auth"
+import { useState } from "react"
 
-// 为每个导航项添加 display 选项
+// Create sidebar config with display options
 function createSidebarConfig(t: TFunction) {
     return [
         {
-            title: t('sidebar.monitor'),
+            title: t("sidebar.monitor"),
             icon: BarChart2,
             href: ROUTES.MONITOR,
-            display: true  // 控制是否显示此导航项
+            display: true,
         },
         {
-            title: t('sidebar.logs'),
+            title: t("sidebar.logs"),
             icon: FileText,
             href: ROUTES.LOGS,
-            display: true  // 控制是否显示此导航项
+            display: true,
         },
         {
-            title: t('sidebar.rules'),
+            title: t("sidebar.rules"),
             icon: Shield,
             href: ROUTES.RULES,
-            display: true  // 控制是否显示此导航项
+            display: true,
         },
         {
-            title: t('sidebar.settings'),
+            title: t("sidebar.settings"),
             icon: Settings,
             href: ROUTES.SETTINGS,
-            display: true  // 控制是否显示此导航项
-        }
+            display: true,
+        },
     ] as const
 }
 
-// 添加一个配置接口，允许传入对象来控制各导航项显示状态
 interface SidebarDisplayConfig {
     monitor?: boolean
     logs?: boolean
@@ -54,117 +55,138 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
     const { t } = useTranslation()
     const navigate = useNavigate()
     const { logout } = useAuthStore()
+    const [isLogoutActive, setIsLogoutActive] = useState(false)
 
-    // 获取当前路径的第一级
-    const currentFirstLevelPath = '/' + location.pathname.split('/')[1]
+    // Get current first level path
+    const currentFirstLevelPath = "/" + location.pathname.split("/")[1]
 
-    // 使用 t 函数生成 sidebarItems，并应用 display 配置
-    const sidebarItems = createSidebarConfig(t).map(item => {
-        // 根据路径名确定哪个配置属性
-        let configKey: keyof SidebarDisplayConfig = 'monitor'
-        if (item.href === ROUTES.LOGS) configKey = 'logs'
-        if (item.href === ROUTES.RULES) configKey = 'rules'
-        if (item.href === ROUTES.SETTINGS) configKey = 'settings'
+    // Generate sidebar items with display config
+    const sidebarItems = createSidebarConfig(t).map((item) => {
+        // Determine which config property based on path
+        let configKey: keyof SidebarDisplayConfig = "monitor"
+        if (item.href === ROUTES.LOGS) configKey = "logs"
+        if (item.href === ROUTES.RULES) configKey = "rules"
+        if (item.href === ROUTES.SETTINGS) configKey = "settings"
 
-        // 如果配置中指定了该项的显示状态，则使用配置的值
-        // 否则使用默认值 true
-        const shouldDisplay = displayConfig[configKey] !== undefined ?
-            displayConfig[configKey] : item.display
+        // Use config value or default
+        const shouldDisplay = displayConfig[configKey] !== undefined ? displayConfig[configKey] : item.display
 
         return {
             ...item,
-            display: shouldDisplay
+            display: shouldDisplay,
         }
     })
 
     const handleLogout = () => {
-        logout()
-        navigate('/login')
+        setIsLogoutActive(true)
+
+        // Visual feedback before actual logout
+        setTimeout(() => {
+            logout()
+            navigate("/login")
+        }, 300)
     }
 
     return (
-        <Card className="w-[17.69rem] min-w-[17.69rem] flex flex-col rounded-none gap-1 border-0 shadow-none overflow-auto">
-            <CardHeader className="pt-[0.0625rem] pb-0 gap-5 w-full items-center justify-center space-y-0 ">
-                <CardTitle
-                    className="w-[5rem] h-[5rem] rounded-full flex justify-center items-center"
-                >
-                    <img src="/logo.svg" alt="logo" className="w-[5rem] h-[5rem] rounded-full" />
-                </CardTitle>
-                {/* <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-cyan-300 drop-shadow-sm"> */}
-                <CardDescription className="text-[1.75rem] font-bold leading-[1.4] tracking-[0.0125rem] normal-case bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-cyan-400 to-purple-300 drop-shadow-sm">
-                    {t('sidebar.title')}
-                </CardDescription>
-            </CardHeader>
+        <div
+            className="w-64 text-white flex flex-col border-r border-slate-200 dark:border-none relative overflow-hidden transition-all duration-300 bg-sidebar-gradient"
+        >
+            {/* 霓虹灯效果 暗色模式 */}
+            <div className="absolute inset-0 dark:animate-sidebar-neon-glow pointer-events-none"></div>
 
-            <CardContent className="pt-[6rem] pl-[3rem] pb-0 pr-0">
-                <nav className="flex flex-col gap-[1.125rem]">
-                    {sidebarItems
-                        .filter(item => item.display) // 只显示 display 为 true 的项
-                        .map((item) => {
-                            const isActive = currentFirstLevelPath === item.href
-                            return (
-                                <Link
-                                    key={item.href}
-                                    to={item.href}
-                                    className="flex items-center gap-[1.125rem] group"
-                                >
-                                    <div className={cn(
-                                        "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
-                                        "transform transition-all duration-500 ease-out",
-                                        isActive
-                                            ? "bg-zinc-600 scale-110"
-                                            : "bg-gray-100 group-hover:scale-105 group-hover:bg-gray-900/20"
-                                    )}>
-                                        <item.icon
-                                            strokeWidth={1}
-                                            className={cn(
-                                                "w-full h-full shrink-0",
-                                                "transform transition-all duration-500 ease-out",
-                                                isActive ? "stroke-white animate-icon-shake" : "stroke-gray-500 group-hover:stroke-gray-900"
-                                            )}
-                                        />
-                                    </div>
-                                    <span className={cn(
-                                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-gray-600",
-                                        "transform transition-all duration-500 ease-out",
-                                        isActive
-                                            ? "font-bold translate-x-2"
-                                            : "font-normal group-hover:translate-x-1"
-                                    )}>
-                                        {item.title}
-                                    </span>
-                                </Link>
-                            )
-                        })}
-                </nav>
-            </CardContent>
+            {/* Decorative background elements */}
+            <div className="absolute bottom-0 left-0 w-full h-48 overflow-hidden opacity-20 dark:opacity-15 pointer-events-none">
+                <div className="absolute bottom-[-10px] left-[-10px] w-20 h-20 bg-white/30 rotate-45 transform animate-float"></div>
+                <div className="absolute bottom-[-5px] left-[40px] w-12 h-12 bg-white/20 rotate-12 transform animate-float-reverse"></div>
+                <div className="absolute bottom-[30px] left-[80px] w-16 h-16 bg-white/25 rotate-30 transform animate-float"></div>
+                <div className="absolute bottom-[10px] left-[120px] w-24 h-24 bg-white/15 rotate-20 transform animate-float-reverse"></div>
+                <div className="absolute bottom-[40px] left-[180px] w-14 h-14 bg-white/20 rotate-45 transform animate-float"></div>
+                <div className="absolute bottom-[-20px] left-[220px] w-20 h-20 bg-white/10 rotate-30 transform animate-float-reverse"></div>
+            </div>
 
-            <CardFooter className="pt-[6.25rem] pl-[3rem] pb-0 pr-0">
-                <div className="flex items-center gap-[1.125rem] cursor-pointer group" onClick={handleLogout}>
-                    <div className={cn(
-                        "p-2 rounded-md w-[3.5rem] h-[3.5rem]",
-                        "transform transition-all duration-500 ease-out",
-                        "bg-gray-100 group-hover:bg-gray-900/20 group-hover:scale-105",
-                        "group-active:bg-gray-900"
-                    )}>
-                        <LogOut strokeWidth={1}
-                            className={cn(
-                                "w-full h-full shrink-0",
-                                "transform transition-all duration-500 ease-out",
-                                "stroke-gray-500 group-hover:stroke-gray-900",
-                                "group-active:stroke-white"
-                            )} />
-                    </div>
-                    <span className={cn(
-                        "text-[1.5rem] leading-[1.6] tracking-[0.0625rem] text-gray-600",
-                        "transform transition-all duration-500 ease-out",
-                        "font-normal group-hover:translate-x-1",
-                        "group-active:font-bold group-active:translate-x-2"
-                    )}>
-                        {t('sidebar.logout')}
-                    </span>
+            {/* Logo and title */}
+            <div className="flex flex-col items-center gap-2 py-6 border-b border-white/10 dark:border-white/5">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#A48BEA] to-[#8861DB] dark:from-[#9470DB] dark:to-[#7B4FD6] flex items-center justify-center shadow-lg animate-pulse-glow">
+                    <Shield className="w-8 h-8 text-white" />
                 </div>
-            </CardFooter>
-        </Card>
+                <div className="font-bold text-xl mt-2">
+                    <span className="text-[#E8DFFF] dark:text-[#F0EBFF] text-shadow-glow-purple transition-all duration-300">RuiQi</span>
+                    <span className="text-[#8ED4FF] dark:text-[#A5DEFF] text-shadow-glow-blue transition-all duration-300"> WAF</span>
+                </div>
+            </div>
+
+            {/* Navigation items */}
+            <div className="flex-1 py-4">
+                {sidebarItems
+                    .filter((item) => item.display)
+                    .map((item) => {
+                        const isActive = currentFirstLevelPath === item.href
+                        return (
+                            <Link
+                                key={item.href}
+                                to={item.href}
+                                className={cn(
+                                    "flex items-center gap-3 font-medium px-6 py-3 w-full group transition-all duration-300 relative overflow-hidden",
+                                    isActive
+                                        ? "bg-white/15 dark:bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.25)] text-white translate-x-1"
+                                        : "text-white/90 hover:text-white hover:translate-x-1 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.2)]",
+                                    "before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full before:bg-gradient-to-r before:from-white/5 before:to-white/20 dark:before:from-white/5 dark:before:to-white/15 before:transition-opacity before:duration-300",
+                                    isActive
+                                        ? "before:opacity-100"
+                                        : "before:opacity-0 hover:before:opacity-100"
+                                )}
+                            >
+                                <span className="relative z-10 flex items-center gap-3">
+                                    <item.icon className={cn(
+                                        "w-5 h-5 transition-transform",
+                                        isActive ? "text-white" : "group-hover:animate-icon-shake"
+                                    )} />
+                                    <span className={cn(
+                                        "transition-all dark:text-shadow-glow-white",
+                                        isActive ? "font-semibold" : "group-hover:font-medium"
+                                    )}>{item.title}</span>
+                                </span>
+                                <div className={cn(
+                                    "absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent blur-sm transition-opacity duration-500",
+                                    isActive ? "opacity-70" : "opacity-0 group-hover:opacity-100"
+                                )}></div>
+                            </Link>
+                        )
+                    })}
+            </div>
+
+            {/* Logout button */}
+            <div className="mt-auto py-4 border-t border-white/10 dark:border-white/5 relative z-10">
+                <button
+                    onClick={handleLogout}
+                    className={cn(
+                        "flex items-center gap-3 font-medium px-6 py-3 w-full group transition-all duration-300 relative overflow-hidden",
+                        isLogoutActive
+                            ? "bg-white/15 dark:bg-white/10 shadow-[0_0_15px_rgba(255,255,255,0.4)] dark:shadow-[0_0_15px_rgba(255,255,255,0.25)] text-white translate-x-1"
+                            : "text-white/90 hover:text-white hover:translate-x-1 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)] dark:hover:shadow-[0_0_12px_rgba(255,255,255,0.2)]",
+                        "before:absolute before:content-[''] before:top-0 before:left-0 before:w-full before:h-full before:bg-gradient-to-r before:from-white/5 before:to-white/20 dark:before:from-white/5 dark:before:to-white/15 before:transition-opacity before:duration-300",
+                        isLogoutActive
+                            ? "before:opacity-100"
+                            : "before:opacity-0 hover:before:opacity-100"
+                    )}
+                >
+                    <span className="relative z-10 flex items-center gap-3">
+                        <LogOut className={cn(
+                            "w-5 h-5 transition-transform",
+                            isLogoutActive ? "text-white" : "group-hover:animate-icon-shake"
+                        )} />
+                        <span className={cn(
+                            "transition-all dark:text-shadow-glow-white",
+                            isLogoutActive ? "font-semibold" : "group-hover:font-medium"
+                        )}>{t("sidebar.logout")}</span>
+                    </span>
+                    <div className={cn(
+                        "absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent blur-sm transition-opacity duration-500",
+                        isLogoutActive ? "opacity-70" : "opacity-0 group-hover:opacity-100"
+                    )}></div>
+                </button>
+                <div className="text-center text-xs text-white/60 dark:text-white/50 mt-4 px-4">© 2025 RuiQi WAF. All Rights Reserved.</div>
+            </div>
+        </div >
     )
-} 
+}

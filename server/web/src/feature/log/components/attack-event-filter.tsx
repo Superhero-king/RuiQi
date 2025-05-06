@@ -94,7 +94,7 @@ export function AttackEventFilter({
     }, [form])
 
     return (
-        <Card className="p-4 bg-zinc-50 border-none shadow-none rounded-sm">
+        <Card className="p-4 bg-zinc-50 dark:bg-muted/30 border-none shadow-none rounded-sm">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleSubmit)}>
                     <div className="flex items-center justify-between mb-2">
@@ -115,8 +115,9 @@ export function AttackEventFilter({
                                     <Switch
                                         checked={enablePolling}
                                         onCheckedChange={(checked) => onPollingChange(checked, pollingInterval)}
+                                        className="dark:data-[state=checked]:bg-primary"
                                     />
-                                    <span className="text-sm font-medium">{t('autoRefresh')}</span>
+                                    <span className="text-sm font-medium dark:text-shadow-glow-white">{t('autoRefresh')}</span>
                                 </div>
 
                                 <Display visible={enablePolling}>
@@ -124,7 +125,7 @@ export function AttackEventFilter({
                                         value={pollingInterval.toString()}
                                         onValueChange={(value) => onPollingChange(enablePolling, parseInt(value))}
                                     >
-                                        <SelectTrigger className="h-8 w-24">
+                                        <SelectTrigger className="h-8 w-24 dark:text-shadow-glow-white">
                                             <SelectValue placeholder={t('interval')} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -146,7 +147,7 @@ export function AttackEventFilter({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleReset}
-                                    className="flex items-center gap-1"
+                                    className="flex items-center gap-1 dark:border-muted-foreground/30 dark:hover:bg-background/50"
                                 >
                                     <AnimatedIcon animationVariant="continuous-spin" isAnimating={isResetAnimating} className="h-4 w-4">
                                         <RotateCcw className="h-4 w-4" />
@@ -160,7 +161,7 @@ export function AttackEventFilter({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleRefresh}
-                                    className="flex items-center gap-1"
+                                    className="flex items-center gap-1 dark:border-muted-foreground/30 dark:hover:bg-background/50"
                                 >
                                     <AnimatedIcon animationVariant="continuous-spin" isAnimating={isRefreshAnimating} className="h-4 w-4">
                                         <RefreshCw className="h-4 w-4" />
@@ -172,7 +173,7 @@ export function AttackEventFilter({
                                 <Button
                                     type="submit"
                                     size="sm"
-                                    className="flex items-center gap-1"
+                                    className="flex items-center gap-1 dark:hover:bg-primary/80"
                                 >
                                     <Search className="h-3 w-3" />
                                     {t('search')}
@@ -188,9 +189,9 @@ export function AttackEventFilter({
                                 name="domain"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('domain')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('domain')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white" />
+                                            <Input placeholder={t('domainPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -201,9 +202,9 @@ export function AttackEventFilter({
                                 name="srcIp"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('srcIp')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('srcIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -214,9 +215,9 @@ export function AttackEventFilter({
                                 name="dstIp"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('dstIp')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('dstIp')}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white" />
+                                            <Input placeholder={t('ipPlaceholder')} {...field} className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white" />
                                         </FormControl>
                                     </FormItem>
                                 )}
@@ -227,14 +228,13 @@ export function AttackEventFilter({
                                 name="srcPort"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('srcPort')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('srcPort')}</FormLabel>
                                         <FormControl>
                                             <Input
-                                                type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -246,14 +246,13 @@ export function AttackEventFilter({
                                 name="dstPort"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('dstPort')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('dstPort')}</FormLabel>
                                         <FormControl>
                                             <Input
-                                                type="number"
                                                 placeholder={t('portPlaceholder')}
                                                 {...field}
                                                 onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                                                className="h-8 text-sm bg-white"
+                                                className="h-8 text-sm bg-white dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -265,7 +264,7 @@ export function AttackEventFilter({
                                 name="startTime"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('startTime')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('startTime')}</FormLabel>
                                         <FormControl>
                                             <DateTimePicker24h
                                                 type="dateHourMinuteSecond"
@@ -286,6 +285,7 @@ export function AttackEventFilter({
                                                         field.onChange("")
                                                     }
                                                 }}
+                                                className="dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
@@ -297,7 +297,7 @@ export function AttackEventFilter({
                                 name="endTime"
                                 render={({ field }) => (
                                     <FormItem className="justify-between w-full sm:w-[calc(50%-0.375rem)] md:w-[calc(33.33%-0.5rem)] lg:w-[calc(20%-0.6rem)]">
-                                        <FormLabel className="text-xs">{t('endTime')}</FormLabel>
+                                        <FormLabel className="text-xs dark:text-shadow-glow-white">{t('endTime')}</FormLabel>
                                         <FormControl>
                                             <DateTimePicker24h
                                                 type="dateHourMinuteSecond"
@@ -318,6 +318,7 @@ export function AttackEventFilter({
                                                         field.onChange("")
                                                     }
                                                 }}
+                                                className="dark:bg-background dark:border-muted-foreground/30 dark:text-shadow-glow-white"
                                             />
                                         </FormControl>
                                     </FormItem>
