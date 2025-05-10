@@ -29,7 +29,12 @@
     "common": {
         "loading": "加载中...",
         "language": "选择语言",
-        "copied": "已复制"
+        "copied": "已复制",
+        "save": "保存",
+        "create": "创建",
+        "delete": "删除",
+        "cancel": "取消",
+        "submitting": "提交中..."
     },
     "error": {
         "title": "发生了错误",
@@ -143,6 +148,8 @@
         "detectedPayload": "检测到的载荷",
         "attackSource": "攻击来源",
         "blockThisIp": "拦截此 IP",
+        "location": "地理位置",
+        "noLocationInfo": "无地理位置信息",
         "targetInfo": "目标信息",
         "technicalDetails": "详情",
         "copyCurl": "复制 cURL",
@@ -361,5 +368,149 @@
         "previousPage": "转到上一页",
         "nextPage": "转到下一页",
         "lastPage": "转到最后一页"
+    },
+    "ipGroup": {
+        "title": "IP 组管理",
+        "createButton": "创建 IP 组",
+        "table": {
+            "name": "组名称",
+            "ipAddresses": "IP 地址",
+            "actions": "操作"
+        },
+        "form": {
+            "name": "组名称",
+            "namePlaceholder": "请输入组名称",
+            "ipAddresses": "IP 地址",
+            "ipAddressPlaceholder": "输入 IP 地址或 CIDR (例如 192.168.1.1 或 10.0.0.0/24)",
+            "noIpAddresses": "尚未添加 IP 地址"
+        },
+        "dialog": {
+            "createTitle": "创建 IP 组",
+            "editTitle": "编辑 IP 组",
+            "createDescription": "创建一个新的 IP 地址组用于规则匹配",
+            "editDescription": "编辑选中的 IP 地址组及其成员"
+        },
+        "deleteDialog": {
+            "title": "删除 IP 组",
+            "description": "确定要删除 IP 组 {{name}} 吗？此操作无法撤销。"
+        },
+        "validation": {
+            "nameRequired": "组名称不能为空",
+            "nameMaxLength": "组名称不能超过50个字符",
+            "ipItemRequired": "IP 地址不能为空",
+            "ipItemInvalid": "IP 地址或 CIDR 格式无效",
+            "ipItemDuplicate": "此 IP 地址已添加",
+            "itemsRequired": "至少需要添加一个 IP 地址"
+        },
+        "toast": {
+            "createSuccess": "创建成功",
+            "ipGroupCreated": "IP 组已成功创建",
+            "createFailed": "创建失败",
+            "createError": "创建 IP 组时出现错误",
+            "updateSuccess": "更新成功",
+            "ipGroupUpdated": "IP 组已成功更新",
+            "updateFailed": "更新失败",
+            "updateError": "更新 IP 组时出现错误",
+            "deleteSuccess": "删除成功",
+            "ipGroupDeleted": "IP 组已成功删除",
+            "deleteFailed": "删除失败",
+            "deleteError": "删除 IP 组时出现错误",
+            "blockSuccess": "IP 已拦截",
+            "ipBlocked": "IP 地址 {{ip}} 已添加到黑名单",
+            "blockFailed": "拦截失败",
+            "blockError": "拦截 IP 地址时出现错误"
+        }
+    },
+    "microRule": {
+        "title": "自定义规则管理",
+        "refresh": "刷新",
+        "add": "添加规则",
+        "table": {
+            "name": "规则名称",
+            "type": "规则类型",
+            "status": "状态",
+            "priority": "优先级",
+            "edit": "编辑",
+            "delete": "删除"
+        },
+        "form": {
+            "name": "规则名称",
+            "namePlaceholder": "请输入规则名称",
+            "type": "规则类型",
+            "selectType": "选择规则类型",
+            "whitelist": "白名单",
+            "blacklist": "黑名单",
+            "status": "状态",
+            "selectStatus": "选择状态",
+            "enabled": "启用",
+            "disabled": "禁用",
+            "priority": "优先级",
+            "priorityPlaceholder": "输入优先级 (0-9999)",
+            "condition": "规则条件"
+        },
+        "condition": {
+            "conditionType": "条件类型",
+            "selectConditionType": "选择条件类型",
+            "simpleCondition": "简单条件",
+            "compositeCondition": "复合条件",
+            "target": "匹配目标",
+            "selectTarget": "选择匹配目标",
+            "sourceIp": "源 IP",
+            "url": "URL",
+            "path": "路径",
+            "matchType": "匹配方式",
+            "selectMatchType": "选择匹配方式",
+            "matchValue": "匹配值",
+            "enterMatchValue": "输入匹配值",
+            "operator": "逻辑运算符",
+            "selectOperator": "选择逻辑运算符",
+            "and": "且(AND)",
+            "or": "或(OR)",
+            "conditionGroup": "条件组",
+            "addSimpleCondition": "添加条件",
+            "addCompositeCondition": "添加条件组",
+            "addNestedCondition": "添加嵌套条件"
+        },
+        "matchTypes": {
+            "equal": "等于",
+            "not_equal": "不等于",
+            "fuzzy": "模糊匹配",
+            "in_cidr": "在CIDR范围内",
+            "not_in_cidr": "不在CIDR范围内",
+            "in_ipgroup": "在IP组内",
+            "not_in_ipgroup": "不在IP组内",
+            "include": "包含",
+            "contains": "包含",
+            "not_contains": "不包含",
+            "prefix_keyword": "前缀匹配",
+            "regex": "正则表达式"
+        },
+        "dialog": {
+            "createTitle": "创建新规则",
+            "updateTitle": "更新规则",
+            "createDescription": "创建自定义WAF规则以保护您的站点",
+            "updateDescription": "编辑规则信息，修改后将自动保存"
+        },
+        "deleteDialog": {
+            "confirmTitle": "确认删除",
+            "confirmDescription": "您确定要删除此规则吗？此操作无法撤销，可能会影响您的安全设置。",
+            "cancel": "取消",
+            "deleting": "删除中...",
+            "delete": "删除"
+        },
+        "toast": {
+            "createSuccess": "创建成功",
+            "microRuleCreated": "规则已成功创建",
+            "createFailed": "创建失败",
+            "createError": "创建规则时出现错误",
+            "updateSuccess": "更新成功",
+            "microRuleUpdated": "规则已成功更新",
+            "updateFailed": "更新失败",
+            "updateError": "更新规则时出现错误",
+            "deleteSuccess": "删除成功",
+            "microRuleDeleted": "规则已成功删除",
+            "deleteFailed": "删除失败",
+            "deleteError": "删除规则时出现错误"
+        }
     }
 }
