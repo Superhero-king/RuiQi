@@ -18,6 +18,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	_ "github.com/HUAHUAI23/simple-waf/server/docs" // 导入 swagger 文档
 	"github.com/HUAHUAI23/simple-waf/server/router"
+	haproxyStats "github.com/HUAHUAI23/simple-waf/server/service/cornjob/haproxy"
 	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
 	"github.com/HUAHUAI23/simple-waf/server/validator"
 )
@@ -78,6 +79,15 @@ func main() {
 		return
 	}
 
+	// Start HAProxy stats aggregation cornjob service
+	haproxyStatsCleanup, err := haproxyStats.Start(runner, config.Logger)
+	if err != nil {
+		config.Logger.Error().Err(err).Msg("Failed to start HAProxy stats service")
+		return
+	}
+	// Register cleanup function to be called during shutdown
+	defer haproxyStatsCleanup()
+
 	// Set Gin mode based on configuration
 	if config.Global.IsProduction {
 		gin.SetMode(gin.ReleaseMode)
@@ -107,7 +117,8 @@ func main() {
 	route.GET("/scalar", func(c *gin.Context) {
 		c.Header("Content-Type", "text/html")
 		scheme := "http://"
-		if c.Request.TLS != nil {
+
+		if c.GetHeader("X-Forwarded-Proto") == "https" || c.Request.TLS != nil {
 			scheme = "https://"
 		}
 
