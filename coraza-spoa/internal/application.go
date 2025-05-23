@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
+	flowcontroller "github.com/HUAHUAI23/simple-waf/coraza-spoa/internal/flow-controller"
 	"github.com/HUAHUAI23/simple-waf/pkg/model"
 	coreruleset "github.com/corazawaf/coraza-coreruleset"
 	"github.com/corazawaf/coraza/v3"
@@ -42,17 +42,26 @@ type AppConfig struct {
 
 // ApplicationOptions 应用程序配置选项 配置应用是否开启 ip 解析，日志记录
 type ApplicationOptions struct {
-	MongoConfig        *MongoConfig   // MongoDB配置，用于日志存储
-	GeoIPConfig        *GeoIP2Options // GeoIP配置，用于IP地理位置处理
-	RuleEngineDbConfig *MongoDBConfig // 规则引擎数据库配置
+	MongoConfig          *MongoConfig          // MongoDB配置，用于日志存储
+	GeoIPConfig          *GeoIP2Options        // GeoIP配置，用于IP地理位置处理
+	RuleEngineDbConfig   *MongoDBConfig        // 规则引擎数据库配置
+	FlowControllerConfig *FlowControllerConfig // 流量控制器配置
+}
+
+// FlowControllerConfig 流量控制器配置
+type FlowControllerConfig struct {
+	Client   *mongo.Client // MongoDB客户端
+	Database string        // 数据库名称
 }
 
 type Application struct {
-	waf         coraza.WAF
-	cache       cache.ExpiringCache
-	logStore    LogStore
-	ipProcessor IPProcessor
-	ruleEngine  *RuleEngine
+	waf            coraza.WAF
+	cache          cache.ExpiringCache
+	logStore       LogStore
+	ipProcessor    IPProcessor
+	ruleEngine     *RuleEngine
+	flowController *flowcontroller.FlowController
+	ipRecorder     flowcontroller.IPRecorder
 
 	AppConfig
 }
@@ -85,6 +94,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		encoding.ReleaseKVEntry(k)
 	}()
 
+	// parse request
 	var req applicationRequest
 	for message.KV.Next(k) {
 		switch name := string(k.NameBytes()); name {
@@ -162,16 +172,51 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		req.ID = sb.String()
 	}
 
+	realIP := getRealClientIP(&req)
+	// 检查IP是否已被限制
+	if a.ipRecorder != nil {
+		if blocked, record := a.ipRecorder.IsIPBlocked(realIP); blocked {
+			a.Logger.Info().
+				Str("ip", realIP).
+				Str("reason", record.Reason).
+				Time("blocked_until", record.BlockedUntil).
+				Msg("请求被拒绝：IP已被限制")
+
+			return ErrInterrupted{
+				Interruption: &types.Interruption{
+					Action: "deny",
+					Status: 403,
+					Data:   fmt.Sprintf("IP has been blocked until %s due to %s", record.BlockedUntil.Format(time.RFC3339), record.Reason),
+				},
+			}
+		}
+	}
+
+	host := getHostFromRequest(&req)
+	// 进行高频访问检查
+	if a.flowController != nil {
+		allowed, err := a.flowController.CheckVisit(realIP, buildFullURL(host, req.Path, req.Query))
+		if err != nil {
+			a.Logger.Error().Err(err).Str("ip", realIP).Msg("流控检查失败")
+		} else if !allowed {
+			return ErrInterrupted{
+				Interruption: &types.Interruption{
+					Action: "deny",
+					Status: 429,
+					Data:   "Too many requests",
+				},
+			}
+		}
+	}
+
+	// micro engine detection
 	if a.ruleEngine != nil {
 		realIP := getRealClientIP(&req)
 		// 获取路径部分
 		path := string(req.Path)
 
-		// 组装完整的 URL
-		url := path
-		if len(req.Query) > 0 {
-			url = path + "?" + string(req.Query)
-		}
+		url := buildURLFromBytes(req.Path, req.Query)
+
 		shouldBlock, _, rule, err := a.ruleEngine.MatchRequest(realIP, url, path)
 
 		if err != nil {
@@ -189,6 +234,11 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		}
 
 		if shouldBlock && err == nil {
+			// 记录攻击
+			if a.flowController != nil {
+				_, _ = a.flowController.RecordAttack(realIP, buildFullURL(host, req.Path, req.Query))
+			}
+
 			a.Logger.Info().
 				Str("ruleName", ruleName).
 				Str("ruleId", ruleId).
@@ -229,6 +279,11 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 
 		// 处理中断情况和日志记录
 		if tx.IsInterrupted() && a.logStore != nil {
+			// 记录攻击
+			if a.flowController != nil {
+				_, _ = a.flowController.RecordAttack(realIP, buildFullURL(host, req.Path, req.Query))
+			}
+
 			interruption := tx.Interruption()
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 {
 				err := a.saveFirewallLog(matchedRules, interruption, &req, req.Headers)
@@ -244,6 +299,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 		}
 	}()
 
+	// 设置 response id 为事务 id，为 response 检测提供支持
 	if err := writer.SetString(encoding.VarScopeTransaction, "id", tx.ID()); err != nil {
 		return err
 	}
@@ -255,16 +311,7 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 
 	tx.ProcessConnection(req.SrcIp.String(), int(req.SrcPort), req.DstIp.String(), int(req.DstPort))
 
-	{
-		url := strings.Builder{}
-		url.Write(req.Path)
-		if req.Query != nil {
-			url.WriteString("?")
-			url.Write(req.Query)
-		}
-
-		tx.ProcessURI(url.String(), req.Method, "HTTP/"+req.Version)
-	}
+	tx.ProcessURI(buildURLFromBytes(req.Path, req.Query), req.Method, "HTTP/"+req.Version)
 
 	if err := readHeaders(req.Headers, tx.AddRequestHeader); err != nil {
 		return fmt.Errorf("reading headers: %v", err)
@@ -291,25 +338,98 @@ func (a *Application) HandleRequest(ctx context.Context, writer *encoding.Action
 	return nil
 }
 
+// readHeaders parses HTTP headers with optimized performance while maintaining correctness
 func readHeaders(headers []byte, callback func(key string, value string)) error {
-	s := bufio.NewScanner(bytes.NewReader(headers))
-	for s.Scan() {
-		line := bytes.TrimSpace(s.Bytes())
+	if len(headers) == 0 {
+		return nil
+	}
+
+	start := 0
+	length := len(headers)
+
+	for start < length {
+		// 查找行尾
+		end := start
+		for end < length && headers[end] != '\n' {
+			end++
+		}
+
+		// 获取当前行
+		line := headers[start:end]
+
+		// 处理 \r\n (去除 \r)
+		if len(line) > 0 && line[len(line)-1] == '\r' {
+			line = line[:len(line)-1]
+		}
+
+		// 跳过空行
 		if len(line) == 0 {
+			start = end + 1
 			continue
 		}
 
-		kv := bytes.SplitN(line, []byte(":"), 2)
-		if len(kv) != 2 {
-			return fmt.Errorf("invalid header: %q", s.Text())
+		// 查找冒号
+		colonPos := -1
+		for i, b := range line {
+			if b == ':' {
+				colonPos = i
+				break
+			}
 		}
 
-		key, value := bytes.TrimSpace(kv[0]), bytes.TrimSpace(kv[1])
+		if colonPos == -1 {
+			return fmt.Errorf("invalid header: %q", string(line))
+		}
 
-		callback(string(key), string(value))
+		// 提取并trim key和value
+		keyBytes := line[:colonPos]
+		valueBytes := line[colonPos+1:]
+
+		keyStart, keyEnd := trimSpaceIndices(keyBytes)
+		valueStart, valueEnd := trimSpaceIndices(valueBytes)
+
+		// 检查key是否为空（与原始版本保持一致的行为）
+		if keyStart >= keyEnd {
+			// 对于空key，原始版本的bytes.SplitN不会报错，而是创建空字符串
+			// 我们也保持这种行为
+			key := ""
+			value := string(valueBytes[valueStart:valueEnd])
+			callback(key, value)
+		} else {
+			key := string(keyBytes[keyStart:keyEnd])
+			value := string(valueBytes[valueStart:valueEnd])
+			callback(key, value)
+		}
+
+		// 移动到下一行
+		start = end + 1
 	}
 
 	return nil
+}
+
+// trimSpaceIndices 返回去除前后空白字符后的起始和结束索引
+// 避免内存分配，只返回索引
+func trimSpaceIndices(data []byte) (start, end int) {
+	// 跳过前导空白
+	start = 0
+	for start < len(data) && isWhitespace(data[start]) {
+		start++
+	}
+
+	// 跳过尾随空白
+	end = len(data)
+	for end > start && isWhitespace(data[end-1]) {
+		end--
+	}
+
+	return start, end
+}
+
+// isWhitespace 检查字符是否为空白字符（与bytes.TrimSpace行为一致）
+func isWhitespace(b byte) bool {
+	// 包含所有bytes.TrimSpace处理的空白字符
+	return b == ' ' || b == '\t' || b == '\n' || b == '\r' || b == '\v' || b == '\f'
 }
 
 type applicationResponse struct {
@@ -375,7 +495,7 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 	if !ok {
 		a.Logger.Error().Str("id", res.ID).Msg("transaction not found")
 		return nil
-		// TODO: 是否需要报错，还是仅记录
+		// TODO: 是否需要报错，还是仅记录，检测器重启时这里会报错，因为 application 被替换，a.cache.Get 会拿不到 res.ID 对应的 transaction
 		// return fmt.Errorf("transaction not found: %s", res.ID)
 	}
 	a.cache.Remove(res.ID)
@@ -391,9 +511,25 @@ func (a *Application) HandleResponse(ctx context.Context, writer *encoding.Actio
 	*/
 	tx := t.tx
 
+	// 获取真实客户端IP
+	realIP := getRealClientIP(t.request)
+	host := getHostFromRequest(t.request)
+	if res.Status >= 400 {
+		// 检查错误响应并记录
+		// 记录错误
+		if a.flowController != nil {
+			_, _ = a.flowController.RecordError(realIP, buildFullURL(host, t.request.Path, t.request.Query))
+		}
+	}
+
 	defer func() {
 		// 处理中断情况和日志记录
 		if tx.IsInterrupted() && a.logStore != nil {
+			// 记录攻击
+			if a.flowController != nil {
+				_, _ = a.flowController.RecordAttack(realIP, buildFullURL(host, t.request.Path, t.request.Query))
+			}
+
 			interruption := tx.Interruption()
 			if matchedRules := tx.MatchedRules(); len(matchedRules) > 0 && t.request != nil {
 				err := a.saveFirewallLog(matchedRules, interruption, t.request, t.request.Headers)
@@ -653,7 +789,7 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, options Applic
 			options.MongoConfig.Collection,
 			a.Logger,
 		)
-		logStore.Start(ctx)
+		logStore.Start()
 		app.logStore = logStore
 	}
 
@@ -682,6 +818,34 @@ func (a AppConfig) NewApplicationWithContext(ctx context.Context, options Applic
 	} else {
 		// 如果未提供GeoIP配置，使用空实现
 		app.ipProcessor = NewNullIPProcessor()
+	}
+
+	// 初始化流量控制器
+	if options.FlowControllerConfig != nil && options.FlowControllerConfig.Client != nil {
+		// 先创建IP记录器
+		ipRecorder := flowcontroller.NewMongoIPRecorder(
+			options.FlowControllerConfig.Client,
+			options.FlowControllerConfig.Database,
+			10000, // 默认容量
+			a.Logger,
+		)
+		app.ipRecorder = ipRecorder
+
+		// 创建流量控制器
+		flowController, err := flowcontroller.NewFlowControllerFromMongoConfig(
+			options.FlowControllerConfig.Client,
+			options.FlowControllerConfig.Database,
+			a.Logger,
+			ipRecorder,
+		)
+		if err != nil {
+			a.Logger.Warn().Err(err).Msg("初始化流量控制器失败")
+		} else {
+			app.flowController = flowController
+			if err := app.flowController.Initialize(); err != nil {
+				a.Logger.Warn().Err(err).Msg("流量控制器初始化失败")
+			}
+		}
 	}
 
 	debugLogger := debuglog.Default().
@@ -786,25 +950,72 @@ func (e ErrInterrupted) Is(target error) bool {
 		e.Interruption.Data == t.Interruption.Data
 }
 
-// 添加新的辅助函数
+// 优化的getHeaderValue函数 - 高性能版本
 func getHeaderValue(headers []byte, targetHeader string) (string, error) {
-	s := bufio.NewScanner(bytes.NewReader(headers))
-	for s.Scan() {
-		line := bytes.TrimSpace(s.Bytes())
+	if len(headers) == 0 || targetHeader == "" {
+		return "", nil
+	}
+
+	// 预先转换目标头部为小写，避免在循环中重复转换
+	targetHeaderLower := strings.ToLower(targetHeader)
+	targetLen := len(targetHeaderLower)
+
+	start := 0
+	for start < len(headers) {
+		// 查找行尾
+		lineEnd := start
+		for lineEnd < len(headers) && headers[lineEnd] != '\n' {
+			lineEnd++
+		}
+
+		// 获取当前行并去除可能的\r
+		line := headers[start:lineEnd]
+		if len(line) > 0 && line[len(line)-1] == '\r' {
+			line = line[:len(line)-1]
+		}
+
+		// 跳过空行
 		if len(line) == 0 {
+			start = lineEnd + 1
 			continue
 		}
 
-		kv := bytes.SplitN(line, []byte(":"), 2)
-		if len(kv) != 2 {
+		// 查找冒号
+		colonIdx := bytes.IndexByte(line, ':')
+		if colonIdx <= 0 {
+			start = lineEnd + 1
 			continue
 		}
 
-		key, value := bytes.TrimSpace(kv[0]), bytes.TrimSpace(kv[1])
-		if strings.EqualFold(string(key), targetHeader) {
+		// 提取key，并检查长度
+		key := bytes.TrimSpace(line[:colonIdx])
+		if len(key) != targetLen {
+			start = lineEnd + 1
+			continue
+		}
+
+		// 快速不区分大小写比较（仅限ASCII）
+		isMatch := true
+		for i := 0; i < targetLen; i++ {
+			a := key[i]
+			if a >= 'A' && a <= 'Z' {
+				a += 32 // 转小写
+			}
+			if a != targetHeaderLower[i] {
+				isMatch = false
+				break
+			}
+		}
+
+		if isMatch {
+			value := bytes.TrimSpace(line[colonIdx+1:])
 			return string(value), nil
 		}
+
+		// 移动到下一行
+		start = lineEnd + 1
 	}
+
 	return "", nil
 }
 
@@ -824,63 +1035,64 @@ func getHostFromRequest(req *applicationRequest) string {
 	return dstIpStr
 }
 
-// getRealClientIP 从多种HTTP头部获取客户端真实IP
+// getRealClientIP 从多种HTTP头部获取客户端真实IP (优化版本)
 func getRealClientIP(req *applicationRequest) string {
 	if req == nil {
 		return ""
 	}
 
-	// 按优先级尝试不同的头部
-	headers := []string{
-		"x-forwarded-for",  // 最常用，链式格式
+	headers := req.Headers
+	if len(headers) == 0 {
+		// 如果没有header，直接返回源IP
+		if req.SrcIp.IsValid() {
+			return req.SrcIp.String()
+		}
+		return ""
+	}
+
+	// 快速路径：优先查找最常见的 X-Forwarded-For header
+	if ip := getXForwardedForIP(headers); ip != "" {
+		return ip
+	}
+
+	// 按优先级尝试其他头部
+	priorityHeaders := []string{
 		"x-real-ip",        // Nginx常用
 		"true-client-ip",   // Akamai
 		"cf-connecting-ip", // Cloudflare
 		"fastly-client-ip", // Fastly
 		"x-client-ip",      // 通用
-		"x-original-forwarded-for",
-		"forwarded", // 标准头部
-		"x-cluster-client-ip",
 	}
 
-	// 尝试从各个头部获取IP
-	for _, header := range headers {
-		if value, err := getHeaderValue(req.Headers, header); err == nil && value != "" {
-			// 对于X-Forwarded-For和类似的链式格式，提取第一个IP
-			if header == "x-forwarded-for" || header == "x-original-forwarded-for" {
-				ips := strings.Split(value, ",")
-				if len(ips) > 0 {
-					ip := strings.TrimSpace(ips[0])
-					if ip != "" {
-						return ip
-					}
-				}
-			} else if header == "forwarded" { // 对于Forwarded头部，需要特殊处理
-				// 解析Forwarded头部，格式如：for=client;proto=https;by=proxy
-				parts := strings.Split(value, ";")
-				for _, part := range parts {
-					kv := strings.SplitN(part, "=", 2)
-					if len(kv) == 2 && strings.TrimSpace(kv[0]) == "for" {
-						// 去除可能的引号和IPv6方括号
-						ip := strings.TrimSpace(kv[1])
-						ip = strings.Trim(ip, "\"")
-
-						// 处理IPv6地址特殊格式
-						if strings.HasPrefix(ip, "[") && strings.HasSuffix(ip, "]") {
-							ip = ip[1 : len(ip)-1]
-						}
-
-						if ip != "" {
-							return ip
-						}
-					}
-				}
-			} else { // 其他头部直接返回值
-				ip := strings.TrimSpace(value)
-				if ip != "" {
-					return ip
-				}
+	// 批量查找简单headers（直接返回值的）
+	for _, header := range priorityHeaders {
+		if value, err := getHeaderValue(headers, header); err == nil && value != "" {
+			if ip := strings.TrimSpace(value); ip != "" {
+				return ip
 			}
+		}
+	}
+
+	// 查找复杂headers
+	if value, err := getHeaderValue(headers, "x-original-forwarded-for"); err == nil && value != "" {
+		if ips := strings.Split(value, ","); len(ips) > 0 {
+			if ip := strings.TrimSpace(ips[0]); ip != "" {
+				return ip
+			}
+		}
+	}
+
+	// Forwarded header需要特殊解析
+	if value, err := getHeaderValue(headers, "forwarded"); err == nil && value != "" {
+		if ip := parseForwardedHeaderFast(value); ip != "" {
+			return ip
+		}
+	}
+
+	// X-Cluster-Client-IP（最后检查）
+	if value, err := getHeaderValue(headers, "x-cluster-client-ip"); err == nil && value != "" {
+		if ip := strings.TrimSpace(value); ip != "" {
+			return ip
 		}
 	}
 
@@ -890,4 +1102,155 @@ func getRealClientIP(req *applicationRequest) string {
 	}
 
 	return ""
+}
+
+// getXForwardedForIP 快速解析X-Forwarded-For header
+func getXForwardedForIP(headers []byte) string {
+	// 快速查找 "x-forwarded-for:" 或 "X-Forwarded-For:"
+	target := []byte("x-forwarded-for:")
+	targetUpper := []byte("X-Forwarded-For:")
+
+	start := 0
+	for start < len(headers) {
+		// 查找行尾
+		lineEnd := start
+		for lineEnd < len(headers) && headers[lineEnd] != '\n' {
+			lineEnd++
+		}
+
+		line := headers[start:lineEnd]
+		if len(line) > 0 && line[len(line)-1] == '\r' {
+			line = line[:len(line)-1]
+		}
+
+		// 检查是否匹配 X-Forwarded-For
+		if len(line) > 16 { // "x-forwarded-for:" 最小长度是16
+			// 快速检查前缀
+			if (bytes.HasPrefix(line, target) || bytes.HasPrefix(line, targetUpper)) ||
+				(len(line) > 15 && isXForwardedForHeader(line)) {
+
+				// 找到冒号后的值
+				colonIdx := bytes.IndexByte(line, ':')
+				if colonIdx > 0 && colonIdx < len(line)-1 {
+					value := bytes.TrimSpace(line[colonIdx+1:])
+					if len(value) > 0 {
+						// 提取第一个IP（逗号分隔）
+						valueStr := string(value)
+						if commaIdx := strings.Index(valueStr, ","); commaIdx > 0 {
+							ip := strings.TrimSpace(valueStr[:commaIdx])
+							if ip != "" {
+								return ip
+							}
+						} else {
+							ip := strings.TrimSpace(valueStr)
+							if ip != "" {
+								return ip
+							}
+						}
+					}
+				}
+			}
+		}
+
+		start = lineEnd + 1
+	}
+	return ""
+}
+
+// isXForwardedForHeader 检查是否是X-Forwarded-For header（不区分大小写）
+func isXForwardedForHeader(line []byte) bool {
+	if len(line) < 16 { // "x-forwarded-for:" 长度是16
+		return false
+	}
+
+	target := "x-forwarded-for:"
+	for i := 0; i < 16; i++ {
+		c := line[i]
+		if c >= 'A' && c <= 'Z' {
+			c += 32 // 转小写
+		}
+		if c != target[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// parseForwardedHeaderFast 快速解析Forwarded header
+func parseForwardedHeaderFast(forwarded string) string {
+	// 快速查找 "for=" 模式
+	forPrefix := "for="
+	start := 0
+
+	for {
+		idx := strings.Index(forwarded[start:], forPrefix)
+		if idx == -1 {
+			break
+		}
+
+		start += idx + 4 // len("for=")
+		if start >= len(forwarded) {
+			break
+		}
+
+		// 查找值的结束位置（分号或字符串结尾）
+		end := start
+		for end < len(forwarded) && forwarded[end] != ';' {
+			end++
+		}
+
+		if end > start {
+			ip := strings.TrimSpace(forwarded[start:end])
+			// 去除引号
+			ip = strings.Trim(ip, "\"")
+
+			// 处理IPv6地址格式 [ip]:port 或 [ip]
+			if strings.HasPrefix(ip, "[") {
+				if closeBracket := strings.Index(ip, "]"); closeBracket > 1 {
+					ip = ip[1:closeBracket]
+				}
+			}
+
+			if ip != "" {
+				return ip
+			}
+		}
+
+		start = end
+	}
+
+	return ""
+}
+
+// buildURLFromBytes 高性能 URL 构建函数
+func buildURLFromBytes(path, query []byte) string {
+	if len(query) == 0 {
+		return string(path)
+	}
+
+	// 一次性分配所需内存
+	result := make([]byte, 0, len(path)+1+len(query))
+	result = append(result, path...)
+	result = append(result, '?')
+	result = append(result, query...)
+	return string(result)
+}
+
+// buildFullURL 构建完整 URL（包含 host）
+func buildFullURL(host string, path, query []byte) string {
+	// 计算总长度
+	totalLen := len(host) + len(path)
+	if len(query) > 0 {
+		totalLen += 1 + len(query) // +1 for '?'
+	}
+
+	// 一次性分配
+	result := make([]byte, 0, totalLen)
+	result = append(result, host...)
+	result = append(result, path...)
+	if len(query) > 0 {
+		result = append(result, '?')
+		result = append(result, query...)
+	}
+	return string(result)
 }
