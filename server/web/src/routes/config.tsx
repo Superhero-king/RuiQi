@@ -22,6 +22,7 @@ import SiteManagerPage from "@/pages/setting/pages/site/page"
 import IPGroupPage from "@/pages/rule/pages/ip-group/page"
 import MicroRulePage from "@/pages/rule/pages/micro-rule/page"
 import StatsPage from "@/pages/monitor/pages/stats/page"
+import ViewerPage from "@/pages/monitor/pages/security-dashboard/page"
 import FlowControlPage from "@/pages/rule/pages/cc/page"
 import { LoadingFallback } from "@/components/common/loading-fallback"
 
@@ -61,7 +62,8 @@ export function createBreadcrumbConfig(t: TFunction): Record<RoutePath, Breadcru
         [ROUTES.MONITOR]: {
             defaultPath: "overview",
             items: [
-                { title: t('breadcrumb.monitor.overview'), path: "overview", component: <StatsPage /> }
+                { title: t('breadcrumb.monitor.overview'), path: "overview", component: <StatsPage /> },
+                { title: t('breadcrumb.monitor.dashboard'), path: "dashboard", component: <Navigate to="/security-dashboard" replace /> },
             ]
         },
         [ROUTES.RULES]: {
@@ -114,6 +116,11 @@ export function useRoutes(): RouteObject[] {
         { path: "/reset-password", element: lazyLoad(ResetPasswordPage) }
     ]
 
+    // security-dashboard
+    const securityDashboardRoutes: RouteObject[] = [
+        { path: "/security-dashboard", element: lazyLoad(ViewerPage) }
+    ]
+
     // 应用路由
     const appRoutes: RouteObject = {
         element: <ProtectedRoute />,
@@ -148,7 +155,7 @@ export function useRoutes(): RouteObject[] {
         }]
     }
 
-    return [...authRoutes, appRoutes]
+    return [...authRoutes, appRoutes, ...securityDashboardRoutes]
 }
 
 // 默认面包屑配置，用于类型推断

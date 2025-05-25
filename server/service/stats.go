@@ -7,6 +7,7 @@ import (
 	"time"
 
 	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
+	pkgModel "github.com/HUAHUAI23/simple-waf/pkg/model"
 	"github.com/HUAHUAI23/simple-waf/server/config"
 	"github.com/HUAHUAI23/simple-waf/server/dto"
 	"github.com/HUAHUAI23/simple-waf/server/model"
@@ -14,6 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type StatsService interface {
@@ -55,9 +57,9 @@ func (s *StatsServiceImpl) GetOverviewStats(ctx context.Context, timeRange strin
 	}
 
 	// 1. 获取 HAProxyMinuteStats 的统计数据
-	minuteStatsResult, err := s.getMinuteStatsAggregate(ctx, db, startTime)
+	minuteStatsResult, err := s.getHAProxyStatsAggregate(ctx, db, startTime)
 	if err != nil {
-		return nil, fmt.Errorf("获取分钟统计数据失败: %w", err)
+		return nil, fmt.Errorf("获取统计数据失败: %w", err)
 	}
 
 	// 2. 获取 WAF 拦截统计数据
@@ -98,8 +100,8 @@ func (s *StatsServiceImpl) GetRealtimeQPS(ctx context.Context, limit int) (*dto.
 	if limit <= 0 {
 		limit = 30 // 默认获取30个点
 	}
-	if limit > 60 {
-		limit = 60 // 最多不超过60个点
+	if limit > 240 {
+		limit = 240 // 最多不超过240个点
 	}
 
 	// 获取MongoDB数据库连接
@@ -371,9 +373,11 @@ func (s *StatsServiceImpl) GetTrafficTimeSeriesData(ctx context.Context, timeRan
 	}}}
 
 	pipeline := mongo.Pipeline{matchStage, groupStage, sortStage}
+	aggregateOptions := options.Aggregate().
+		SetAllowDiskUse(true)
 
 	// 执行聚合查询
-	cursor, err := collection.Aggregate(ctx, pipeline)
+	cursor, err := collection.Aggregate(ctx, pipeline, aggregateOptions)
 	if err != nil {
 		return nil, fmt.Errorf("执行流量时间序列聚合查询失败: %w", err)
 	}
@@ -422,8 +426,8 @@ func (s *StatsServiceImpl) getTimeRangeStart(timeRange string) (time.Time, error
 	}
 }
 
-// 辅助方法 - 分钟统计聚合结果
-type minuteStatsAggregateResult struct {
+// 辅助方法 - haproxy统计聚合结果
+type haproxyStatsAggregateResult struct {
 	TotalRequests   int64 // 总请求数
 	InboundTraffic  int64 // 入站流量
 	OutboundTraffic int64 // 出站流量
@@ -432,8 +436,8 @@ type minuteStatsAggregateResult struct {
 	Error5xx        int64 // 5xx错误数
 }
 
-// 辅助方法 - 获取分钟统计数据聚合结果
-func (s *StatsServiceImpl) getMinuteStatsAggregate(ctx context.Context, db *mongo.Database, startTime time.Time) (*minuteStatsAggregateResult, error) {
+// 辅助方法 - 获取haproxy统计数据聚合结果
+func (s *StatsServiceImpl) getHAProxyStatsAggregate(ctx context.Context, db *mongo.Database, startTime time.Time) (*haproxyStatsAggregateResult, error) {
 	// 创建聚合管道
 	matchStage := bson.D{{Key: "$match", Value: bson.D{
 		{Key: "target_name", Value: "all"},
@@ -452,11 +456,25 @@ func (s *StatsServiceImpl) getMinuteStatsAggregate(ctx context.Context, db *mong
 
 	pipeline := mongo.Pipeline{matchStage, groupStage}
 
+	// 设置聚合选项以优化性能
+	aggregateOptions := options.Aggregate().
+		SetAllowDiskUse(true).                                                        // 允许使用磁盘进行大数据集聚合
+		SetHint(bson.D{{Key: "target_name", Value: 1}, {Key: "timestamp", Value: 1}}) // 使用最优复合索引
+
 	// 执行聚合查询
 	var haproxyMinuteStats model.HAProxyMinuteStats
 	collection := db.Collection(haproxyMinuteStats.GetCollectionName())
-	cursor, err := collection.Aggregate(ctx, pipeline)
+
+	queryStartTime := time.Now()
+	cursor, err := collection.Aggregate(ctx, pipeline, aggregateOptions)
+	duration := time.Since(queryStartTime)
+
 	if err != nil {
+		s.logger.Error().
+			Err(err).
+			Dur("duration", duration).
+			Time("queryStartTime", startTime).
+			Msg("HAProxy统计聚合查询失败")
 		return nil, fmt.Errorf("执行统计聚合查询失败: %w", err)
 	}
 	defer cursor.Close(ctx)
@@ -471,11 +489,15 @@ func (s *StatsServiceImpl) getMinuteStatsAggregate(ctx context.Context, db *mong
 		Error5xx        int64 `bson:"error5xx"`
 	}
 	if err = cursor.All(ctx, &results); err != nil {
+		s.logger.Error().
+			Err(err).
+			Dur("duration", duration).
+			Msg("解析HAProxy统计聚合结果失败")
 		return nil, fmt.Errorf("解析统计聚合结果失败: %w", err)
 	}
 
 	// 构建结果
-	result := &minuteStatsAggregateResult{}
+	result := &haproxyStatsAggregateResult{}
 	if len(results) > 0 {
 		result.TotalRequests = results[0].TotalRequests
 		result.InboundTraffic = results[0].InboundTraffic
@@ -483,6 +505,24 @@ func (s *StatsServiceImpl) getMinuteStatsAggregate(ctx context.Context, db *mong
 		result.MaxQPS = results[0].MaxQPS
 		result.Error4xx = results[0].Error4xx
 		result.Error5xx = results[0].Error5xx
+	}
+
+	// 记录性能监控日志
+	s.logger.Debug().
+		Dur("duration", duration).
+		Int64("totalRequests", result.TotalRequests).
+		Int64("inboundTraffic", result.InboundTraffic).
+		Int64("outboundTraffic", result.OutboundTraffic).
+		Int64("maxQPS", result.MaxQPS).
+		Time("queryStartTime", startTime).
+		Msg("HAProxy统计聚合查询完成")
+
+	// 性能警告
+	if duration > 1*time.Second {
+		s.logger.Warn().
+			Dur("duration", duration).
+			Time("queryStartTime", startTime).
+			Msg("HAProxy统计聚合查询耗时较长")
 	}
 
 	return result, nil
@@ -501,7 +541,16 @@ func (s *StatsServiceImpl) getWAFBlockStats(ctx context.Context, startTime time.
 		return 0, 0, fmt.Errorf("计算拦截总数失败: %w", err)
 	}
 
-	// 聚合不同攻击IP数
+	// 获取MongoDB数据库连接，直接执行聚合查询获取不同攻击IP数
+	db, err := mongodb.GetDatabase(s.dbName)
+	if err != nil {
+		return 0, 0, fmt.Errorf("获取数据库连接失败: %w", err)
+	}
+
+	var wafLog pkgModel.WAFLog
+	collection := db.Collection(wafLog.GetCollectionName())
+
+	// 优化的聚合管道：直接计算不同IP数量
 	ipCountPipeline := mongo.Pipeline{
 		{
 			{Key: "$match", Value: bson.D{
@@ -514,16 +563,43 @@ func (s *StatsServiceImpl) getWAFBlockStats(ctx context.Context, startTime time.
 			}},
 		},
 		{
-			{Key: "$count", Value: "count"},
+			{Key: "$count", Value: "uniqueIPs"},
 		},
 	}
 
-	attackIPCount, err := s.wafLogRepository.CountAggregateAttackEvents(ctx, ipCountPipeline)
+	// 设置聚合选项以优化大数据集查询性能
+	aggregateOptions := options.Aggregate().
+		SetAllowDiskUse(true).                                                  // 允许使用磁盘进行大数据集聚合
+		SetHint(bson.D{{Key: "srcIp", Value: 1}, {Key: "createdAt", Value: 1}}) // 使用复合索引提示
+
+	// 执行聚合查询
+	cursor, err := collection.Aggregate(ctx, ipCountPipeline, aggregateOptions)
 	if err != nil {
 		s.logger.Error().Err(err).Msg("计算攻击IP数量失败")
-		// 忽略错误，降级返回0
-		attackIPCount = 0
+		return blockCount, 0, nil
 	}
+	defer cursor.Close(ctx)
+
+	// 解析结果
+	var result struct {
+		UniqueIPs int64 `bson:"uniqueIPs"`
+	}
+
+	attackIPCount := int64(0)
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			s.logger.Error().Err(err).Msg("解析攻击IP数量结果失败")
+			return blockCount, 0, nil
+		}
+		attackIPCount = result.UniqueIPs
+	}
+
+	// 记录统计信息用于性能监控
+	s.logger.Debug().
+		Int64("blockCount", blockCount).
+		Int64("attackIPCount", attackIPCount).
+		Time("startTime", startTime).
+		Msg("WAF拦截统计查询完成")
 
 	return blockCount, attackIPCount, nil
 }
@@ -578,8 +654,11 @@ func (s *StatsServiceImpl) getRequestTimeSeries(ctx context.Context, startTime t
 
 	pipeline := mongo.Pipeline{matchStage, groupStage, sortStage}
 
+	aggregateOptions := options.Aggregate().
+		SetAllowDiskUse(true)
+
 	// 执行聚合查询
-	cursor, err := collection.Aggregate(ctx, pipeline)
+	cursor, err := collection.Aggregate(ctx, pipeline, aggregateOptions)
 	if err != nil {
 		return nil, fmt.Errorf("执行请求时间序列聚合查询失败: %w", err)
 	}
@@ -667,8 +746,11 @@ func (s *StatsServiceImpl) getBlockTimeSeries(ctx context.Context, startTime tim
 
 	pipeline := mongo.Pipeline{matchStage, groupStage, sortStage, projectStage}
 
+	aggregateOptions := options.Aggregate().
+		SetAllowDiskUse(true)
+
 	// 执行聚合查询
-	cursor, err := collection.Aggregate(ctx, pipeline)
+	cursor, err := collection.Aggregate(ctx, pipeline, aggregateOptions)
 	if err != nil {
 		return nil, fmt.Errorf("执行WAF拦截时间序列聚合查询失败: %w", err)
 	}

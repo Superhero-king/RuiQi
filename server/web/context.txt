@@ -144,5 +144,131 @@ src/utils 下是项目 utils 文件，负责项目的 utils 管理
 - 国际化支持: 在translation.json中添加了flowControl相关的中英文翻译
 - 更新了config类型定义，添加了FlowControlConfig相关接口
 
+# Security Dashboard 大屏开发上下文
+
+## 项目概述
+完成了 security-dashboard 大屏开发，这是一个基于 React + TypeScript 的 WAF 安全防护监控大屏系统。
+
+## 技术栈
+- React 18 + TypeScript
+- shadcn/ui 组件库
+- TanStack Query 数据请求
+- react-hook-form + zod 表单验证
+- echarts 图表库
+- react-i18next 国际化
+- Tailwind CSS 样式
+
+## 功能特性
+1. **实时数据监控** - 5秒轮询更新
+2. **3D地球可视化** - 攻击轨迹展示
+3. **统计数据展示** - 24小时拦截数、攻击IP数、访问次数
+4. **实时攻击列表** - 显示最新的Web攻击事件
+5. **QPS图表** - 实时请求量监控
+6. **国际化支持** - 中英文切换
+7. **全屏模式** - 支持全屏切换
+
+## 文件结构
+```
+src/feature/security-dashboard/
+├── hooks/
+│   ├── useSecurityDashboard.ts    # 数据管理Hook
+│   └── index.ts
+├── component/
+│   ├── SecurityDashboardLayout.tsx # 主布局组件
+│   ├── StatCard.tsx               # 统计卡片组件
+│   ├── AttackIPList.tsx           # 攻击IP列表组件
+│   ├── RealtimeAttackList.tsx     # 实时攻击列表组件
+│   ├── DashboardQPSChart.tsx      # QPS图表组件
+│   └── index.ts
+└── index.ts
+```
+
+## 核心组件说明
+
+### 1. useSecurityDashboard Hook
+- 管理统计数据和攻击事件数据
+- 实现5秒轮询机制
+- 过滤有地理位置信息的攻击事件
+- 提供处理后的数据给各个组件使用
+
+### 2. SecurityDashboardLayout 主布局
+- 实现上下左右布局设计
+- 顶部：标题栏 + 时间显示 + 全屏切换
+- 左侧：3个统计卡片 + 攻击IP列表
+- 右侧：实时攻击列表
+- 底部：QPS图表
+- 背景：3D地球可视化
+
+### 3. StatCard 统计卡片
+- 显示统计数据（拦截数、攻击IP数、访问次数）
+- 支持数字格式化（K、M单位）
+- 图标 + 数值的卡片设计
+- 半透明背景 + 毛玻璃效果
+
+### 4. AttackIPList 攻击IP列表
+- 显示24小时内的攻击IP
+- 包含IP地址、地理位置、攻击次数
+- 支持国际化地理位置显示
+- 滚动列表设计
+
+### 5. RealtimeAttackList 实时攻击列表
+- 显示实时Web攻击事件
+- 状态指示器（进行中/已结束）
+- 包含IP、地理位置、时间、域名信息
+- 支持滚动查看更多攻击事件
+
+### 6. DashboardQPSChart QPS图表
+- 使用echarts实现实时QPS监控
+- 120个数据点，适合大屏展示
+- 紫色主题配色
+- 渐变柱状图设计
+
+## 样式设计
+- **主色调**: #a071da (紫色)
+- **背景**: 深色渐变 (from-[#0d0c27] via-[#1a1336] to-[#2d1b54])
+- **卡片**: 半透明白色背景 (bg-white/90) + 毛玻璃效果 (backdrop-blur-sm)
+- **边框**: 半透明白色边框 (border-white/20)
+- **阴影**: 柔和阴影效果 (shadow-lg)
+
+## 数据源
+- **统计数据**: useOverviewStats('24h') - 24小时概览统计
+- **攻击事件**: useAttackEvents - 攻击事件列表
+- **QPS数据**: useRealtimeQPS(120) - 实时QPS数据
+
+## 国际化
+- 支持中英文切换
+- 地理位置信息根据语言显示对应名称
+- 使用 react-i18next 管理翻译
+
+## 响应式设计
+- 固定布局适配大屏显示
+- 组件内部支持滚动
+- 全屏模式支持
+
+## 性能优化
+- 使用 useMemo 优化数据处理
+- 轮询机制避免内存泄漏
+- 图表组件优化渲染性能
+
+## 部署说明
+- 页面路径: /monitor/security-dashboard
+- 组件已集成到现有路由系统
+- 支持热重载开发
+
+## 后续优化建议
+1. 添加更多图表类型（饼图、折线图等）
+2. 增加攻击类型分类统计
+3. 添加地理位置热力图
+4. 支持时间范围选择
+5. 添加数据导出功能
+6. 优化移动端适配
+
+## 开发注意事项
+- 遵循项目现有代码风格
+- 使用TypeScript严格类型检查
+- 组件复用性设计
+- 错误边界处理
+- 加载状态管理
+
 
 

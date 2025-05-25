@@ -12,6 +12,7 @@ import (
 	"github.com/HUAHUAI23/simple-waf/server/constant"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func InitDB(db *mongo.Database) error {
@@ -139,23 +140,22 @@ func initWAFLog(db *mongo.Database) error {
 	// 访问集合（不存在会自动创建空集合）
 	wafLogCollection := db.Collection(collectionName)
 
-	// 创建索引模型
+	// 创建索引模型 - 优化大时间范围查询性能
 	indexModels := []mongo.IndexModel{
 		{
-			// 时间序列索引
+			// 主要时间序列索引 - 优化时间范围查询
 			Keys: bson.D{
 				{Key: "createdAt", Value: 1},
-				{Key: "date", Value: 1},
-				{Key: "hour", Value: 1},
-				{Key: "hourGroupSix", Value: 1},
 			},
+			Options: options.Index().SetName("idx_createdAt"),
 		},
 		{
-			// 源IP索引
+			// 源IP和时间复合索引 - 优化IP统计查询
 			Keys: bson.D{
 				{Key: "srcIp", Value: 1},
 				{Key: "createdAt", Value: 1},
 			},
+			Options: options.Index().SetName("idx_srcIp_createdAt"),
 		},
 		{
 			// 目标IP索引
@@ -163,6 +163,7 @@ func initWAFLog(db *mongo.Database) error {
 				{Key: "dstIp", Value: 1},
 				{Key: "createdAt", Value: 1},
 			},
+			Options: options.Index().SetName("idx_dstIp_createdAt"),
 		},
 		{
 			// 域名索引
@@ -170,6 +171,17 @@ func initWAFLog(db *mongo.Database) error {
 				{Key: "domain", Value: 1},
 				{Key: "createdAt", Value: 1},
 			},
+			Options: options.Index().SetName("idx_domain_createdAt"),
+		},
+		{
+			// 6小时分组索引 - 优化中等时间范围的聚合查询
+			Keys: bson.D{
+				{Key: "createdAt", Value: 1},
+				{Key: "date", Value: 1},
+				{Key: "hour", Value: 1},
+				{Key: "hourGroupSix", Value: 1},
+			},
+			Options: options.Index().SetName("idx_time_series_6hour"),
 		},
 	}
 

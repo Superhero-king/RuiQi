@@ -110,8 +110,8 @@ func (c *StatsControllerImpl) GetRealtimeQPS(ctx *gin.Context) {
 	if err != nil || limit < 1 {
 		limit = 30 // 默认30个点
 	}
-	if limit > 60 {
-		limit = 60 // 最多60个点
+	if limit > 240 {
+		limit = 240 // 最多240个点
 	}
 
 	// 调用服务

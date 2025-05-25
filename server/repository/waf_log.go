@@ -165,7 +165,11 @@ func (r *MongoWAFLogRepository) FindAttackLogs(
 
 // CountAttackLogs counts the total number of attack logs matching the filter
 func (r *MongoWAFLogRepository) CountAttackLogs(ctx context.Context, filter bson.D) (int64, error) {
-	total, err := r.collection.CountDocuments(ctx, filter)
+	// 设置计数选项以优化大数据集性能
+	countOptions := options.Count().
+		SetHint(bson.D{{Key: "createdAt", Value: 1}}) // 使用时间索引提示
+
+	total, err := r.collection.CountDocuments(ctx, filter, countOptions)
 	if err != nil {
 		return 0, fmt.Errorf("error counting documents: %w", err)
 	}

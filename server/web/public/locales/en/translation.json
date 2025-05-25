@@ -13,7 +13,8 @@
             "protect": "Protection logs"
         },
         "monitor": {
-            "overview": "Monitor"
+            "overview": "Monitor",
+            "dashboard": "Security Dashboard"
         },
         "rules": {
             "system": "System rules",
@@ -619,6 +620,27 @@
             "cleanupMessage": "{{count}} expired records cleaned up",
             "cleanupFailed": "Cleanup Failed",
             "cleanupError": "Error occurred while cleaning up expired records"
+        }
+    },
+    "securityDashboard": {
+        "title": "Security Protection Dashboard",
+        "stats": {
+            "blockCount24h": "Blocks in 24h",
+            "attackIPCount24h": "Attack IPs in 24h",
+            "totalRequests24h": "Total Requests in 24h"
+        },
+        "attackIPList": {
+            "title": "Attack IPs in 24h",
+            "noData": "No attack IP data",
+            "attackCount": "times"
+        },
+        "realtimeAttacks": {
+            "title": "Realtime Attacks",
+            "noData": "No realtime attack data"
+        },
+        "qpsChart": {
+            "title": "Realtime QPS Monitor",
+            "tooltip": "{{time}}: {{value}} QPS"
         }
     }
 }

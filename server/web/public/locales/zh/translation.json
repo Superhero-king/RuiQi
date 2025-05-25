@@ -13,7 +13,8 @@
             "protect": "防护日志"
         },
         "monitor": {
-            "overview": "监控"
+            "overview": "监控",
+            "dashboard": "防护大屏"
         },
         "rules": {
             "system": "系统规则",
@@ -619,6 +620,27 @@
             "cleanupMessage": "已清理 {{count}} 条过期记录",
             "cleanupFailed": "清理失败",
             "cleanupError": "清理过期记录时出现错误"
+        }
+    },
+    "securityDashboard": {
+        "title": "安全防护监控大屏",
+        "stats": {
+            "blockCount24h": "近24小时拦截数",
+            "attackIPCount24h": "近24小时攻击IP数",
+            "totalRequests24h": "近24小时访问次数"
+        },
+        "attackIPList": {
+            "title": "24小时攻击IP",
+            "noData": "暂无攻击IP数据",
+            "attackCount": "次"
+        },
+        "realtimeAttacks": {
+            "title": "实时攻击列表",
+            "noData": "暂无实时攻击数据"
+        },
+        "qpsChart": {
+            "title": "实时QPS监控",
+            "tooltip": "{{time}}: {{value}} QPS"
         }
     }
 }
