@@ -73,7 +73,7 @@ export const RealtimeAttackList: React.FC<RealtimeAttackListProps> = ({
                         ))}
                     </div>
                 ) : realtimeAttacks.length === 0 ? (
-                    <div className="text-center text-white/60 py-2 text-xs">
+                    <div className="text-left text-white/60 py-2 text-xs">
                         {t('noResult')}
                     </div>
                 ) : (

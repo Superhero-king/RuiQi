@@ -292,24 +292,27 @@ func (fc *FlowController) setupAllRules() {
 	if err != nil {
 		fc.logger.Error().Err(err).Msg("加载热点限流规则失败")
 	} else {
-		fc.logger.Info().Int("count", len(allRules)).Msg("所有限流规则加载成功")
+		fc.logger.Info().Msgf("所有限流规则加载成功，开启的规则数量：%d", len(allRules))
 
 		fc.logger.Info().
 			Int64("threshold", fc.config.VisitLimit.Threshold).
 			Int64("burstCount", fc.config.VisitLimit.BurstCount).
 			Int64("durationInSec", int64(fc.config.VisitLimit.StatDuration.Seconds())).
+			Bool("enabled", fc.config.VisitLimit.Enabled).
 			Msg("访问限流规则加载成功")
 
 		fc.logger.Info().
 			Int64("threshold", fc.config.AttackLimit.Threshold).
 			Int64("burstCount", fc.config.AttackLimit.BurstCount).
 			Int64("durationInSec", int64(fc.config.AttackLimit.StatDuration.Seconds())).
+			Bool("enabled", fc.config.AttackLimit.Enabled).
 			Msg("攻击限流规则加载成功")
 
 		fc.logger.Info().
 			Int64("threshold", fc.config.ErrorLimit.Threshold).
 			Int64("burstCount", fc.config.ErrorLimit.BurstCount).
 			Int64("durationInSec", int64(fc.config.ErrorLimit.StatDuration.Seconds())).
+			Bool("enabled", fc.config.ErrorLimit.Enabled).
 			Msg("错误限流规则加载成功")
 	}
 }

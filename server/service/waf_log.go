@@ -71,10 +71,13 @@ func (s *WAFLogServiceImpl) GetAttackEvents(
 		}},
 	}
 
-	// Sort by lastAttackTime (most recent first)
+	// Sort by lastAttackTime (most recent first), then by count (high attack frequency first), then by srcIp (for stability)
+	// 按最新攻击时间优先，攻击次数多的优先，确保排序稳定性
 	sortStage := bson.D{
 		{Key: "$sort", Value: bson.D{
-			{Key: "lastAttackTime", Value: -1},
+			{Key: "lastAttackTime", Value: -1}, // 最新攻击时间优先
+			{Key: "count", Value: -1},          // 攻击次数多的优先
+			{Key: "srcIp", Value: 1},           // 确保排序稳定性
 		}},
 	}
 

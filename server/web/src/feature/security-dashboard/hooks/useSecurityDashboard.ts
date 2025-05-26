@@ -49,11 +49,11 @@ export const useSecurityDashboard = () => {
         // 设置新的轮询 - 5秒间隔
         pollingTimerRef.current = window.setInterval(() => {
             // 更新时间参数以获取最新的24小时数据
+            // 时间参数更新会自动触发 useAttackEvents 重新请求，无需手动 refetch
             updateTimeParams()
             
-            // 刷新统计数据和攻击事件数据
+            // 只需要手动刷新统计数据，因为它不依赖时间参数
             overviewStats.refetch()
-            attackEvents.refetch()
         }, POLLING_INTERVAL)
 
         // 组件卸载时清除轮询
@@ -62,7 +62,7 @@ export const useSecurityDashboard = () => {
                 clearInterval(pollingTimerRef.current)
             }
         }
-    }, [overviewStats.refetch, attackEvents.refetch])
+    }, [overviewStats.refetch])
 
     // 过滤有地理位置信息的攻击事件，用于实时攻击列表
     const realtimeAttacks = useMemo(() => {
