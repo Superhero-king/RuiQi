@@ -638,7 +638,7 @@ definitions:
         type: integer
       configBaseDir:
         description: 配置文件根目录
-        example: /simple-waf
+        example: /RuiQi
         type: string
       haproxyBin:
         description: HAProxy二进制文件路径

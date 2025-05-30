@@ -3,11 +3,11 @@ package controller
 import (
 	"errors"
 
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/dto"
-	"github.com/HUAHUAI23/simple-waf/server/service"
-	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
-	"github.com/HUAHUAI23/simple-waf/server/utils/response"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/dto"
+	"github.com/HUAHUAI23/RuiQi/server/service"
+	"github.com/HUAHUAI23/RuiQi/server/service/daemon"
+	"github.com/HUAHUAI23/RuiQi/server/utils/response"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 )
@@ -89,6 +89,7 @@ func buildControlResponse(action string, state daemon.ServiceState) dto.RunnerCo
 }
 
 // GetStatus 获取运行器状态
+//
 //	@Summary		获取后台运行器状态
 //	@Description	获取WAF后台运行器的运行状态
 //	@Tags			运行器管理
@@ -113,6 +114,7 @@ func (c *RunnerControllerImpl) GetStatus(ctx *gin.Context) {
 }
 
 // Control 控制运行器
+//
 //	@Summary		控制后台运行器
 //	@Description	执行启动、停止、重启、强制停止或热重载操作
 //	@Tags			运行器管理

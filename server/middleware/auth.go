@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/HUAHUAI23/simple-waf/server/model"
-	"github.com/HUAHUAI23/simple-waf/server/repository"
-	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
-	"github.com/HUAHUAI23/simple-waf/server/utils/response"
+	"github.com/HUAHUAI23/RuiQi/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/repository"
+	"github.com/HUAHUAI23/RuiQi/server/utils/jwt"
+	"github.com/HUAHUAI23/RuiQi/server/utils/response"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )

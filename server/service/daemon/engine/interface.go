@@ -3,7 +3,7 @@ package engine
 import (
 	"fmt"
 
-	"github.com/HUAHUAI23/simple-waf/coraza-spoa/pkg/server"
+	"github.com/HUAHUAI23/RuiQi/coraza-spoa/pkg/server"
 	"github.com/rs/zerolog"
 )
 

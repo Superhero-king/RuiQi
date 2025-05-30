@@ -5,10 +5,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/dto"
-	"github.com/HUAHUAI23/simple-waf/server/model"
-	"github.com/HUAHUAI23/simple-waf/server/repository"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/dto"
+	"github.com/HUAHUAI23/RuiQi/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/repository"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )

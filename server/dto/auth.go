@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"github.com/HUAHUAI23/simple-waf/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/model"
 )
 
 // UserLoginRequest 用户登录请求

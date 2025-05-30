@@ -6,7 +6,7 @@ RUN npm install -g pnpm@10.6.5
 # 设置工作目录
 WORKDIR /app
 # 复制前端项目文件
-COPY server/web/ ./
+COPY web/ ./
 # 安装依赖并构建前端
 RUN pnpm install
 RUN pnpm build
@@ -27,41 +27,50 @@ COPY server/ ./server/
 COPY go.work ./
 COPY geo-ip/ ./geo-ip/
 # 复制前端构建产物到正确位置
-COPY --from=frontend-builder /app/dist ./server/web/dist
+COPY --from=frontend-builder /app/dist ./server/public/dist
 # 使用Go的工作区功能进行构建
 RUN go work use ./coraza-spoa ./pkg ./server
-RUN cd server && go build -o ../simple-waf-server main.go
+RUN cd server && go build -o ../ruiqi-waf main.go
 
-# 阶段3: 最终镜像 - 使用Ubuntu 24.04并安装HAProxy 3.0
-FROM ubuntu:24.04
-# 避免交互式前端
-ENV DEBIAN_FRONTEND=noninteractive
-# 安装HAProxy 3.0
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends software-properties-common ca-certificates && \
-    add-apt-repository -y ppa:vbernat/haproxy-3.0 && \
-    apt-get update && \
-    apt-get install -y haproxy=3.0.* && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-# 创建必要的目录
+# 阶段3: 最终镜像 - 使用官方 HAProxy 3.0.10 镜像
+FROM haproxy:3.0.10
+# 立即切换到 root 用户进行初始化设置
+USER root
+
+# 创建 ruiqi 用户和组
+RUN groupadd --gid 1000 ruiqi && \
+    useradd --uid 1000 --gid ruiqi --home-dir /home/ruiqi --create-home --shell /bin/bash ruiqi
+
+# 将 ruiqi 用户添加到 haproxy 组，以便有权限执行 haproxy 相关操作
+RUN usermod -a -G haproxy ruiqi
+
+# 创建应用目录并设置权限
 WORKDIR /app
+RUN chown ruiqi:ruiqi /app
+
 # 从构建器复制Go二进制文件
-COPY --from=backend-builder /build/simple-waf-server .
+COPY --from=backend-builder /build/ruiqi-waf .
 # 复制前端构建产物
-COPY --from=backend-builder /build/server/web/dist ./web/dist
+COPY --from=backend-builder /build/server/public/dist ./public/dist
 # 复制Swagger文档文件
 COPY --from=backend-builder /build/server/docs/ ./docs/
 
-# 创建root用户家目录下的simple-waf目录并移动geo-ip文件夹进去
-RUN mkdir -p /root/simple-waf
-COPY --from=backend-builder /build/geo-ip/ /root/simple-waf/geo-ip/
+# 设置应用文件权限
+RUN chown -R ruiqi:ruiqi /app && chmod +x /app/ruiqi-waf
 
-# 设置运行权限
-RUN chmod +x /app/simple-waf-server
+# 创建 ruiqi 用户家目录下的 ruiqi-waf 目录并复制 geo-ip 文件夹
+RUN mkdir -p /home/ruiqi/ruiqi-waf
+COPY --from=backend-builder /build/geo-ip/ /home/ruiqi/ruiqi-waf/geo-ip/
+RUN chown -R ruiqi:ruiqi /home/ruiqi/ruiqi-waf
+
+# 切换到 ruiqi 用户
+USER ruiqi
+
 # 设置环境变量
 ENV GIN_MODE=release
+# 重置 ENTRYPOINT（覆盖基础镜像的 docker-entrypoint.sh）
+ENTRYPOINT []
 # 暴露端口
 EXPOSE 2333
 # 运行应用
-CMD ["/app/simple-waf-server"]
+CMD ["/app/ruiqi-waf"]

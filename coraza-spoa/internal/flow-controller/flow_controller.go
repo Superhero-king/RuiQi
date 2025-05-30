@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
-	"github.com/HUAHUAI23/simple-waf/pkg/model"
+	"github.com/HUAHUAI23/RuiQi/pkg/model"
 )
 
 // FlowControlConfig 定义流控配置

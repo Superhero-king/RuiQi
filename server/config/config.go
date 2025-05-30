@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
-	"github.com/HUAHUAI23/simple-waf/pkg/model"
-	"github.com/HUAHUAI23/simple-waf/server/constant"
-	"github.com/HUAHUAI23/simple-waf/server/utils/jwt"
+	mongodb "github.com/HUAHUAI23/RuiQi/pkg/database/mongo"
+	"github.com/HUAHUAI23/RuiQi/pkg/model"
+	"github.com/HUAHUAI23/RuiQi/server/constant"
+	"github.com/HUAHUAI23/RuiQi/server/utils/jwt"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -24,6 +24,8 @@ type Config struct {
 	Bind         string
 	IsProduction bool
 	IsK8s        bool
+	DisableWeb   bool
+	WebPath      string
 	Log          LogConfig
 	DBConfig     DBConfig
 	JWT          JWTConfig
@@ -55,6 +57,8 @@ func InitConfig() error {
 		Bind:         "0.0.0.0:2333",
 		IsProduction: false,
 		IsK8s:        false,
+		DisableWeb:   false, // Web 功能默认开启
+		WebPath:      "",    // 使用嵌入的前端资源
 		Log: LogConfig{
 			Level:  "info",
 			File:   "/dev/stdout",
@@ -110,6 +114,14 @@ func InitConfig() error {
 		if hrs, err := strconv.Atoi(env); err == nil {
 			Global.JWT.ExpirationHrs = hrs
 		}
+	}
+
+	// 前端配置
+	if env := os.Getenv("DISABLE_WEB"); env != "" {
+		Global.DisableWeb = env == "true"
+	}
+	if env := os.Getenv("WEB_PATH"); env != "" {
+		Global.WebPath = env
 	}
 
 	// 初始化JWT

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	flowcontroller "github.com/HUAHUAI23/simple-waf/coraza-spoa/internal/flow-controller"
+	flowcontroller "github.com/HUAHUAI23/RuiQi/coraza-spoa/internal/flow-controller"
 	"github.com/rs/zerolog"
 )
 

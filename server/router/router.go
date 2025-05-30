@@ -1,15 +1,11 @@
 package router
 
 import (
-	"errors"
-	"strings"
-
-	"github.com/HUAHUAI23/simple-waf/server/controller"
-	"github.com/HUAHUAI23/simple-waf/server/middleware"
-	"github.com/HUAHUAI23/simple-waf/server/model"
-	"github.com/HUAHUAI23/simple-waf/server/repository"
-	"github.com/HUAHUAI23/simple-waf/server/service"
-	"github.com/HUAHUAI23/simple-waf/server/utils/response"
+	"github.com/HUAHUAI23/RuiQi/server/controller"
+	"github.com/HUAHUAI23/RuiQi/server/middleware"
+	"github.com/HUAHUAI23/RuiQi/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/repository"
+	"github.com/HUAHUAI23/RuiQi/server/service"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -223,30 +219,5 @@ func Setup(route *gin.Engine, db *mongo.Database) {
 	}
 
 	// ===== 前端静态资源托管 =====
-
-	// 托管静态资源
-	route.Static("/assets", "./web/dist/assets")
-
-	// 托管本地化文件
-	route.Static("/locales", "./web/dist/locales")
-
-	// 托管其他静态文件
-	route.StaticFile("/favicon.ico", "./web/dist/favicon.ico")
-	route.StaticFile("/logo.png", "./web/dist/logo.png")
-	route.StaticFile("/logo32.png", "./web/dist/logo32.png")
-	route.StaticFile("/logo.svg", "./web/dist/logo.svg")
-
-	// 处理所有非API路由，返回前端入口
-
-	// NoRoute处理
-	route.NoRoute(func(c *gin.Context) {
-		// 如果是API请求，返回404
-		if strings.HasPrefix(c.Request.URL.Path, "/api") {
-			response.BadRequest(c, errors.New("API路由不存在"), true)
-			return
-		}
-
-		// 所有其他路由返回前端入口文件
-		c.File("./web/dist/index.html")
-	})
+	SetStaticFileRouter(route)
 }

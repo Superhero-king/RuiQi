@@ -8,8 +8,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/pkg/model"
-	"github.com/HUAHUAI23/simple-waf/server/constant"
+	"github.com/HUAHUAI23/RuiQi/pkg/model"
+	"github.com/HUAHUAI23/RuiQi/server/constant"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -69,8 +69,8 @@ func createDefaultConfig() model.Config {
 		Engine: model.EngineConfig{
 			Bind:            "127.0.0.1:2342",
 			UseBuiltinRules: true,
-			ASNDBPath:       filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-ASN.mmdb"),
-			CityDBPath:      filepath.Join(homeDir, "simple-waf", "geo-ip", "GeoLite2-City.mmdb"),
+			ASNDBPath:       filepath.Join(homeDir, "ruiqi-waf", "geo-ip", "GeoLite2-ASN.mmdb"),
+			CityDBPath:      filepath.Join(homeDir, "ruiqi-waf", "geo-ip", "GeoLite2-City.mmdb"),
 			FlowController:  model.GetDefaultFlowControlConfig(),
 			AppConfig: []model.AppConfig{
 				{
@@ -98,7 +98,7 @@ SecRuleUpdateTargetById 933120 !ARGS:json.engine.appConfig.0.directives`,
 			},
 		},
 		Haproxy: model.HaproxyConfig{
-			ConfigBaseDir: filepath.Join(homeDir, "simple-waf"),
+			ConfigBaseDir: filepath.Join(homeDir, "ruiqi-waf"),
 			HaproxyBin:    "haproxy",
 			BackupsNumber: 5,
 			SpoeAgentAddr: "127.0.0.1",

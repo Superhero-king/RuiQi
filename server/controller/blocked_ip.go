@@ -3,10 +3,10 @@ package controller
 import (
 	"errors"
 
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/dto"
-	"github.com/HUAHUAI23/simple-waf/server/service"
-	"github.com/HUAHUAI23/simple-waf/server/utils/response"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/dto"
+	"github.com/HUAHUAI23/RuiQi/server/service"
+	"github.com/HUAHUAI23/RuiQi/server/utils/response"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 )

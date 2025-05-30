@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/model"
-	"github.com/HUAHUAI23/simple-waf/server/repository"
-	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
+	mongodb "github.com/HUAHUAI23/RuiQi/pkg/database/mongo"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/repository"
+	"github.com/HUAHUAI23/RuiQi/server/service/daemon"
 	"github.com/rs/zerolog"
 )
 

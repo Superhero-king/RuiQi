@@ -3952,7 +3952,7 @@ const docTemplate = `{
                 "configBaseDir": {
                     "description": "配置文件根目录",
                     "type": "string",
-                    "example": "/simple-waf"
+                    "example": "/RuiQi"
                 },
                 "haproxyBin": {
                     "description": "HAProxy二进制文件路径",

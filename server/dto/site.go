@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/model"
 )
 
 // CreateSiteRequest 创建站点请求

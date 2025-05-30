@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/service/daemon"
 	"github.com/rs/zerolog"
 )
 

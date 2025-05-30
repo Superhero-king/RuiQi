@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/pkg/model"
+	"github.com/HUAHUAI23/RuiQi/pkg/model"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )

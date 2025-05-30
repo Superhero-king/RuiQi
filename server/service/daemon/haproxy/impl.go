@@ -18,8 +18,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/model"
 	client_native "github.com/haproxytech/client-native/v6"
 	"github.com/haproxytech/client-native/v6/configuration"
 	cfg_opt "github.com/haproxytech/client-native/v6/configuration/options"
@@ -253,9 +253,11 @@ func (s *HAProxyServiceImpl) AddSiteConfig(site model.Site) error {
 				{
 					index: 1,
 					rule: &models.HTTPRequestRule{
-						Type:      "set-header",
-						HdrName:   "Host",
-						HdrFormat: site.Backend.Servers[0].Host, // 使用引号包装主机名
+						Type:    "set-header",
+						HdrName: "Host",
+						// TODO: 在 k8s 中，如果后端域名有多个，这里只是传递了第一个后端域名，在碰到其他后端时，透明传递的 Host 头是错误的，
+						// TODO: 待解决,不同后端域名，透明传递的 Host 头是不同的，需要根据后端域名来传递 Host 头
+						HdrFormat: site.Backend.Servers[0].Host,
 					},
 				},
 			}

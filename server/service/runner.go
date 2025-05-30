@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	cornjob "github.com/HUAHUAI23/simple-waf/server/service/cornjob/haproxy"
-	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	cornjob "github.com/HUAHUAI23/RuiQi/server/service/cornjob/haproxy"
+	"github.com/HUAHUAI23/RuiQi/server/service/daemon"
 	"github.com/haproxytech/client-native/v6/models"
 	"github.com/rs/zerolog"
 )

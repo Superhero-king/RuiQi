@@ -14,13 +14,13 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	mongodb "github.com/HUAHUAI23/simple-waf/pkg/database/mongo"
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	_ "github.com/HUAHUAI23/simple-waf/server/docs" // 导入 swagger 文档
-	"github.com/HUAHUAI23/simple-waf/server/router"
-	haproxyStats "github.com/HUAHUAI23/simple-waf/server/service/cornjob/haproxy"
-	"github.com/HUAHUAI23/simple-waf/server/service/daemon"
-	"github.com/HUAHUAI23/simple-waf/server/validator"
+	mongodb "github.com/HUAHUAI23/RuiQi/pkg/database/mongo"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	_ "github.com/HUAHUAI23/RuiQi/server/docs" // 导入 swagger 文档
+	"github.com/HUAHUAI23/RuiQi/server/router"
+	haproxyStats "github.com/HUAHUAI23/RuiQi/server/service/cornjob/haproxy"
+	"github.com/HUAHUAI23/RuiQi/server/service/daemon"
+	"github.com/HUAHUAI23/RuiQi/server/validator"
 )
 
 //	@title			RuiQi-WAF API

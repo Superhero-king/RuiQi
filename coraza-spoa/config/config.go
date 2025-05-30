@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v3"
 
-	"github.com/HUAHUAI23/simple-waf/coraza-spoa/internal"
+	"github.com/HUAHUAI23/RuiQi/coraza-spoa/internal"
 )
 
 var ConfigPath string

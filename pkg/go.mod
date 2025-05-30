@@ -1,4 +1,4 @@
-module github.com/HUAHUAI23/simple-waf/pkg
+module github.com/HUAHUAI23/RuiQi/pkg
 
 go 1.24.1
 

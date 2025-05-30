@@ -4,11 +4,11 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/dto"
-	"github.com/HUAHUAI23/simple-waf/server/model"
-	"github.com/HUAHUAI23/simple-waf/server/service"
-	"github.com/HUAHUAI23/simple-waf/server/utils/response"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/dto"
+	"github.com/HUAHUAI23/RuiQi/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/service"
+	"github.com/HUAHUAI23/RuiQi/server/utils/response"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -39,6 +39,7 @@ func NewCertificateController(certService service.CertificateService) Certificat
 }
 
 // CreateCertificate 创建证书
+//
 //	@Summary		创建新证书
 //	@Description	创建一个新的SSL/TLS证书
 //	@Tags			证书管理
@@ -96,6 +97,7 @@ func (c *CertificateControllerImpl) CreateCertificate(ctx *gin.Context) {
 }
 
 // GetCertificates 获取证书列表
+//
 //	@Summary		获取证书列表
 //	@Description	获取所有SSL/TLS证书列表，支持分页
 //	@Tags			证书管理
@@ -127,6 +129,7 @@ func (c *CertificateControllerImpl) GetCertificates(ctx *gin.Context) {
 }
 
 // GetCertificateByID 获取单个证书
+//
 //	@Summary		获取单个证书
 //	@Description	根据ID获取证书详情
 //	@Tags			证书管理
@@ -180,6 +183,7 @@ func (c *CertificateControllerImpl) GetCertificateByID(ctx *gin.Context) {
 }
 
 // UpdateCertificate 更新证书
+//
 //	@Summary		更新证书
 //	@Description	更新指定证书的信息
 //	@Tags			证书管理
@@ -251,6 +255,7 @@ func (c *CertificateControllerImpl) UpdateCertificate(ctx *gin.Context) {
 // ... existing code ...
 
 // DeleteCertificate 删除证书
+//
 //	@Summary		删除证书
 //	@Description	删除指定的SSL/TLS证书
 //	@Tags			证书管理

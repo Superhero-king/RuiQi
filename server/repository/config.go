@@ -6,9 +6,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/pkg/model"
-	"github.com/HUAHUAI23/simple-waf/server/config"
-	"github.com/HUAHUAI23/simple-waf/server/constant"
+	"github.com/HUAHUAI23/RuiQi/pkg/model"
+	"github.com/HUAHUAI23/RuiQi/server/config"
+	"github.com/HUAHUAI23/RuiQi/server/constant"
 	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"

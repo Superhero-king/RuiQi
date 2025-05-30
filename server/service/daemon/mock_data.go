@@ -3,7 +3,7 @@ package daemon
 import (
 	"time"
 
-	"github.com/HUAHUAI23/simple-waf/server/model"
+	"github.com/HUAHUAI23/RuiQi/server/model"
 )
 
 // GetTestSites 返回用于开发/测试的模拟站点数据

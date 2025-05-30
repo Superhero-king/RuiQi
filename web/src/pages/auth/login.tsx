@@ -1,20 +1,31 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router'
-import { PasswordResetForm } from '@/feature/auth/components/PasswordResetForm'
+import { useNavigate, useLocation } from 'react-router'
+import { LoginForm } from '@/feature/auth/components/LoginForm'
 import useAuthStore from '@/store/auth'
 import { useTranslation } from 'react-i18next'
+import { Heart } from 'lucide-react'
 
-export default function ResetPasswordPage() {
-    const { isAuthenticated } = useAuthStore()
+export default function LoginPage() {
+    const { isAuthenticated, needPasswordReset } = useAuthStore()
     const navigate = useNavigate()
+    const location = useLocation()
     const { t } = useTranslation()
 
+    // Get the redirect path from location state, or default to '/'
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
+
     useEffect(() => {
-        // If not authenticated, redirect to login
-        if (!isAuthenticated) {
-            navigate('/login')
+        // If already authenticated
+        if (isAuthenticated) {
+            // If needs password reset, redirect to reset page
+            if (needPasswordReset) {
+                navigate('/reset-password')
+            } else {
+                // Otherwise, redirect to the page they tried to access or home
+                navigate(from)
+            }
         }
-    }, [isAuthenticated, navigate])
+    }, [isAuthenticated, needPasswordReset, navigate, from])
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-purple-700 via-purple-500 to-indigo-500 before:content-[''] before:absolute before:inset-0 before:bg-[length:400%_400%] before:bg-gradient-to-br before:from-purple-600 before:via-indigo-500 before:to-pink-500 before:animate-gradient-shift before:opacity-70">
@@ -28,20 +39,23 @@ export default function ResetPasswordPage() {
             </div>
 
 
-            <div className="mb-8 z-10 animate-fade-in-up">
+            <div className="mb-8 z-10 flex flex-col items-center animate-fade-in-up">
                 <h1 className="text-3xl font-bold text-center text-white drop-shadow-md hover:animate-wiggle text-shadow-glow-white">
                     {t('sidebar.title')}
                 </h1>
             </div>
 
             <div className="w-full max-w-md z-10 animate-fade-in-up [animation-delay:200ms]">
-                <PasswordResetForm />
+                <LoginForm />
             </div>
 
             {/* 底部说明文字 */}
-            <div className="mt-8 text-white/70 text-sm text-center z-10 animate-fade-in-up [animation-delay:400ms]">
-                © {new Date().getFullYear()} RuiQi WAF. All rights reserved.
+            <div className="text-center text-xs text-white/70 dark:text-white mt-8 z-10 flex items-center justify-center gap-1 animate-fade-in-up [animation-delay:400ms]">
+                <span>Made with</span>
+                <Heart className="h-3 w-3 text-red-500 fill-red-500" />
+                <span>by</span>
+                <a href="https://github.com/HUAHUAI23/RuiQi" target="_blank" rel="noopener noreferrer" className="text-white/70 dark:text-white dark:text-shadow-glow-white">RuiQi WAF team</a>
             </div>
         </div>
     )
-} 
+}

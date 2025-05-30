@@ -254,43 +254,43 @@ This will start both MongoDB and Simple WAF services with all required configura
 
 ## Roadmap
 
-Our upcoming features include:
+Our project features and development progress:
 
 1. **Monitoring Dashboard**
 
-   - Real-time attack visualization map
-   - Geographic attack origin analytics
-   - Comprehensive security metrics dashboard
+   - [x] Real-time attack visualization map
+   - [x] Geographic attack origin analytics
+   - [ ] Comprehensive security metrics dashboard
 
 2. **Advanced Traffic Control**
 
-   - Fine-grained rate limiting
-   - Request frequency analysis
-   - Adaptive throttling based on traffic patterns
+   - [x] Fine-grained rate limiting
+   - [x] Request frequency analysis
+   - [ ] Adaptive throttling based on traffic patterns
 
 3. **Alert Integration**
 
-   - Webhook alert system
-   - Integration with popular messaging platforms
-   - Customizable alert templates
+   - [ ] Webhook alert system
+   - [ ] Integration with popular messaging platforms
+   - [ ] Customizable alert templates
 
 4. **AI Security Analysis**
 
-   - ML-based attack pattern detection
-   - AI-assisted rule generation
-   - Automated ModSecurity directive creation
-   - MCP (Model Control Plane) integration
+   - [ ] ML-based attack pattern detection
+   - [ ] AI-assisted rule generation
+   - [ ] Automated ModSecurity directive creation
+   - [ ] MCP (Model Control Plane) integration
 
 5. **Enhanced Rule Management**
-   - OWASP Top 10 specific rule templates
-   - Rule effectiveness scoring
-   - One-click protection profiles
+   - [ ] OWASP Top 10 specific rule templates
+   - [ ] Rule effectiveness scoring
+   - [ ] One-click protection profiles
 
 For detailed technical documentation on engine architecture and implementation, see the proposals in the `/doc/proposal` directory.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ## Acknowledgements
 

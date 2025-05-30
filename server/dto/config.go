@@ -37,12 +37,12 @@ type AppConfigPatchDTO struct {
 
 // HaproxyPatchDTO HAProxy配置补丁DTO
 type HaproxyPatchDTO struct {
-	ConfigBaseDir *string `json:"configBaseDir,omitempty" binding:"omitempty" example:"/simple-waf"` // 配置文件根目录
-	HaproxyBin    *string `json:"haproxyBin,omitempty" binding:"omitempty" example:"haproxy"`        // HAProxy二进制文件路径
-	BackupsNumber *int    `json:"backupsNumber,omitempty" binding:"omitempty" example:"5"`           // 备份数量
-	SpoeAgentAddr *string `json:"spoeAgentAddr,omitempty" binding:"omitempty" example:"127.0.0.1"`   // SPOE代理地址
-	SpoeAgentPort *int    `json:"spoeAgentPort,omitempty" binding:"omitempty" example:"2342"`        // SPOE代理端口
-	Thread        *int    `json:"thread,omitempty" binding:"omitempty,min=0,max=256" example:"4"`    // 线程数
+	ConfigBaseDir *string `json:"configBaseDir,omitempty" binding:"omitempty" example:"/RuiQi"`    // 配置文件根目录
+	HaproxyBin    *string `json:"haproxyBin,omitempty" binding:"omitempty" example:"haproxy"`      // HAProxy二进制文件路径
+	BackupsNumber *int    `json:"backupsNumber,omitempty" binding:"omitempty" example:"5"`         // 备份数量
+	SpoeAgentAddr *string `json:"spoeAgentAddr,omitempty" binding:"omitempty" example:"127.0.0.1"` // SPOE代理地址
+	SpoeAgentPort *int    `json:"spoeAgentPort,omitempty" binding:"omitempty" example:"2342"`      // SPOE代理端口
+	Thread        *int    `json:"thread,omitempty" binding:"omitempty,min=0,max=256" example:"4"`  // 线程数
 }
 
 // FlowControllerPatchDTO 流量控制器配置补丁DTO

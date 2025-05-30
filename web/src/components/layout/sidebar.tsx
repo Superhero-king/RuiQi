@@ -2,7 +2,7 @@
 
 import { Link, useLocation, useNavigate } from "react-router"
 import { cn } from "@/lib/utils"
-import { Settings, Shield, BarChart2, FileText, LogOut } from "lucide-react"
+import { Settings, Shield, BarChart2, FileText, LogOut, Heart, Globe, BookOpen, Github } from "lucide-react"
 import { ROUTES } from "@/routes/constants"
 import { useTranslation } from "react-i18next"
 import type { TFunction } from "i18next"
@@ -105,7 +105,8 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
             </div>
 
             {/* Logo and title */}
-            <div className="flex flex-col items-center gap-2 py-6 border-b border-white/10 dark:border-white/5">
+            {/* <div className="flex flex-col items-center gap-2 py-6 border-b border-white/10 dark:border-white/5"> */}
+            <div className="flex flex-col items-center gap-2 py-6 border-none">
                 {/* <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#A48BEA] to-[#8861DB] dark:from-[#9470DB] dark:to-[#7B4FD6] flex items-center justify-center shadow-lg animate-pulse-glow"> */}
                 <div className="w-16 h-16 rounded-full flex items-center justify-center animate-pulse-glow">
                     {/* <Shield className="w-8 h-8 text-white" /> */}
@@ -156,9 +157,42 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                         )
                     })}
             </div>
+            {/* External Links */}
+            <div className="py-4 relative z-10">
+                <div className="flex items-center gap-4 px-6">
+                    <a
+                        href="https://github.com/HUAHUAI23/RuiQi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                        title="官网"
+                    >
+                        <Globe className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
+                    </a>
+                    <a
+                        href="https://deepwiki.com/HUAHUAI23/RuiQi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                        title="文档"
+                    >
+                        <BookOpen className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
+                    </a>
+                    <a
+                        href="https://github.com/HUAHUAI23/RuiQi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                        title="GitHub"
+                    >
+                        <Github className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
+                    </a>
+                </div>
+            </div>
 
             {/* Logout button */}
-            <div className="mt-auto py-4 border-t border-white/10 dark:border-white/5 relative z-10">
+            {/* <div className="mt-auto py-4 border-t border-white/10 dark:border-white/5 relative z-10"> */}
+            <div className="mt-auto py-4 border-none">
                 <button
                     onClick={handleLogout}
                     className={cn(
@@ -187,7 +221,13 @@ export function Sidebar({ displayConfig = {} }: SidebarProps) {
                         isLogoutActive ? "opacity-70" : "opacity-0 group-hover:opacity-100"
                     )}></div>
                 </button>
-                <div className="text-center text-xs text-white/60 dark:text-white/50 mt-4 px-4">© 2025 RuiQi WAF. All Rights Reserved.</div>
+
+                <div className="text-center text-xs text-white/60 dark:text-white mt-4 px-4 flex items-center justify-center gap-1">
+                    <span>Made with</span>
+                    <Heart className="h-3 w-3 text-red-500 fill-red-500" />
+                    <span>by</span>
+                    <a href="https://github.com/HUAHUAI23/RuiQi" target="_blank" rel="noopener noreferrer" className="text-white/60 dark:text-white dark:text-shadow-glow-white">RuiQi WAF team</a>
+                </div>
             </div>
         </div >
     )
