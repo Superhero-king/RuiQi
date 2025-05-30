@@ -1,0 +1,160 @@
+name: Docker Build and Push
+
+on:
+  # PR 提交或更新时触发
+  pull_request:
+    branches: [main, master, develop]
+    types: [opened, synchronize, reopened]
+
+  # 合并到主分支时触发
+  push:
+    branches: [main, master]
+    # 支持手动触发
+  workflow_dispatch:
+
+env:
+  # 使用 vars 而不是 secrets 来存储用户名（推荐做法）
+  DOCKER_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/ruiqi-waf
+
+# 精简权限
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 智能设置：PR只需要QEMU用于ARM64，推送时才设置
+      - name: Set up QEMU
+        if: github.event_name == 'push'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 仅推送时登录Docker Hub
+      - name: Login to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 总是登录GitHub Container Registry（更快）
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 生成标签
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKER_IMAGE }}
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=pr
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # 创建多平台Dockerfile（仅在需要时）
+      - name: Prepare multi-platform Dockerfile
+        if: github.event_name == 'push'
+        run: |
+          sed 's/GOOS=linux/GOOS=$TARGETOS/g; s/GOARCH=amd64/GOARCH=$TARGETARCH/g' Dockerfile > Dockerfile.multiarch
+
+      # PR阶段：仅构建AMD64进行快速验证
+      - name: Build Docker image (PR - AMD64 only)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=pr-amd64
+          cache-to: type=gha,mode=max,scope=pr-amd64
+          # PR阶段优化：禁用不必要的功能
+          provenance: false
+          sbom: false
+
+      # 推送阶段：完整多平台构建
+      - name: Build and push (Multi-platform)
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.multiarch
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha,scope=build-amd64
+            type=gha,scope=build-arm64
+          cache-to: type=gha,mode=max,scope=build-multiplatform
+          # 生产构建：启用完整安全功能
+          provenance: true
+          sbom: true
+
+      # 优化的PR评论
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ 成功' : '❌ 失败';
+            const buildTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+            
+            const body = `### 🚀 Docker 快速构建${status}
+            
+            **AMD64 平台验证完成** (优化后仅构建单平台加速验证)
+            - 验证平台: \`linux/amd64\` 
+            - 构建状态: ${status}
+            - 提交: \`${{ github.event.pull_request.head.sha }}\`
+            - 构建时间: ${buildTime}
+            
+            ${status.includes('成功') 
+              ? '✅ 基础架构验证通过，合并后将自动构建完整多平台镜像' 
+              : '❌ 请检查构建日志并修复问题'}
+              
+            > 💡 **优化说明**: PR阶段仅构建AMD64以提高速度，完整的多平台构建将在合并后进行`;
+
+            // 查找并更新现有评论
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('Docker 快速构建')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

@@ -3,6 +3,7 @@
         "bson",
         "Configurator",
         "coraza",
+        "DOCKERHUB",
         "Dont",
         "flowcontroller",
         "Forwardfor",

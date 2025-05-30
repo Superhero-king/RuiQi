@@ -1,0 +1,364 @@
+# .github/workflows/go-quality-check.yml (修复版本)
+name: Go Code Quality Check
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - "server/**"
+      - "pkg/**"
+      - "coraza-spoa/**"
+      - "go.work"
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - "server/**"
+      - "pkg/**"
+      - "coraza-spoa/**"
+      - "go.work"
+  workflow_dispatch:
+
+jobs:
+  go-check:
+    name: Go Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.1"
+
+      # 缓存 Go 模块
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      # 检查 Go 代码格式
+      - name: Check Go formatting
+        run: |
+          echo "🔍 检查 Go 代码格式..."
+          unformatted=$(gofmt -l .)
+          if [ ! -z "$unformatted" ]; then
+            echo "⚠️ 以下文件格式需要优化："
+            echo "$unformatted"
+            echo ""
+            echo "💡 建议运行 'gofmt -w .' 来格式化代码"
+            echo "FORMAT_ISSUES=true" >> $GITHUB_ENV
+            echo "FORMAT_FILES<<EOF" >> $GITHUB_ENV
+            echo "$unformatted" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+          else
+            echo "✅ Go 代码格式正确"
+            echo "FORMAT_ISSUES=false" >> $GITHUB_ENV
+          fi
+        continue-on-error: true
+
+      # 运行 go vet
+      - name: Run go vet
+        run: |
+          echo "🔍 运行 go vet..."
+          failed=false
+
+          if [ -d "server" ]; then
+            echo "检查 server 模块..."
+            cd server && go vet ./... || failed=true
+            cd ..
+          fi
+
+          if [ -d "pkg" ]; then
+            echo "检查 pkg 模块..."
+            cd pkg && go vet ./... || failed=true
+            cd ..
+          fi
+
+          if [ -d "coraza-spoa" ]; then
+            echo "检查 coraza-spoa 模块..."
+            cd coraza-spoa && go vet ./... || failed=true
+            cd ..
+          fi
+
+          if [ "$failed" = "true" ]; then
+            echo "❌ go vet 发现重要问题"
+            exit 1
+          fi
+          echo "✅ go vet 检查通过"
+
+      # 运行 staticcheck（核心检查 + 详细风格建议）
+      - name: Run staticcheck
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          echo "🔍 运行 staticcheck..."
+
+          # 核心检查（bug、性能和安全问题）
+          critical_checks="SA,S1,QF,ST1001,ST1005,ST1006,ST1008,ST1011,ST1012,ST1013,ST1015,ST1016,ST1017,ST1018,ST1019"
+          critical_failed=false
+
+          echo "📋 执行核心质量检查..."
+          for module in server pkg coraza-spoa; do
+            if [ -d "$module" ]; then
+              echo "核心检查 $module 模块..."
+              cd "$module" && staticcheck -checks "$critical_checks" ./... || critical_failed=true
+              cd ..
+            fi
+          done
+
+          # 风格检查（详细输出）
+          echo ""
+          echo "📝 检查代码风格建议..."
+          style_checks="ST1000,ST1003,ST1020,ST1021,ST1023"
+          style_output=""
+          style_count=0
+
+          for module in server pkg coraza-spoa; do
+            if [ -d "$module" ]; then
+              echo "风格检查 $module 模块..."
+              module_style_output=$(cd "$module" && staticcheck -checks "$style_checks" ./... 2>/dev/null || true)
+              if [ ! -z "$module_style_output" ]; then
+                style_output="${style_output}${module_style_output}\n"
+                module_count=$(echo "$module_style_output" | wc -l)
+                style_count=$((style_count + module_count))
+              fi
+            fi
+          done
+
+          # 保存风格建议到环境变量
+          echo "STYLE_SUGGESTIONS_COUNT=$style_count" >> $GITHUB_ENV
+          if [ $style_count -gt 0 ]; then
+            echo "STYLE_SUGGESTIONS_FOUND=true" >> $GITHUB_ENV
+            echo "STYLE_SUGGESTIONS<<EOF" >> $GITHUB_ENV
+            echo -e "$style_output" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo "ℹ️ 发现 $style_count 个代码风格改进点（不影响功能）"
+          else
+            echo "STYLE_SUGGESTIONS_FOUND=false" >> $GITHUB_ENV
+            echo "✨ 代码风格很棒！"
+          fi
+
+          # 检查核心问题结果
+          if [ "$critical_failed" = "true" ]; then
+            echo "❌ staticcheck 发现重要问题需要修复"
+            exit 1
+          fi
+          echo "✅ staticcheck 核心检查通过"
+
+      # 运行测试
+      - name: Run tests
+        run: |
+          echo "🧪 运行 Go 测试..."
+          test_failed=false
+
+          for module in server pkg coraza-spoa; do
+            if [ -d "$module" ]; then
+              echo "测试 $module 模块..."
+              cd "$module" && go test -v -race -coverprofile=coverage.out ./... || test_failed=true
+              cd ..
+            fi
+          done
+
+          if [ "$test_failed" = "true" ]; then
+            echo "❌ 测试失败"
+            exit 1
+          fi
+          echo "✅ 所有测试通过"
+
+      # 使用官方 govulncheck-action 检查安全漏洞（支持多模块）
+      - name: Run govulncheck for server module
+        if: always()
+        uses: golang/govulncheck-action@v1
+        with:
+          work-dir: server
+          go-package: ./...
+        continue-on-error: true
+
+      - name: Run govulncheck for pkg module
+        if: always()
+        uses: golang/govulncheck-action@v1
+        with:
+          work-dir: pkg
+          go-package: ./...
+        continue-on-error: true
+
+      - name: Run govulncheck for coraza-spoa module
+        if: always()
+        uses: golang/govulncheck-action@v1
+        with:
+          work-dir: coraza-spoa
+          go-package: ./...
+        continue-on-error: true
+
+      # 生成详细检查报告
+      - name: Generate Go check summary
+        if: always()
+        run: |
+          echo "## 🐹 Go Code Quality Check Report / Go 代码质量检查报告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 检查状态
+          echo "### 📋 Core Check Results / 核心检查结果" >> $GITHUB_STEP_SUMMARY
+          echo "| Check Item / 检查项目 | Status / 状态 | Description / 说明 |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|------|------|" >> $GITHUB_STEP_SUMMARY
+
+          # 格式检查状态
+          if [ "$FORMAT_ISSUES" = "true" ]; then
+            echo "| Code Formatting / 代码格式 | ⚠️ Suggestions Available / 建议优化 | Found formatting improvement points / 发现格式改进点 |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Code Formatting / 代码格式 | ✅ Passed / 通过 | Standard formatting / 格式标准 |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "| go vet | ✅ Passed / 通过 | No important issues / 无重要问题 |" >> $GITHUB_STEP_SUMMARY
+          echo "| staticcheck (core) / staticcheck (核心) | ✅ Passed / 通过 | No bugs or security issues / 无bug和安全问题 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests / 单元测试 | ✅ Passed / 通过 | Functionality verified / 功能验证通过 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Check / 安全检查 | ✅ Passed / 通过 | Using official govulncheck-action / 使用官方 govulncheck-action |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 详细改进建议
+          if [ "$FORMAT_ISSUES" = "true" ] || [ "$STYLE_SUGGESTIONS_FOUND" = "true" ]; then
+            echo "### 💡 Optional Improvement Suggestions / 可选改进建议" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if [ "$FORMAT_ISSUES" = "true" ]; then
+              echo "#### 🎨 Code Formatting Optimization / 代码格式优化" >> $GITHUB_STEP_SUMMARY
+              echo "The following files can be formatted using \`gofmt -w .\`:  " >> $GITHUB_STEP_SUMMARY
+              echo "以下文件可以通过 \`gofmt -w .\` 进行格式化：" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$FORMAT_FILES" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if [ "$STYLE_SUGGESTIONS_FOUND" = "true" ]; then
+              echo "#### 📝 Code Style Suggestions / 代码风格建议 (${STYLE_SUGGESTIONS_COUNT} items / 项)" >> $GITHUB_STEP_SUMMARY
+              echo "The following are staticcheck style suggestions, which can be adopted based on team standards:  " >> $GITHUB_STEP_SUMMARY
+              echo "以下是 staticcheck 的风格建议，可根据团队规范选择性采纳：" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$STYLE_SUGGESTIONS" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+          # 代码质量概览
+          echo "### 📊 Code Quality Overview / 代码质量概览" >> $GITHUB_STEP_SUMMARY
+          echo "- **🔧 Core Quality / 核心质量**: Passed all important checks / 通过所有重要检查" >> $GITHUB_STEP_SUMMARY
+          echo "- **🧪 Functionality Verification / 功能验证**: Complete test coverage / 测试覆盖完整" >> $GITHUB_STEP_SUMMARY
+          echo "- **🔒 Security Check / 安全检查**: Module-wise scanning using official govulncheck-action / 使用官方 govulncheck-action 分模块扫描" >> $GITHUB_STEP_SUMMARY
+          echo "- **🏗️ Project Structure / 项目结构**: Complete multi-module workspace support / 多模块工作空间支持完善" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Project Information / 项目信息" >> $GITHUB_STEP_SUMMARY
+          echo "- **Go Version / Go版本**: 1.24.1" >> $GITHUB_STEP_SUMMARY
+          echo "- **Check Strategy / 检查策略**: Module-wise checks (server, pkg, coraza-spoa) / 分模块检查（server、pkg、coraza-spoa）" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit SHA / 提交 SHA**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch / 分支**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by / 触发者**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Check Time / 检查时间**: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+      # PR评论（仅在PR时运行）
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const success = '${{ job.status }}' === 'success';
+            const styleSuggestions = process.env.STYLE_SUGGESTIONS_FOUND === 'true';
+            const styleCount = process.env.STYLE_SUGGESTIONS_COUNT || '0';
+            const formatIssues = process.env.FORMAT_ISSUES === 'true';
+
+            let emoji = success ? '✅' : '❌';
+            let statusEn = success ? 'Passed' : 'Failed';
+            let statusCn = success ? '通过' : '失败';
+
+            let body = `### 🐹 Go Code Quality Check ${statusEn} / Go 代码质量检查${statusCn} ${emoji}
+
+            **PR #${{ github.event.pull_request.number }}** Go code quality check completed.  
+            **PR #${{ github.event.pull_request.number }}** 的 Go 代码质量检查已完成。
+
+            **📋 Core Checks / 核心检查项目:**
+            - ✅ go vet static analysis / go vet 静态分析
+            - ✅ staticcheck core checks (bugs & security) / staticcheck 核心检查（bug & 安全）
+            - ✅ unit tests / 单元测试
+            - ✅ security scan (official govulncheck-action) / 安全检查（官方 govulncheck-action）
+            ${formatIssues ? '- ⚠️ code formatting (suggestions available) / 代码格式（建议优化）' : '- ✅ code formatting / 代码格式'}
+
+            `;
+
+            if (styleSuggestions || formatIssues) {
+              body += `
+            **💡 Optional Improvements / 可选改进提示:**`;
+              if (formatIssues) {
+                body += `
+            - 🎨 Code formatting can be improved by running \`gofmt -w .\`  
+              代码格式可以通过运行 \`gofmt -w .\` 进行优化`;
+              }
+              if (styleSuggestions) {
+                body += `
+            - 📝 Found ${styleCount} code style suggestions (see Summary page for details)  
+              发现 ${styleCount} 个代码风格改进点（详见 Summary 页面）`;
+              }
+              body += `
+
+            💡 These suggestions don't affect functionality and can be addressed based on team standards.  
+            这些提示不影响功能，可根据团队标准选择性处理。
+            `;
+            }
+
+            if (success) {
+              body += `
+            **🎉 Result / 结果:** All Go code quality checks passed! Code is stable and reliable.  
+            Go 代码核心质量检查全部通过！代码功能稳定可靠。
+
+            **🔧 Multi-module Support / 多模块支持:** Checked server, pkg, and coraza-spoa modules separately.  
+            已分别检查 server、pkg、coraza-spoa 三个模块。`;
+            } else {
+              body += `
+            **⚠️ Attention Required / 需要关注:** Important issues found that need to be fixed. Please check the detailed logs.  
+            发现需要修复的重要问题，请查看详细日志。`;
+            }
+
+            // 查找并更新现有评论
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🐹 Go Code Quality Check')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

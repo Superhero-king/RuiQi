@@ -1,0 +1,412 @@
+# .github/workflows/frontend-quality-check.yml (平衡版本)
+name: Frontend Code Quality Check
+
+# 🔒 工作流级权限控制
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - "web/**"
+      - "*.json"
+      - "*.js"
+      - "*.ts"
+      - "*.tsx"
+      - "*.vue"
+      - "*.jsx"
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "web/**"
+      - "*.json"
+      - "*.js"
+      - "*.ts"
+      - "*.tsx"
+      - "*.vue"
+      - "*.jsx"
+  workflow_dispatch:
+
+jobs:
+  frontend-check:
+    name: Frontend Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      # ✅ 使用官方推荐的最新稳定版本
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check frontend project
+        id: check-frontend
+        run: |
+          if [ -d "web" ] && [ -f "web/package.json" ]; then
+            echo "✅ 发现前端项目"
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "FRONTEND_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "ℹ️ 未发现前端项目，跳过前端检查"
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "FRONTEND_EXISTS=false" >> $GITHUB_ENV
+          fi
+
+      - name: Setup Node.js
+        if: steps.check-frontend.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "23.10.0"
+
+      - name: Install pnpm
+        if: steps.check-frontend.outputs.exists == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+
+      - name: Get pnpm store directory
+        if: steps.check-frontend.outputs.exists == 'true'
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      # ✅ 使用 v4 - 官方推荐的稳定版本
+      - name: Setup pnpm cache
+        if: steps.check-frontend.outputs.exists == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Analyze project configuration
+        if: steps.check-frontend.outputs.exists == 'true'
+        id: analyze-config
+        run: |
+          cd web
+          echo "🔍 分析前端项目配置..."
+
+          # 检查package.json中的脚本
+          if grep -q '"lint"' package.json; then
+            echo "✅ 发现 lint 脚本"
+            echo "has_lint=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ 未配置 lint 脚本"
+            echo "has_lint=false" >> $GITHUB_OUTPUT
+          fi
+
+          if grep -q '"test"' package.json; then
+            echo "✅ 发现 test 脚本"
+            echo "has_test=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ 未配置 test 脚本"
+            echo "has_test=false" >> $GITHUB_OUTPUT
+          fi
+
+          if grep -q '"build"' package.json; then
+            echo "✅ 发现 build 脚本"
+            echo "has_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ 未配置 build 脚本"
+            echo "has_build=false" >> $GITHUB_OUTPUT
+          fi
+
+          # 检查TypeScript配置
+          if [ -f "tsconfig.json" ]; then
+            echo "✅ 发现 TypeScript 项目"
+            echo "is_typescript=true" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ 非 TypeScript 项目"
+            echo "is_typescript=false" >> $GITHUB_OUTPUT
+          fi
+
+          # 检查框架类型
+          if grep -q '"vue"' package.json; then
+            echo "📦 检测到 Vue.js 项目"
+            echo "framework=vue" >> $GITHUB_OUTPUT
+          elif grep -q '"react"' package.json; then
+            echo "📦 检测到 React 项目"
+            echo "framework=react" >> $GITHUB_OUTPUT
+          elif grep -q '"next"' package.json; then
+            echo "📦 检测到 Next.js 项目"
+            echo "framework=nextjs" >> $GITHUB_OUTPUT
+          else
+            echo "📦 普通 JavaScript 项目"
+            echo "framework=vanilla" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install dependencies
+        if: steps.check-frontend.outputs.exists == 'true'
+        run: |
+          cd web
+          echo "📦 安装前端依赖..."
+          # 🔒 使用 --frozen-lockfile 确保依赖一致性
+          pnpm install --frozen-lockfile
+          echo "✅ 依赖安装完成"
+
+      # 运行 ESLint
+      - name: Run ESLint
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.has_lint == 'true'
+        run: |
+          cd web
+          echo "🔍 运行 ESLint 代码检查..."
+          if pnpm lint; then
+            echo "✅ ESLint 检查通过"
+            echo "LINT_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "❌ ESLint 检查失败"
+            echo "LINT_STATUS=failed" >> $GITHUB_ENV
+            exit 1
+          fi
+
+      - name: Skip ESLint (not configured)
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.has_lint == 'false'
+        run: |
+          echo "⚠️ 项目未配置 ESLint，跳过代码检查"
+          echo "LINT_STATUS=skipped" >> $GITHUB_ENV
+
+      # 运行 TypeScript 类型检查
+      - name: Run TypeScript check
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.is_typescript == 'true'
+        run: |
+          cd web
+          echo "🔍 运行 TypeScript 类型检查..."
+          if pnpm tsc --noEmit; then
+            echo "✅ TypeScript 类型检查通过"
+            echo "TYPECHECK_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "❌ TypeScript 类型检查失败"
+            echo "TYPECHECK_STATUS=failed" >> $GITHUB_ENV
+            exit 1
+          fi
+
+      - name: Skip TypeScript check (not TypeScript project)
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.is_typescript == 'false'
+        run: |
+          echo "ℹ️ 非 TypeScript 项目，跳过类型检查"
+          echo "TYPECHECK_STATUS=skipped" >> $GITHUB_ENV
+
+      # 运行测试
+      - name: Run tests
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.has_test == 'true'
+        run: |
+          cd web
+          echo "🧪 运行前端测试..."
+          if pnpm test --passWithNoTests; then
+            echo "✅ 前端测试通过"
+            echo "TEST_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "❌ 前端测试失败"
+            echo "TEST_STATUS=failed" >> $GITHUB_ENV
+            exit 1
+          fi
+
+      - name: Skip tests (not configured)
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.has_test == 'false'
+        run: |
+          echo "⚠️ 项目未配置测试，跳过测试"
+          echo "TEST_STATUS=skipped" >> $GITHUB_ENV
+
+      # 检查构建
+      - name: Test build
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.has_build == 'true'
+        run: |
+          cd web
+          echo "🏗️ 测试前端构建..."
+          if pnpm build; then
+            echo "✅ 前端构建成功"
+            echo "BUILD_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "❌ 前端构建失败"
+            echo "BUILD_STATUS=failed" >> $GITHUB_ENV
+            exit 1
+          fi
+
+      - name: Skip build (not configured)
+        if: steps.check-frontend.outputs.exists == 'true' && steps.analyze-config.outputs.has_build == 'false'
+        run: |
+          echo "⚠️ 项目未配置构建脚本，跳过构建测试"
+          echo "BUILD_STATUS=skipped" >> $GITHUB_ENV
+
+      # 🔒 可选：安全审计步骤
+      - name: Security Audit
+        if: steps.check-frontend.outputs.exists == 'true'
+        run: |
+          cd web
+          echo "🔍 运行安全审计..."
+          # 检查已知漏洞
+          if command -v pnpm &> /dev/null; then
+            pnpm audit --audit-level moderate || echo "⚠️ 发现安全问题，建议检查"
+          fi
+        continue-on-error: true
+
+      # 生成检查报告
+      - name: Generate Frontend check summary
+        if: always()
+        run: |
+          echo "## 🎨 前端代码质量检查报告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$FRONTEND_EXISTS" = "false" ]; then
+            echo "### ℹ️ 项目状态" >> $GITHUB_STEP_SUMMARY
+            echo "未发现前端项目，跳过前端代码检查。" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "如果您的前端代码不在 \`web/\` 目录下，请调整工作流配置。" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### 📋 检查结果" >> $GITHUB_STEP_SUMMARY
+            echo "| 检查项目 | 状态 | 说明 |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|------|------|" >> $GITHUB_STEP_SUMMARY
+            
+            # ESLint状态
+            case "$LINT_STATUS" in
+              "success") echo "| 代码规范 (ESLint) | ✅ 通过 | 代码符合规范 |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| 代码规范 (ESLint) | ❌ 失败 | 发现代码规范问题 |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| 代码规范 (ESLint) | ⚠️ 跳过 | 未配置 lint 脚本 |" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+            
+            # TypeScript状态
+            case "$TYPECHECK_STATUS" in
+              "success") echo "| 类型检查 (TypeScript) | ✅ 通过 | 类型定义正确 |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| 类型检查 (TypeScript) | ❌ 失败 | 发现类型错误 |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| 类型检查 (TypeScript) | ⚠️ 跳过 | 非 TypeScript 项目 |" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+            
+            # 测试状态
+            case "$TEST_STATUS" in
+              "success") echo "| 单元测试 | ✅ 通过 | 所有测试通过 |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| 单元测试 | ❌ 失败 | 测试用例失败 |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| 单元测试 | ⚠️ 跳过 | 未配置测试脚本 |" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+            
+            # 构建状态
+            case "$BUILD_STATUS" in
+              "success") echo "| 构建测试 | ✅ 通过 | 构建成功 |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| 构建测试 | ❌ 失败 | 构建过程出错 |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| 构建测试 | ⚠️ 跳过 | 未配置构建脚本 |" >> $GITHUB_STEP_SUMMARY ;;
+            esac
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 项目信息" >> $GITHUB_STEP_SUMMARY
+            echo "- **框架**: ${{ steps.analyze-config.outputs.framework }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **TypeScript**: ${{ steps.analyze-config.outputs.is_typescript == 'true' && '✅ 是' || '❌ 否' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Node.js版本**: 23.10.0" >> $GITHUB_STEP_SUMMARY
+            echo "- **pnpm版本**: 10.6.5" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 运行信息" >> $GITHUB_STEP_SUMMARY
+          echo "- **提交 SHA**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **分支**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **触发者**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **检查时间**: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+      # PR评论（仅在PR时运行）
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const frontendExists = process.env.FRONTEND_EXISTS === 'true';
+            const success = '${{ job.status }}' === 'success';
+
+            if (!frontendExists) {
+              const body = `### 🎨 前端代码检查 ℹ️
+
+              **PR #${{ github.event.pull_request.number }}** 未发现前端项目，跳过前端代码检查。
+
+              如果您的前端代码不在 \`web/\` 目录下，请调整工作流配置。`;
+
+              // 查找现有评论
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+
+              const botComment = comments.find(comment => 
+                comment.user.type === 'Bot' && 
+                comment.body.includes('🎨 前端代码检查')
+              );
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: body
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body
+                });
+              }
+              return;
+            }
+
+            const lintStatus = process.env.LINT_STATUS;
+            const typecheckStatus = process.env.TYPECHECK_STATUS;
+            const testStatus = process.env.TEST_STATUS;
+            const buildStatus = process.env.BUILD_STATUS;
+
+            let emoji = success ? '✅' : '❌';
+            let status = success ? '通过' : '失败';
+
+            const getStatusIcon = (status) => {
+              switch(status) {
+                case 'success': return '✅';
+                case 'failed': return '❌';
+                default: return '⚠️';
+              }
+            };
+
+            let body = `### 🎨 前端代码质量检查${status} ${emoji}
+
+            **PR #${{ github.event.pull_request.number }}** 的前端代码检查已完成。
+
+            **📋 检查结果:**
+            - ${getStatusIcon(lintStatus)} 代码规范 (ESLint)
+            - ${getStatusIcon(typecheckStatus)} 类型检查 (TypeScript)
+            - ${getStatusIcon(testStatus)} 单元测试
+            - ${getStatusIcon(buildStatus)} 构建测试
+
+            `;
+
+            if (success) {
+              body += `**🎉 结果:** 前端代码质量检查全部通过！`;
+            } else {
+              body += `**⚠️ 需要关注:** 发现需要修复的问题，请查看详细日志。`;
+            }
+
+            // 查找并更新现有评论
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🎨 前端代码质量检查')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

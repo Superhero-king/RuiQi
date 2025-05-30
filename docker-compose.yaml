@@ -23,7 +23,7 @@ services:
   ruiqi:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: Dockerfile
     container_name: ruiqi-waf # 容器名小写
     restart: always
     depends_on:

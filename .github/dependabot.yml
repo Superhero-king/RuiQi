@@ -1,0 +1,181 @@
+version: 2
+updates:
+  # Go 依赖更新 - 使用 directories 简化配置
+  - package-ecosystem: "gomod"
+    directories:
+      - "/server"
+      - "/pkg"
+      - "/coraza-spoa"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "go"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    # 版本策略：只在必要时更新版本约束，避免不必要的更改
+    versioning-strategy: "increase-if-necessary"
+    groups:
+      # 将小版本和补丁更新合并到一个 PR
+      go-minor-patch:
+        applies-to: version-updates
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      # 安全更新单独分组，优先处理
+      go-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+    ignore:
+      # 忽略主要版本更新（v1.x → v2.x），避免破坏性更改
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # 前端依赖更新（pnpm 项目使用 npm 生态系统）
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 8
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "pnpm"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    # 版本策略：保持现有约束，只在必要时更新
+    versioning-strategy: "increase-if-necessary"
+    groups:
+      # UI 库分组（Radix UI 等）
+      ui-libraries:
+        dependency-type: "production"
+        patterns:
+          - "@radix-ui/*"
+          - "lucide-react"
+          - "tailwind*"
+        update-types:
+          - "minor"
+          - "patch"
+      # 核心框架分组（React 相关）
+      react-ecosystem:
+        dependency-type: "production"
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-*"
+        update-types:
+          - "patch"  # React 只允许补丁更新，减少风险
+      # 工具库分组（数据处理、格式化等）
+      utilities:
+        dependency-type: "production"
+        patterns:
+          - "axios"
+          - "date-fns"
+          - "clsx"
+          - "immer"
+          - "zod"
+          - "*query*"
+        update-types:
+          - "minor"
+          - "patch"
+      # 开发工具分组（构建、类型检查等）
+      dev-tools:
+        dependency-type: "development"
+        patterns:
+          - "vite"
+          - "typescript*"
+          - "eslint*"
+          - "@types/*"
+          - "@vitejs/*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # 忽略主要版本更新，需要手动测试兼容性
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      # 特定依赖的版本锁定
+      - dependency-name: "react"
+        versions: ["19.x"]  # 暂时保持在 React 18，React 19 需要手动升级
+      - dependency-name: "react-dom"
+        versions: ["19.x"]
+      - dependency-name: "typescript"
+        versions: ["5.7.x", "5.8.x"]  # TypeScript 5.6 相对稳定
+      - dependency-name: "node"
+        versions: [">23.10.0"]  # 与 Dockerfile 保持一致，锁定在 23.10.0
+      - dependency-name: "pnpm"
+        versions: [">10.6.5"]  # 与 Dockerfile 保持一致，锁定在 10.6.5
+      # 3D 库需要谨慎更新（可能影响渲染）
+      - dependency-name: "three"
+        update-types: ["version-update:semver-minor"]
+      - dependency-name: "three-globe"
+        update-types: ["version-update:semver-minor"]
+
+  # GitHub Actions 更新
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      # 所有 GitHub Actions 合并更新
+      github-actions:
+        patterns:
+          - "*"
+
+  # Docker 基础镜像更新（项目有 Dockerfile）
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    ignore:
+      # 忽略主要版本更新的 Docker 镜像（如 HAProxy 3.x → 4.x）
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+      
+      # === 构建环境版本锁定 ===
+      # 锁定 HAProxy 版本在 3.0.10，防止自动更新
+      - dependency-name: "haproxy"
+        versions: [">3.0.10"]  # 忽略所有高于 3.0.10 的版本
+      
+      # 锁定 Node.js 版本在 23.10.0，确保前端构建环境一致性
+      - dependency-name: "node"
+        versions: [">23.10.0"]  # 忽略所有高于 23.10.0 的版本
+      
+      # 锁定 Golang 版本在 1.24.1，确保后端构建环境一致性
+      - dependency-name: "golang"
+        versions: [">1.24.1"]  # 忽略所有高于 1.24.1 的版本
+      
+      # 注意：pnpm 版本在 Dockerfile 中通过 npm install -g 安装
+      # 需要在前端项目的 engines 字段中控制，Dependabot 不会直接管理
