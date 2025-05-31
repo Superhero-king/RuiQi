@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react"
-import { WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, DirectionalLight, Color, MeshStandardMaterial, FrontSide, PointLight } from "three"
+import { WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, DirectionalLight, Color, PointLight, MeshPhysicalMaterial, DoubleSide } from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import ThreeGlobe from "three-globe"
 import countries from "./globe-data-min.json"
@@ -138,7 +138,7 @@ const Globe3DMap = React.memo(({ wafAttackTrajectoryData }: { wafAttackTrajector
             // 创建新的Three.js实例
             const renderer = new WebGLRenderer({
                 antialias: true,
-                logarithmicDepthBuffer: false,
+                logarithmicDepthBuffer: true,
                 alpha: true,
                 preserveDrawingBuffer: true  // 保持绘制缓冲区
             })
@@ -189,19 +189,25 @@ const Globe3DMap = React.memo(({ wafAttackTrajectoryData }: { wafAttackTrajector
             const globe = new ThreeGlobe({ waitForGlobeReady: true, animateIn: true })
             scene.add(globe)
 
-            const globeMaterial = new MeshStandardMaterial({
-                color: new Color(0xa071da),
-                metalness: 1,
-                roughness: 0.75,
-                side: FrontSide,
-                depthWrite: false  // 保持原有设置
+            const globeMaterial = new MeshPhysicalMaterial({
+                color: new Color(0x0d0c27),
+                transparent: true,       // 启用透明
+                transmission: 1,         // 透光率
+                thickness: 0.5,          // 厚度
+                roughness: 0.75,         // 粗糙度
+                metalness: 0,            // 金属感
+                ior: 1.5,                // 折射率
+                envMapIntensity: 1.5,    // 环境贴图强度
+                reflectivity: 0.1,       // 反射率
+                opacity: 0.55,           // 不透明度
+                side: DoubleSide,        // 双面渲染
             })
 
             globe
                 .showGlobe(true)
                 .globeMaterial(globeMaterial)
                 .showAtmosphere(true)
-                .atmosphereColor("#a071da")
+                .atmosphereColor("#0d0c27")
                 .atmosphereAltitude(0.25)
 
             globe
@@ -211,7 +217,7 @@ const Globe3DMap = React.memo(({ wafAttackTrajectoryData }: { wafAttackTrajector
                 .hexPolygonMargin(0.4)
                 .hexPolygonColor((e) => {
                     const countryCode = (e as FeatureCollection<Geometry, GeoJsonProperties>["features"][number]).properties!.ISO_A3
-                    return (countryCode === "CHN" || countryCode === "TWN") ? "rgba(255, 255, 255, 1)" : "rgba(241, 230, 255, 0.87)"
+                    return (countryCode === "CHN" || countryCode === "TWN") ? "rgba(255, 255, 255, 1)" : "rgba(241, 230, 255, 1)"
                 })
 
             // 设置 onGlobeReady 回调（只设置一次）
@@ -354,7 +360,7 @@ const Globe3DMap = React.memo(({ wafAttackTrajectoryData }: { wafAttackTrajector
                 // 根据攻击类型分配颜色
                 return WAF_ATTACK_TRAJECTORY_COLORS[attackTrajectory.colorIndex]
             })
-            .arcAltitude((e: unknown) => (e as WAFAttackTrajectory).arcAlt)
+            .arcAltitude((e: unknown) => Math.pow((e as WAFAttackTrajectory).arcAlt * 0.22, 1.225)) // 攻击轨迹高度(因为此处的arcAlt是地理距离, 所以需要适配四次贝塞尔曲线的高度, 距离越远需要给的补偿值越大因此使用倍率加次方计算)
             .arcStroke(0.3) // 攻击轨迹线条粗细
             .arcDashLength(0.9)
             .arcDashGap(4)
