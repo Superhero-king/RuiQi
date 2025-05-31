@@ -1,6 +1,165 @@
 version: 2
 updates:
-  # Go 依赖更新 - 使用 directories 简化配置
+  # ===========================================
+  # 前端依赖更新 - 极度保守策略
+  # ===========================================
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "monthly" # 改为月度检查，降低频率
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 2 # 大幅降低 PR 数量限制
+    labels:
+      - "dependencies"
+      - "frontend"
+      - "needs-manual-testing" # 添加手动测试标签
+      - "stability-critical" # 标记为稳定性关键
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    versioning-strategy: "increase-if-necessary"
+
+    # 分组策略 - 只允许特定类型的更新
+    groups:
+      # 安全更新 - 唯一允许的自动更新
+      critical-security:
+        applies-to: security-updates
+        patterns: ["*"]
+        update-types: ["patch"] # 即使安全更新也只允许补丁版本
+
+      # 开发工具 - 相对安全的更新
+      dev-tools-safe:
+        dependency-type: "development"
+        patterns:
+          - "eslint"
+          - "prettier"
+          - "@eslint/*"
+          - "eslint-*"
+        update-types: ["patch"]
+
+    # 大范围忽略策略
+    ignore:
+      # ===== 完全禁止自动更新的关键包 =====
+
+      # React 核心生态 - 手动控制
+      - dependency-name: "react"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "react-dom"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "@types/react"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "@types/react-dom"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "react-router"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+
+      # 表单和验证库 - 类型系统复杂
+      - dependency-name: "react-hook-form"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "@hookform/resolvers"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "zod"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+
+      # TypeScript 相关 - 影响整个编译链
+      - dependency-name: "typescript"
+        update-types:
+          [
+            "version-update:semver-major",
+            "version-update:semver-minor",
+            "version-update:semver-patch",
+          ]
+      - dependency-name: "@types/*"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+
+      # 构建工具 - 影响构建流程
+      - dependency-name: "vite"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "@vitejs/*"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "esbuild"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+
+      # UI 框架 - 可能影响样式和交互
+      - dependency-name: "@radix-ui/*"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "lucide-react"
+        update-types: ["version-update:semver-major"]
+
+      # 状态管理和数据获取
+      - dependency-name: "*query*" # React Query 等
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "axios"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "immer"
+        update-types: ["version-update:semver-major"]
+
+      # 3D 和复杂组件库
+      - dependency-name: "three"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "three-globe"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+
+      # ===== 禁止所有主版本和小版本更新 =====
+      - dependency-name: "*"
+        update-types:
+          ["version-update:semver-major", "version-update:semver-minor"]
+
+  # ===========================================
+  # Go 依赖更新 - 保持适度更新策略
+  # ===========================================
   - package-ecosystem: "gomod"
     directories:
       - "/server"
@@ -11,128 +170,35 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 8 # 略微降低限制
     labels:
       - "dependencies"
       - "go"
+      - "backend"
     commit-message:
       prefix: "chore"
       include: "scope"
+
     groups:
-      # 将小版本和补丁更新合并到一个 PR
+      # Go 小版本和补丁更新 - 相对安全
       go-minor-patch:
         applies-to: version-updates
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-      # 安全更新单独分组，优先处理
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+      # 安全更新 - 高优先级
       go-security:
         applies-to: security-updates
-        patterns:
-          - "*"
+        patterns: ["*"]
+
     ignore:
-      # 只忽略主要版本更新，允许小版本和补丁更新
+      # 只忽略主版本更新，允许小版本和补丁
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
 
-  # 前端依赖更新（更灵活的策略）
-  - package-ecosystem: "npm"
-    directory: "/web"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:00"
-      timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 10 # 增加限制，允许更多更新
-    labels:
-      - "dependencies"
-      - "frontend"
-      - "pnpm"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    versioning-strategy: "increase-if-necessary"
-    groups:
-      # 关键框架分组 - 只限制主版本更新
-      critical-frameworks:
-        dependency-type: "production"
-        patterns:
-          - "react"
-          - "react-dom"
-          - "vite"
-        update-types:
-          - "minor"
-          - "patch"
-
-      # UI 库分组 - 允许更多更新
-      ui-libraries:
-        dependency-type: "production"
-        patterns:
-          - "@radix-ui/*"
-          - "lucide-react"
-          - "tailwind*"
-        update-types:
-          - "minor"
-          - "patch"
-
-      # 工具库分组 - 相对自由
-      utilities:
-        dependency-type: "production"
-        patterns:
-          - "axios"
-          - "date-fns"
-          - "clsx"
-          - "immer"
-          - "zod"
-          - "*query*"
-        update-types:
-          - "minor"
-          - "patch"
-
-      # 开发工具分组 - 允许积极更新
-      dev-tools:
-        dependency-type: "development"
-        patterns:
-          - "typescript*"
-          - "eslint*"
-          - "@types/*"
-          - "@vitejs/*"
-          - "esbuild"
-        update-types:
-          - "minor"
-          - "patch"
-
-      # 安全更新优先处理
-      security-updates:
-        applies-to: security-updates
-        patterns:
-          - "*"
-
-    ignore:
-      # === 谨慎处理的主版本更新 ===
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-
-      # === 特定库的策略 ===
-      # React 18 -> 19 需要手动测试，但允许 18.x 内的更新
-      - dependency-name: "react"
-        versions: [">= 19.0.0"]
-      - dependency-name: "react-dom"
-        versions: [">= 19.0.0"]
-
-      # TypeScript 主版本更新需要谨慎
-      - dependency-name: "typescript"
-        versions: [">= 6.0.0"]
-
-      # 3D 库需要谨慎处理
-      - dependency-name: "three"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "three-globe"
-        update-types: ["version-update:semver-major"]
-
-  # GitHub Actions 更新
+  # ===========================================
+  # GitHub Actions 更新 - 保持现有策略
+  # ===========================================
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -140,19 +206,28 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 4 # 略微降低
     labels:
       - "dependencies"
       - "github-actions"
+      - "ci"
     commit-message:
       prefix: "ci"
       include: "scope"
-    groups:
-      github-actions:
-        patterns:
-          - "*"
 
-  # Docker 基础镜像更新
+    groups:
+      github-actions-all:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+    ignore:
+      # 只忽略主版本更新
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # ===========================================
+  # Docker 基础镜像更新 - 保守策略
+  # ===========================================
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -160,23 +235,84 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3 # 降低限制
     labels:
       - "dependencies"
       - "docker"
+      - "infrastructure"
     commit-message:
       prefix: "docker"
       include: "scope"
+
+    groups:
+      docker-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
     ignore:
-      # 只忽略主版本更新，允许补丁和小版本更新
+      # 忽略主版本更新
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
 
-      # === 构建环境版本锁定 ===
-      # 锁定 HAProxy 版本在 3.0.10，防止自动更新
+      # ===== 特定版本锁定 =====
+      # 锁定 HAProxy 版本 - 确保 WAF 功能稳定
       - dependency-name: "haproxy"
-        versions: [">3.0.10"] # 忽略所有高于 3.0.10 的版本
+        versions: [">3.0.10"]
 
-      # 锁定 Golang 版本在 1.24.1，确保后端构建环境一致性
+      # 锁定 Golang 构建版本 - 确保后端构建环境一致性
       - dependency-name: "golang"
-        versions: [">1.24.1"] # 忽略所有高于 1.24.1 的版本
+        versions: [">1.24.1"]
+
+      # 锁定基础镜像的主版本
+      - dependency-name: "node"
+        versions: [">22.0.0"] # 如果当前使用 Node 20.x，不自动升级到 22.x
+      - dependency-name: "alpine"
+        versions: [">3.20.0"] # 保持 Alpine 版本稳定
+
+
+  # ===========================================
+  # Dockerfile 多阶段构建的其他配置
+  # ===========================================
+
+  # 如果有其他 package managers (如 pip, maven 等)
+  # 可以在这里添加类似的保守配置
+
+  # 示例：如果项目中有 Python 依赖
+  # - package-ecosystem: "pip"
+  #   directory: "/scripts"  # 如果有 Python 脚本目录
+  #   schedule:
+  #     interval: "monthly"
+  #   open-pull-requests-limit: 2
+  #   labels:
+  #     - "dependencies"
+  #     - "python"
+  #     - "scripts"
+  #   ignore:
+  #     - dependency-name: "*"
+  #       update-types: ["version-update:semver-major", "version-update:semver-minor"]
+# ===========================================
+# 全局配置说明
+# ===========================================
+#
+# 🎯 策略总结：
+#
+# 前端 (npm): 极度保守
+# - 月度检查，最多 2 个 PR
+# - 只允许安全补丁自动更新
+# - 关键包完全禁止自动更新
+#
+# 后端 (Go): 适度更新
+# - 周度检查，最多 8 个 PR
+# - 允许小版本和补丁更新
+# - 只禁止主版本更新
+#
+# CI/CD: 保守更新
+# - GitHub Actions 允许小版本更新
+# - Docker 镜像保守更新，锁定关键版本
+#
+# 🔧 手动更新流程：
+#
+# 1. 前端关键依赖需要季度评估
+# 2. 在专门的分支中测试更新
+# 3. 充分测试后再合并
+# 4. 保持详细的更新日志
