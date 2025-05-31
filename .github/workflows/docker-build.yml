@@ -115,22 +115,60 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const status = '${{ job.status }}' === 'success' ? '✅ 成功' : '❌ 失败';
+            const success = '${{ job.status }}' === 'success';
+            const emoji = success ? '✅' : '❌';
+            const statusEn = success ? 'Success' : 'Failed';
+            const statusCn = success ? '成功' : '失败';
             const buildTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-            
-            const body = `### 🚀 Docker 快速构建${status}
-            
-            **AMD64 平台验证完成** (优化后仅构建单平台加速验证)
-            - 验证平台: \`linux/amd64\` 
-            - 构建状态: ${status}
+
+            // 构建中文报告
+            let chineseReport = `### 中文报告
+
+            **🏗️ 构建详情:**
+            - 验证平台: \`linux/amd64\`
+            - 构建状态: ${statusCn}
             - 提交: \`${{ github.event.pull_request.head.sha }}\`
             - 构建时间: ${buildTime}
-            
-            ${status.includes('成功') 
-              ? '✅ 基础架构验证通过，合并后将自动构建完整多平台镜像' 
-              : '❌ 请检查构建日志并修复问题'}
-              
-            > 💡 **优化说明**: PR阶段仅构建AMD64以提高速度，完整的多平台构建将在合并后进行`;
+
+            `;
+
+            if (success) {
+              chineseReport += `**✅ 结果:** 基础架构验证通过，合并后将自动构建完整多平台镜像
+
+            **💡 优化说明:** PR阶段仅构建AMD64以提高速度，完整的多平台构建将在合并后进行`;
+            } else {
+              chineseReport += `**❌ 需要关注:** 请检查构建日志并修复问题`;
+            }
+
+            // 构建英文报告
+            let englishReport = `### English Report
+
+            **🏗️ Build Details:**
+            - Verification Platform: \`linux/amd64\`
+            - Build Status: ${statusEn}
+            - Commit: \`${{ github.event.pull_request.head.sha }}\`
+            - Build Time: ${buildTime}
+
+            `;
+
+            if (success) {
+              englishReport += `**✅ Result:** Architecture verification passed, full multi-platform build will be triggered after merge
+
+            **💡 Optimization Note:** PR stage only builds AMD64 to improve speed, complete multi-platform build will be performed after merge`;
+            } else {
+              englishReport += `**❌ Attention Required:** Please check build logs and fix issues`;
+            }
+
+            // 组合最终内容（中文在前，英文在后）
+            const body = `## 🚀 Docker Quick Build ${statusEn} ${emoji}
+
+            **PR #${{ github.event.pull_request.number }}** AMD64 platform verification completed (optimized to build single platform only for faster verification)
+
+            ${chineseReport}
+
+            ---
+
+            ${englishReport}`;
 
             // 查找并更新现有评论
             const { data: comments } = await github.rest.issues.listComments({
@@ -140,7 +178,7 @@ jobs:
             });
 
             const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && comment.body.includes('Docker 快速构建')
+              comment.user.type === 'Bot' && comment.body.includes('Docker Quick Build')
             );
 
             if (botComment) {

@@ -175,7 +175,7 @@ graph TD
 ## Prerequisites
 
 - Go 1.24.1 or higher
-- Node.js 23.10.0 and pnpm 10.6.5 (for frontend development)
+- Node.js 23.10.0 and pnpm 10.11.0 (for frontend development)
 - HAProxy 3.0 (for local development)
 - MongoDB 6.0
 - Docker and Docker Compose (for containerized deployment)

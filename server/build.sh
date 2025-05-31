@@ -21,7 +21,7 @@ else
 fi
 
 # 检查 pnpm 版本
-REQUIRED_PNPM="10.6.5"
+REQUIRED_PNPM="10.11.0"
 if command -v pnpm &> /dev/null; then
     PNPM_VERSION=$(pnpm --version)
     echo "📦 pnpm 版本: $PNPM_VERSION (要求: $REQUIRED_PNPM)"

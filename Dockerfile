@@ -1,8 +1,9 @@
 # 多阶段构建
 # 阶段1: 构建Node.js前端
-FROM node:23.10.0 AS frontend-builder
+# 生产环境使用固定版本
+FROM node:23.10.0-alpine AS frontend-builder
 # 安装pnpm
-RUN npm install -g pnpm@10.6.5
+RUN npm install -g pnpm@10.11.0
 # 设置工作目录
 WORKDIR /app
 # 复制前端项目文件

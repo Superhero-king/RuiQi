@@ -1,4 +1,4 @@
-# .github/workflows/frontend-quality-check.yml (平衡版本)
+# .github/workflows/frontend-quality-check.yml (优化国际化版本)
 name: Frontend Code Quality Check
 
 # 🔒 工作流级权限控制
@@ -63,7 +63,7 @@ jobs:
         if: steps.check-frontend.outputs.exists == 'true'
         uses: pnpm/action-setup@v4
         with:
-          version: 10.6.5
+          version: 10.11.0
 
       - name: Get pnpm store directory
         if: steps.check-frontend.outputs.exists == 'true'
@@ -247,61 +247,61 @@ jobs:
       - name: Generate Frontend check summary
         if: always()
         run: |
-          echo "## 🎨 前端代码质量检查报告" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎨 Frontend Code Quality Check Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ "$FRONTEND_EXISTS" = "false" ]; then
-            echo "### ℹ️ 项目状态" >> $GITHUB_STEP_SUMMARY
-            echo "未发现前端项目，跳过前端代码检查。" >> $GITHUB_STEP_SUMMARY
+            echo "### ℹ️ Project Status" >> $GITHUB_STEP_SUMMARY
+            echo "No frontend project found, skipping frontend code checks." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "如果您的前端代码不在 \`web/\` 目录下，请调整工作流配置。" >> $GITHUB_STEP_SUMMARY
+            echo "If your frontend code is not in the \`web/\` directory, please adjust the workflow configuration." >> $GITHUB_STEP_SUMMARY
           else
-            echo "### 📋 检查结果" >> $GITHUB_STEP_SUMMARY
-            echo "| 检查项目 | 状态 | 说明 |" >> $GITHUB_STEP_SUMMARY
+            echo "### 📋 Check Results" >> $GITHUB_STEP_SUMMARY
+            echo "| Check Item | Status | Description |" >> $GITHUB_STEP_SUMMARY
             echo "|---------|------|------|" >> $GITHUB_STEP_SUMMARY
             
             # ESLint状态
             case "$LINT_STATUS" in
-              "success") echo "| 代码规范 (ESLint) | ✅ 通过 | 代码符合规范 |" >> $GITHUB_STEP_SUMMARY ;;
-              "failed") echo "| 代码规范 (ESLint) | ❌ 失败 | 发现代码规范问题 |" >> $GITHUB_STEP_SUMMARY ;;
-              *) echo "| 代码规范 (ESLint) | ⚠️ 跳过 | 未配置 lint 脚本 |" >> $GITHUB_STEP_SUMMARY ;;
+              "success") echo "| Code Standards (ESLint) | ✅ Passed | Code meets standards |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| Code Standards (ESLint) | ❌ Failed | Found code standard issues |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| Code Standards (ESLint) | ⚠️ Skipped | No lint script configured |" >> $GITHUB_STEP_SUMMARY ;;
             esac
             
             # TypeScript状态
             case "$TYPECHECK_STATUS" in
-              "success") echo "| 类型检查 (TypeScript) | ✅ 通过 | 类型定义正确 |" >> $GITHUB_STEP_SUMMARY ;;
-              "failed") echo "| 类型检查 (TypeScript) | ❌ 失败 | 发现类型错误 |" >> $GITHUB_STEP_SUMMARY ;;
-              *) echo "| 类型检查 (TypeScript) | ⚠️ 跳过 | 非 TypeScript 项目 |" >> $GITHUB_STEP_SUMMARY ;;
+              "success") echo "| Type Check (TypeScript) | ✅ Passed | Type definitions correct |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| Type Check (TypeScript) | ❌ Failed | Found type errors |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| Type Check (TypeScript) | ⚠️ Skipped | Not a TypeScript project |" >> $GITHUB_STEP_SUMMARY ;;
             esac
             
             # 测试状态
             case "$TEST_STATUS" in
-              "success") echo "| 单元测试 | ✅ 通过 | 所有测试通过 |" >> $GITHUB_STEP_SUMMARY ;;
-              "failed") echo "| 单元测试 | ❌ 失败 | 测试用例失败 |" >> $GITHUB_STEP_SUMMARY ;;
-              *) echo "| 单元测试 | ⚠️ 跳过 | 未配置测试脚本 |" >> $GITHUB_STEP_SUMMARY ;;
+              "success") echo "| Unit Tests | ✅ Passed | All tests passed |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| Unit Tests | ❌ Failed | Test cases failed |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| Unit Tests | ⚠️ Skipped | No test script configured |" >> $GITHUB_STEP_SUMMARY ;;
             esac
             
             # 构建状态
             case "$BUILD_STATUS" in
-              "success") echo "| 构建测试 | ✅ 通过 | 构建成功 |" >> $GITHUB_STEP_SUMMARY ;;
-              "failed") echo "| 构建测试 | ❌ 失败 | 构建过程出错 |" >> $GITHUB_STEP_SUMMARY ;;
-              *) echo "| 构建测试 | ⚠️ 跳过 | 未配置构建脚本 |" >> $GITHUB_STEP_SUMMARY ;;
+              "success") echo "| Build Test | ✅ Passed | Build successful |" >> $GITHUB_STEP_SUMMARY ;;
+              "failed") echo "| Build Test | ❌ Failed | Build process error |" >> $GITHUB_STEP_SUMMARY ;;
+              *) echo "| Build Test | ⚠️ Skipped | No build script configured |" >> $GITHUB_STEP_SUMMARY ;;
             esac
             
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📊 项目信息" >> $GITHUB_STEP_SUMMARY
-            echo "- **框架**: ${{ steps.analyze-config.outputs.framework }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **TypeScript**: ${{ steps.analyze-config.outputs.is_typescript == 'true' && '✅ 是' || '❌ 否' }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Node.js版本**: 23.10.0" >> $GITHUB_STEP_SUMMARY
-            echo "- **pnpm版本**: 10.6.5" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Project Information" >> $GITHUB_STEP_SUMMARY
+            echo "- **Framework**: ${{ steps.analyze-config.outputs.framework }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **TypeScript**: ${{ steps.analyze-config.outputs.is_typescript == 'true' && '✅ Yes' || '❌ No' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Node.js Version**: 23.10.0" >> $GITHUB_STEP_SUMMARY
+            echo "- **pnpm Version**: 10.11.0" >> $GITHUB_STEP_SUMMARY
           fi
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 运行信息" >> $GITHUB_STEP_SUMMARY
-          echo "- **提交 SHA**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **分支**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **触发者**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **检查时间**: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Runtime Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit SHA**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Check Time**: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
 
       # PR评论（仅在PR时运行）
       - name: Comment on PR
@@ -313,11 +313,28 @@ jobs:
             const success = '${{ job.status }}' === 'success';
 
             if (!frontendExists) {
-              const body = `### 🎨 前端代码检查 ℹ️
+              // 构建无前端项目的双语报告
+              let chineseReport = `### 中文报告
 
-              **PR #${{ github.event.pull_request.number }}** 未发现前端项目，跳过前端代码检查。
+            **ℹ️ 项目状态:** 未发现前端项目，跳过前端代码检查。
 
-              如果您的前端代码不在 \`web/\` 目录下，请调整工作流配置。`;
+            如果您的前端代码不在 \`web/\` 目录下，请调整工作流配置。`;
+
+              let englishReport = `### English Report
+
+            **ℹ️ Project Status:** No frontend project found, skipping frontend code checks.
+
+            If your frontend code is not in the \`web/\` directory, please adjust the workflow configuration.`;
+
+              const body = `## 🎨 Frontend Code Quality Check ℹ️
+
+            **PR #${{ github.event.pull_request.number }}** frontend code check completed.
+
+            ${chineseReport}
+
+            ---
+
+            ${englishReport}`;
 
               // 查找现有评论
               const { data: comments } = await github.rest.issues.listComments({
@@ -328,7 +345,7 @@ jobs:
 
               const botComment = comments.find(comment => 
                 comment.user.type === 'Bot' && 
-                comment.body.includes('🎨 前端代码检查')
+                comment.body.includes('🎨 Frontend Code Quality Check')
               );
 
               if (botComment) {
@@ -355,7 +372,8 @@ jobs:
             const buildStatus = process.env.BUILD_STATUS;
 
             let emoji = success ? '✅' : '❌';
-            let status = success ? '通过' : '失败';
+            let statusEn = success ? 'Passed' : 'Failed';
+            let statusCn = success ? '通过' : '失败';
 
             const getStatusIcon = (status) => {
               switch(status) {
@@ -365,9 +383,8 @@ jobs:
               }
             };
 
-            let body = `### 🎨 前端代码质量检查${status} ${emoji}
-
-            **PR #${{ github.event.pull_request.number }}** 的前端代码检查已完成。
+            // 构建中文报告
+            let chineseReport = `### 中文报告
 
             **📋 检查结果:**
             - ${getStatusIcon(lintStatus)} 代码规范 (ESLint)
@@ -378,10 +395,38 @@ jobs:
             `;
 
             if (success) {
-              body += `**🎉 结果:** 前端代码质量检查全部通过！`;
+              chineseReport += `**🎉 结果:** 前端代码质量检查全部通过！`;
             } else {
-              body += `**⚠️ 需要关注:** 发现需要修复的问题，请查看详细日志。`;
+              chineseReport += `**⚠️ 需要关注:** 发现需要修复的问题，请查看详细日志。`;
             }
+
+            // 构建英文报告
+            let englishReport = `### English Report
+
+            **📋 Check Results:**
+            - ${getStatusIcon(lintStatus)} Code Standards (ESLint)
+            - ${getStatusIcon(typecheckStatus)} Type Check (TypeScript)
+            - ${getStatusIcon(testStatus)} Unit Tests
+            - ${getStatusIcon(buildStatus)} Build Test
+
+            `;
+
+            if (success) {
+              englishReport += `**🎉 Result:** All frontend code quality checks passed!`;
+            } else {
+              englishReport += `**⚠️ Attention Required:** Issues found that need to be fixed. Please check the detailed logs.`;
+            }
+
+            // 组合最终内容（中文在前，英文在后）
+            let body = `## 🎨 Frontend Code Quality Check ${statusEn} ${emoji}
+
+            **PR #${{ github.event.pull_request.number }}** frontend code check completed.
+
+            ${chineseReport}
+
+            ---
+
+            ${englishReport}`;
 
             // 查找并更新现有评论
             const { data: comments } = await github.rest.issues.listComments({
@@ -392,7 +437,7 @@ jobs:
 
             const botComment = comments.find(comment => 
               comment.user.type === 'Bot' && 
-              comment.body.includes('🎨 前端代码质量检查')
+              comment.body.includes('🎨 Frontend Code Quality Check')
             );
 
             if (botComment) {

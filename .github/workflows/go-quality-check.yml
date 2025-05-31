@@ -1,4 +1,4 @@
-# .github/workflows/go-quality-check.yml (修复版本)
+# .github/workflows/go-quality-check.yml (优化国际化版本)
 name: Go Code Quality Check
 
 permissions:
@@ -209,37 +209,36 @@ jobs:
       - name: Generate Go check summary
         if: always()
         run: |
-          echo "## 🐹 Go Code Quality Check Report / Go 代码质量检查报告" >> $GITHUB_STEP_SUMMARY
+          echo "## ⚡ Go Code Quality Check Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 检查状态
-          echo "### 📋 Core Check Results / 核心检查结果" >> $GITHUB_STEP_SUMMARY
-          echo "| Check Item / 检查项目 | Status / 状态 | Description / 说明 |" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Core Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Check Item | Status | Description |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|------|------|" >> $GITHUB_STEP_SUMMARY
 
           # 格式检查状态
           if [ "$FORMAT_ISSUES" = "true" ]; then
-            echo "| Code Formatting / 代码格式 | ⚠️ Suggestions Available / 建议优化 | Found formatting improvement points / 发现格式改进点 |" >> $GITHUB_STEP_SUMMARY
+            echo "| Code Formatting | ⚠️ Suggestions Available | Found formatting improvement points |" >> $GITHUB_STEP_SUMMARY
           else
-            echo "| Code Formatting / 代码格式 | ✅ Passed / 通过 | Standard formatting / 格式标准 |" >> $GITHUB_STEP_SUMMARY
+            echo "| Code Formatting | ✅ Passed | Standard formatting |" >> $GITHUB_STEP_SUMMARY
           fi
 
-          echo "| go vet | ✅ Passed / 通过 | No important issues / 无重要问题 |" >> $GITHUB_STEP_SUMMARY
-          echo "| staticcheck (core) / staticcheck (核心) | ✅ Passed / 通过 | No bugs or security issues / 无bug和安全问题 |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests / 单元测试 | ✅ Passed / 通过 | Functionality verified / 功能验证通过 |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Check / 安全检查 | ✅ Passed / 通过 | Using official govulncheck-action / 使用官方 govulncheck-action |" >> $GITHUB_STEP_SUMMARY
+          echo "| go vet | ✅ Passed | No important issues |" >> $GITHUB_STEP_SUMMARY
+          echo "| staticcheck (core) | ✅ Passed | No bugs or security issues |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ✅ Passed | Functionality verified |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Check | ✅ Passed | Using official govulncheck-action |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 详细改进建议
           if [ "$FORMAT_ISSUES" = "true" ] || [ "$STYLE_SUGGESTIONS_FOUND" = "true" ]; then
-            echo "### 💡 Optional Improvement Suggestions / 可选改进建议" >> $GITHUB_STEP_SUMMARY
+            echo "### 💡 Optional Improvement Suggestions" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
 
             if [ "$FORMAT_ISSUES" = "true" ]; then
-              echo "#### 🎨 Code Formatting Optimization / 代码格式优化" >> $GITHUB_STEP_SUMMARY
-              echo "The following files can be formatted using \`gofmt -w .\`:  " >> $GITHUB_STEP_SUMMARY
-              echo "以下文件可以通过 \`gofmt -w .\` 进行格式化：" >> $GITHUB_STEP_SUMMARY
+              echo "#### 🎨 Code Formatting Optimization" >> $GITHUB_STEP_SUMMARY
+              echo "The following files can be formatted using \`gofmt -w .\`:" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
               echo "$FORMAT_FILES" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
@@ -247,9 +246,8 @@ jobs:
             fi
 
             if [ "$STYLE_SUGGESTIONS_FOUND" = "true" ]; then
-              echo "#### 📝 Code Style Suggestions / 代码风格建议 (${STYLE_SUGGESTIONS_COUNT} items / 项)" >> $GITHUB_STEP_SUMMARY
-              echo "The following are staticcheck style suggestions, which can be adopted based on team standards:  " >> $GITHUB_STEP_SUMMARY
-              echo "以下是 staticcheck 的风格建议，可根据团队规范选择性采纳：" >> $GITHUB_STEP_SUMMARY
+              echo "#### 📝 Code Style Suggestions (${STYLE_SUGGESTIONS_COUNT} items)" >> $GITHUB_STEP_SUMMARY
+              echo "The following are staticcheck style suggestions, which can be adopted based on team standards:" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
               echo "$STYLE_SUGGESTIONS" >> $GITHUB_STEP_SUMMARY
               echo '```' >> $GITHUB_STEP_SUMMARY
@@ -258,20 +256,20 @@ jobs:
           fi
 
           # 代码质量概览
-          echo "### 📊 Code Quality Overview / 代码质量概览" >> $GITHUB_STEP_SUMMARY
-          echo "- **🔧 Core Quality / 核心质量**: Passed all important checks / 通过所有重要检查" >> $GITHUB_STEP_SUMMARY
-          echo "- **🧪 Functionality Verification / 功能验证**: Complete test coverage / 测试覆盖完整" >> $GITHUB_STEP_SUMMARY
-          echo "- **🔒 Security Check / 安全检查**: Module-wise scanning using official govulncheck-action / 使用官方 govulncheck-action 分模块扫描" >> $GITHUB_STEP_SUMMARY
-          echo "- **🏗️ Project Structure / 项目结构**: Complete multi-module workspace support / 多模块工作空间支持完善" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Code Quality Overview" >> $GITHUB_STEP_SUMMARY
+          echo "- **🔧 Core Quality**: Passed all important checks" >> $GITHUB_STEP_SUMMARY
+          echo "- **🧪 Functionality Verification**: Complete test coverage" >> $GITHUB_STEP_SUMMARY
+          echo "- **🔒 Security Check**: Module-wise scanning using official govulncheck-action" >> $GITHUB_STEP_SUMMARY
+          echo "- **🏗️ Project Structure**: Complete multi-module workspace support" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Project Information / 项目信息" >> $GITHUB_STEP_SUMMARY
-          echo "- **Go Version / Go版本**: 1.24.1" >> $GITHUB_STEP_SUMMARY
-          echo "- **Check Strategy / 检查策略**: Module-wise checks (server, pkg, coraza-spoa) / 分模块检查（server、pkg、coraza-spoa）" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit SHA / 提交 SHA**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch / 分支**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Triggered by / 触发者**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Check Time / 检查时间**: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Project Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Go Version**: 1.24.1" >> $GITHUB_STEP_SUMMARY
+          echo "- **Check Strategy**: Module-wise checks (server, pkg, coraza-spoa)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit SHA**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Check Time**: $(date '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
 
       # PR评论（仅在PR时运行）
       - name: Comment on PR
@@ -288,52 +286,92 @@ jobs:
             let statusEn = success ? 'Passed' : 'Failed';
             let statusCn = success ? '通过' : '失败';
 
-            let body = `### 🐹 Go Code Quality Check ${statusEn} / Go 代码质量检查${statusCn} ${emoji}
+            // 构建英文报告
+            let englishReport = `### English Report
 
-            **PR #${{ github.event.pull_request.number }}** Go code quality check completed.  
-            **PR #${{ github.event.pull_request.number }}** 的 Go 代码质量检查已完成。
-
-            **📋 Core Checks / 核心检查项目:**
-            - ✅ go vet static analysis / go vet 静态分析
-            - ✅ staticcheck core checks (bugs & security) / staticcheck 核心检查（bug & 安全）
-            - ✅ unit tests / 单元测试
-            - ✅ security scan (official govulncheck-action) / 安全检查（官方 govulncheck-action）
-            ${formatIssues ? '- ⚠️ code formatting (suggestions available) / 代码格式（建议优化）' : '- ✅ code formatting / 代码格式'}
+            **📋 Core Checks:**
+            - ✅ go vet static analysis
+            - ✅ staticcheck core checks (bugs & security)
+            - ✅ unit tests
+            - ✅ security scan (official govulncheck-action)
+            ${formatIssues ? '- ⚠️ code formatting (suggestions available)' : '- ✅ code formatting'}
 
             `;
 
             if (styleSuggestions || formatIssues) {
-              body += `
-            **💡 Optional Improvements / 可选改进提示:**`;
+              englishReport += `**💡 Optional Improvements:**`;
               if (formatIssues) {
-                body += `
-            - 🎨 Code formatting can be improved by running \`gofmt -w .\`  
-              代码格式可以通过运行 \`gofmt -w .\` 进行优化`;
+                englishReport += `
+            - 🎨 Code formatting can be improved by running \`gofmt -w .\``;
               }
               if (styleSuggestions) {
-                body += `
-            - 📝 Found ${styleCount} code style suggestions (see Summary page for details)  
-              发现 ${styleCount} 个代码风格改进点（详见 Summary 页面）`;
+                englishReport += `
+            - 📝 Found ${styleCount} code style suggestions (see Summary page for details)`;
               }
-              body += `
+              englishReport += `
 
-            💡 These suggestions don't affect functionality and can be addressed based on team standards.  
-            这些提示不影响功能，可根据团队标准选择性处理。
+            💡 These suggestions don't affect functionality and can be addressed based on team standards.
             `;
             }
 
             if (success) {
-              body += `
-            **🎉 Result / 结果:** All Go code quality checks passed! Code is stable and reliable.  
-            Go 代码核心质量检查全部通过！代码功能稳定可靠。
+              englishReport += `
+            **🎉 Result:** All Go code quality checks passed! Code is stable and reliable.
 
-            **🔧 Multi-module Support / 多模块支持:** Checked server, pkg, and coraza-spoa modules separately.  
-            已分别检查 server、pkg、coraza-spoa 三个模块。`;
+            **🔧 Multi-module Support:** Checked server, pkg, and coraza-spoa modules separately.`;
             } else {
-              body += `
-            **⚠️ Attention Required / 需要关注:** Important issues found that need to be fixed. Please check the detailed logs.  
-            发现需要修复的重要问题，请查看详细日志。`;
+              englishReport += `
+            **⚠️ Attention Required:** Important issues found that need to be fixed. Please check the detailed logs.`;
             }
+
+            // 构建中文报告
+            let chineseReport = `### 中文报告
+
+            **📋 核心检查项目:**
+            - ✅ go vet 静态分析
+            - ✅ staticcheck 核心检查（bug & 安全）
+            - ✅ 单元测试
+            - ✅ 安全检查（官方 govulncheck-action）
+            ${formatIssues ? '- ⚠️ 代码格式（建议优化）' : '- ✅ 代码格式'}
+
+            `;
+
+            if (styleSuggestions || formatIssues) {
+              chineseReport += `**💡 可选改进提示:**`;
+              if (formatIssues) {
+                chineseReport += `
+            - 🎨 代码格式可以通过运行 \`gofmt -w .\` 进行优化`;
+              }
+              if (styleSuggestions) {
+                chineseReport += `
+            - 📝 发现 ${styleCount} 个代码风格改进点（详见 Summary 页面）`;
+              }
+              chineseReport += `
+
+            💡 这些提示不影响功能，可根据团队标准选择性处理。
+            `;
+            }
+
+            if (success) {
+              chineseReport += `
+            **🎉 结果:** Go 代码核心质量检查全部通过！代码功能稳定可靠。
+
+            **🔧 多模块支持:** 已分别检查 server、pkg、coraza-spoa 三个模块。`;
+            } else {
+              chineseReport += `
+            **⚠️ 需要关注:** 发现需要修复的重要问题，请查看详细日志。`;
+            }
+
+            // 组合最终内容（中文，英文）
+            let body = `## ⚡ Go Code Quality Check ${statusEn} ${emoji}
+
+            **PR #${{ github.event.pull_request.number }}** Go code quality check completed.
+
+            ${chineseReport}
+
+            ---
+
+            ${englishReport}`;
 
             // 查找并更新现有评论
             const { data: comments } = await github.rest.issues.listComments({
@@ -343,8 +381,7 @@ jobs:
             });
 
             const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
-              comment.body.includes('🐹 Go Code Quality Check')
+              comment.user.type === 'Bot' && comment.body.includes('⚡ Go Code Quality Check')
             );
 
             if (botComment) {

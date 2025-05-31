@@ -1,0 +1,222 @@
+# RuiQi WAF Management System - GitHub Actions Labeler Configuration
+# Usage: https://github.com/actions/labeler
+
+# 📚 文档和指南
+area/documentation:
+  - any: ['docs/**/*', 'README.md', '**/*.md', 'LICENSE']
+  - any: ['doc/**/*', '*.md']
+
+area/proposal:
+  - any: ['doc/proposal/**/*']
+
+# 🔧 后端开发
+area/backend:
+  - any: ['server/**/*']
+  - any: ['**/*.go']
+
+area/api:
+  - any: ['server/api/**/*', 'server/router/**/*']
+  - any: ['server/handler/**/*', 'server/controller/**/*']
+
+area/middleware:
+  - any: ['server/middleware/**/*']
+
+area/models:
+  - any: ['server/models/**/*', 'server/entity/**/*']
+  - any: ['**/*_model.go', '**/*_entity.go']
+
+area/database:
+  - any: ['server/database/**/*', 'server/db/**/*']
+  - any: ['server/migration/**/*', '**/*_migration.go']
+
+# 🎨 前端开发
+area/frontend:
+  - any: ['server/web/**/*']
+  - any: ['frontend/**/*']
+
+area/ui:
+  - any: ['**/*.tsx', '**/*.jsx']
+  - any: ['**/*.vue', '**/*.svelte']
+
+area/styles:
+  - any: ['**/*.css', '**/*.scss', '**/*.sass']
+  - any: ['**/*.less', '**/*.styl']
+
+area/components:
+  - any: ['**/components/**/*', '**/component/**/*']
+
+# 🛡️ 安全引擎
+area/waf:
+  - any: ['coraza-spoa/**/*']
+  - any: ['**/*coraza*', '**/*waf*']
+
+area/security:
+  - any: ['**/security/**/*', '**/auth/**/*']
+  - any: ['**/*auth*', '**/*security*', '**/*jwt*']
+
+area/rules:
+  - any: ['**/rules/**/*', '**/*rule*']
+  - any: ['**/*.conf', '**/*.cfg']
+
+area/microengine:
+  - any: ['**/microengine/**/*', 'pkg/microengine/**/*']
+
+# 🌐 网络和代理
+area/haproxy:
+  - any: ['**/*haproxy*', '**/haproxy/**/*']
+  - any: ['**/*.cfg', '**/haproxy.conf']
+
+area/proxy:
+  - any: ['**/proxy/**/*', '**/*proxy*']
+
+area/networking:
+  - any: ['**/network/**/*', '**/net/**/*']
+
+# 📦 包管理和依赖
+area/dependencies:
+  - any: ['go.mod', 'go.sum', 'package.json', 'pnpm-lock.yaml']
+  - any: ['yarn.lock', 'package-lock.json']
+
+area/packages:
+  - any: ['pkg/**/*']
+
+# 🔧 配置和环境
+area/config:
+  - any: ['**/*.env*', '**/config/**/*']
+  - any: ['**/*.yaml', '**/*.yml', '**/*.json']
+  - any: ['**/*.toml', '**/*.ini']
+
+area/docker:
+  - any: ['Dockerfile*', 'docker-compose*.yml', 'docker-compose*.yaml']
+  - any: ['.dockerignore', '**/docker/**/*']
+
+# 🧪 测试
+area/test:
+  - any: ['**/*_test.go', '**/test/**/*']
+  - any: ['**/*.test.js', '**/*.spec.js']
+  - any: ['**/*.test.tsx', '**/*.spec.tsx']
+
+area/integration-test:
+  - any: ['**/integration/**/*', '**/e2e/**/*']
+
+# 🚀 部署和运维
+area/ci:
+  - any: ['.github/**/*']
+  - any: ['.gitlab-ci.yml', '.travis.yml', 'Jenkinsfile']
+
+area/deployment:
+  - any: ['deploy/**/*', '**/deploy/**/*']
+  - any: ['k8s/**/*', 'kubernetes/**/*']
+  - any: ['helm/**/*', 'charts/**/*']
+
+area/scripts:
+  - any: ['scripts/**/*', '**/*.sh', '**/*.bat']
+  - any: ['Makefile', 'makefile']
+
+# 📊 监控和日志
+area/monitoring:
+  - any: ['**/monitoring/**/*', '**/metrics/**/*']
+  - any: ['**/*monitor*', '**/*metric*']
+
+area/logging:
+  - any: ['**/log/**/*', '**/logs/**/*']
+  - any: ['**/*log*', '**/*logger*']
+
+# 🔍 分析和仪表板
+area/analytics:
+  - any: ['**/analytics/**/*', '**/dashboard/**/*']
+  - any: ['**/*analytics*', '**/*dashboard*']
+
+area/visualization:
+  - any: ['**/chart/**/*', '**/graph/**/*']
+  - any: ['**/*chart*', '**/*graph*', '**/*viz*']
+
+# 🌍 地理和位置
+area/geo:
+  - any: ['**/geo/**/*', '**/location/**/*']
+  - any: ['**/*geo*', '**/*location*', '**/*geoip*']
+
+# ⚡ 性能和优化
+area/performance:
+  - any: ['**/performance/**/*', '**/perf/**/*']
+  - any: ['**/*perf*', '**/*performance*', '**/*optimize*']
+
+area/cache:
+  - any: ['**/cache/**/*', '**/*cache*']
+  - any: ['**/redis/**/*', '**/memcached/**/*']
+
+# 🔄 流量控制
+area/rate-limiting:
+  - any: ['**/rate/**/*', '**/limit/**/*']
+  - any: ['**/*rate*', '**/*limit*', '**/*throttle*']
+
+# 🚨 警报和通知
+area/alerts:
+  - any: ['**/alert/**/*', '**/notification/**/*']
+  - any: ['**/*alert*', '**/*notification*', '**/*webhook*']
+
+# 🤖 AI和机器学习
+area/ai:
+  - any: ['**/ai/**/*', '**/ml/**/*']
+  - any: ['**/*ai*', '**/*ml*', '**/*machine*']
+
+area/mcp:
+  - any: ['**/mcp/**/*', '**/*mcp*']
+
+# 🔐 认证和授权
+area/auth:
+  - any: ['**/auth/**/*', '**/authentication/**/*']
+  - any: ['**/authorization/**/*', '**/rbac/**/*']
+
+# 📱 API文档
+area/api-docs:
+  - any: ['**/swagger/**/*', '**/openapi/**/*']
+  - any: ['**/*swagger*', '**/*openapi*', '**/*redoc*']
+
+# 🔧 工具和实用程序
+area/utils:
+  - any: ['**/utils/**/*', '**/util/**/*']
+  - any: ['**/helper/**/*', '**/common/**/*']
+
+# 🗄️ 存储
+area/storage:
+  - any: ['**/storage/**/*', '**/store/**/*']
+  - any: ['**/*storage*', '**/*store*']
+
+# 🌐 国际化
+area/i18n:
+  - any: ['**/i18n/**/*', '**/locale/**/*']
+  - any: ['**/*i18n*', '**/*locale*', '**/*lang*']
+
+# ============================================================================
+# 💡 类型标签 (可选 - 基于 PR 大小和类型)
+# ============================================================================
+
+# 📏 大小标签 (需要额外的 GitHub Action)
+# size/XS: 0-9 lines
+# size/S: 10-29 lines  
+# size/M: 30-99 lines
+# size/L: 100-499 lines
+# size/XL: 500-999 lines
+# size/XXL: 1000+ lines
+
+# 🏷️ 类型标签 (需要手动添加或基于 conventional commits)
+# type/feat: 新功能
+# type/fix: 错误修复
+# type/docs: 文档更新
+# type/style: 代码格式化
+# type/refactor: 代码重构
+# type/test: 测试相关
+# type/chore: 构建过程或辅助工具的变动
+
+# 🚨 优先级标签 (需要手动添加)
+# priority/critical: 紧急修复
+# priority/high: 高优先级
+# priority/medium: 中等优先级
+# priority/low: 低优先级
+
+# 🎯 状态标签 (需要手动添加)
+# status/needs-review: 需要代码审查
+# status/needs-testing: 需要测试
+# status/ready-to-merge: 准备合并
+# status/blocked: 被阻塞
