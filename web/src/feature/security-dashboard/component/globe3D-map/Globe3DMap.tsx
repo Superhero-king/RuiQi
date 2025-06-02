@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react"
-import { WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, DirectionalLight, Color, PointLight, MeshPhysicalMaterial, DoubleSide } from "three"
+import { WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, DirectionalLight, Color, PointLight } from "three"
 import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 import ThreeGlobe from "three-globe"
 import countries from "./globe-data-min.json"
@@ -189,36 +189,21 @@ const Globe3DMap = React.memo(({ wafAttackTrajectoryData }: { wafAttackTrajector
             const globe = new ThreeGlobe({ waitForGlobeReady: true, animateIn: true })
             scene.add(globe)
 
-            const globeMaterial = new MeshPhysicalMaterial({
-                color: new Color(0x0d0c27),
-                transparent: true,       // 启用透明
-                transmission: 1,         // 透光率
-                thickness: 0.5,          // 厚度
-                roughness: 0.75,         // 粗糙度
-                metalness: 0,            // 金属感
-                ior: 1.5,                // 折射率
-                envMapIntensity: 1.5,    // 环境贴图强度
-                reflectivity: 0.1,       // 反射率
-                opacity: 0.55,           // 不透明度
-                side: DoubleSide,        // 双面渲染
-            })
-
             globe
-                .showGlobe(true)
-                .globeMaterial(globeMaterial)
+                .showGlobe(false)
                 .showAtmosphere(true)
-                .atmosphereColor("#0d0c27")
-                .atmosphereAltitude(0.25)
+                .atmosphereColor("#a071da")
+                .atmosphereAltitude(0.35);
 
             globe
                 .hexPolygonsData(countries.features)
                 .hexPolygonResolution(3)
-                .hexPolygonAltitude(0.001)
+                .hexPolygonAltitude(0)
                 .hexPolygonMargin(0.4)
                 .hexPolygonColor((e) => {
                     const countryCode = (e as FeatureCollection<Geometry, GeoJsonProperties>["features"][number]).properties!.ISO_A3
                     return (countryCode === "CHN" || countryCode === "TWN") ? "rgba(255, 255, 255, 1)" : "rgba(241, 230, 255, 1)"
-                })
+                });
 
             // 设置 onGlobeReady 回调（只设置一次）
             globe.onGlobeReady(() => {
