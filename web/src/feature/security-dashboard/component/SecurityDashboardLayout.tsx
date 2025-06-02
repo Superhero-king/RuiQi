@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { OverviewStats } from '@/types/stats'
 import { AttackEventAggregateResult } from '@/types/log'
 import { useDebounce } from '@/hooks/useDebounce'
+import { geoDistance } from 'd3-geo';
 
 /**
  * 安全大屏布局组件
@@ -145,7 +146,8 @@ export const SecurityDashboardLayout: React.FC = () => {
                 startLng: event.srcIpInfo.location.longitude,
                 endLat: 30.274084, // 杭州坐标
                 endLng: 120.155070,
-                arcAlt: Math.min(0.3, Math.max(0.05, event.count / 500)),
+                // arcAlt: Math.min(0.3, Math.max(0.05, event.count / 500)),
+                arcAlt: geoDistance([event.srcIpInfo.location.longitude, event.srcIpInfo.location.latitude], [120.155070, 30.274084]), // 计算起点和终点之间的地理距离(线条需要根据距离生成相应的贝塞尔曲线高度)
                 colorIndex: Math.abs(event.srcIp.split('.').reduce((a, b) => a + parseInt(b), 0)) % 8 // 基于IP地址生成固定颜色索引
             }))
 
