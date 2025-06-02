@@ -14,7 +14,7 @@ on:
 
 env:
   # 使用 vars 而不是 secrets 来存储用户名（推荐做法）
-  DOCKER_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/ruiqi-waf
+  DOCKER_IMAGE: ${{ vars.DOCKERHUB_USERNAME && vars.DOCKERHUB_USERNAME != '' && vars.DOCKERHUB_USERNAME || 'defaultuser' }}/ruiqi-waf
 
 # 精简权限
 permissions:

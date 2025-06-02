@@ -57,9 +57,6 @@ RUN chown ruiqi:ruiqi /app
 # 从构建器复制Go二进制文件
 COPY --from=backend-builder /build/ruiqi-waf .
 
-# 复制前端构建产物
-COPY --from=backend-builder /build/server/public/dist ./public/dist
-
 # 复制Swagger文档文件
 COPY --from=backend-builder /build/server/docs/ ./docs/
 
