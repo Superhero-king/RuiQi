@@ -209,14 +209,10 @@ const Globe3DMap = React.memo(({ wafAttackTrajectoryData }: { wafAttackTrajector
             globe.onGlobeReady(() => {
                 console.log('Globe is ready!')
                 // 在地球准备好后设置旋转角度
-                // globe.rotation.y = -Math.PI * (95 / 180)  // -95度
-                // globe.rotation.z = -Math.PI / 8  // 轻微倾斜以获得更好的视角
-            })
-
-            // 立即设置旋转角度（不等待onGlobeReady）
-            // console.log('Setting globe rotation immediately...')
-            // globe.rotation.y = -Math.PI * (95 / 180)  // -95度
-            // globe.rotation.z = -Math.PI / 8  // 轻微倾斜以获得更好的视角
+                const position = globe.getCoords(30.274084, 120.155070, camera.position.z) // 杭州坐标
+                globe.setPointOfView(camera)
+                camera.position.set(position.x, position.y, position.z); // 设置相机位置，距离地球表面200单位
+            });
 
             // 更新全局实例
             wafSecurityGlobeInstance.renderer = renderer
